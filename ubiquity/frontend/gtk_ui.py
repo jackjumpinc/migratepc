@@ -440,14 +440,10 @@ class Wizard(BaseFrontend):
                 cache.update()
                 cache.open()
                 self.have_apt_updated = True
-            except apt.cache.FetchFailedException:
+            except Exception:
                 syslog.syslog(syslog.LOG_INFO,
                               "Failed to update apt indexes; offline? "
                               "Continuing without.")
-            except apt.cache.LockFailedException:
-                syslog.syslog(syslog.LOG_WARNING,
-                              "Failed to update apt indexes, permission "
-                              "denied: running under test?")
 
             if osextras.find_on_path('ubuntu-drivers'):
                 # We already ran, were offline then, and are still offline, no
