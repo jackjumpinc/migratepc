@@ -262,7 +262,13 @@ class Wizard(BaseFrontend):
         self.have_apt_updated = False
 
         # To get a "busy mouse":
-        self.watch = Gdk.Cursor.new(Gdk.CursorType.WATCH)
+        try:
+            self.watch = Gdk.Cursor.new(Gdk.CursorType.WATCH)
+        except:
+            # If we can't get Gdk to work, there's something wrong with the graphical session,
+            # reboot instead of crashing so we don't end up with no user account.
+            # See https://github.com/linuxmint/ubiquity/issues/102
+            self.do_reboot()
         self.set_busy_cursor(True)
         atexit.register(set_root_cursor)
 
