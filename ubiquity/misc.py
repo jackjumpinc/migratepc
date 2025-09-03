@@ -656,6 +656,119 @@ def create_bool(text):
         return text
 
 
+# steve@jackjump.com/grok3 added rsync user and config files
+def copy_to_drive(db, source_dir, copy_device, dest_dir, frontend, preinstall_copied=False, was_compressed=False):
+    """Copy files from source_dir to dest_dir on the specified copy_device using rsync.
+    If copy_device is None, dest_dir is assumed to be on the target system (e.g., /target/home).
+    preinstall_copied: If True, skip deletion of jackjump directory.
+    was_compressed: If True, use rsync -z; if False, use space check to decide.
+    """
+    if not os.path.exists(source_dir):
+        syslog.syslog(f"Source directory {source_dir} does not exist, skipping rsync")
+        return True
+
+    # If copy_device is specified, mount it; otherwise, use dest_dir directly
+    mount_point = None
+    if copy_device:
+        mount_point = "/mnt/copy_drive"
+        if not os.path.exists(mount_point):
+            os.makedirs(mount_point)
+
+        # Mount the copy drive
+        filesystems = ['exfat', 'ntfs', 'vfat', 'ext4', 'xfs', 'btrfs']
+        mounted = False
+        for fs in filesystems:
+            if execute('mount', '-t', fs, copy_device, mount_point):
+                mounted = True
+                break
+        if not mounted:
+            frontend.error_dialog(
+                "Error",
+                f"Failed to mount copy drive {copy_device}. Ensure it is a valid drive with a supported filesystem."
+            )
+            osextras.unlink_force(mount_point)
+            return False
+        dest_path = os.path.join(mount_point, dest_dir.lstrip('/'))
+        
+        # Clean up jackjump directory only if not preinstall_copied
+        if not preinstall_copied:
+            jackjump_path = os.path.join(mount_point, 'jackjump')
+            if os.path.exists(jackjump_path):
+                shutil.rmtree(jackjump_path, ignore_errors=True)
+    else:
+        dest_path = dest_dir
+
+    # Check available space unless compression is predetermined
+    use_compression = was_compressed
+    if not use_compression:
+        try:
+            source_size = int(subprocess.run(['du', '-s', source_dir], capture_output=True, text=True, check=True).stdout.split()[0])
+            dest_free = int(subprocess.run(['df', '-k', os.path.dirname(dest_path)], capture_output=True, text=True, check=True).stdout.splitlines()[-1].split()[3])
+            if source_size > dest_free * 0.9:
+                if source_size <= dest_free * 1.1:
+                    use_compression = True
+                else:
+                    frontend.error_dialog(
+                        "Error",
+                        f"Not enough space in {os.path.dirname(dest_path)} to store files."
+                    )
+                    if mount_point:
+                        execute('umount', mount_point)
+                        osextras.unlink_force(mount_point)
+                    return False
+        except subprocess.CalledProcessError as e:
+            syslog.syslog(syslog.LOG_ERR, f"Failed to check space: {e}")
+            frontend.error_dialog(
+                "Error",
+                f"Failed to check available space in {os.path.dirname(dest_path)}."
+            )
+            if mount_point:
+                execute('umount', mount_point)
+                osextras.unlink_force(mount_point)
+            return False
+
+    # Perform rsync copy
+    try:
+        os.makedirs(dest_path, exist_ok=True)
+        rsync_cmd = ['rsync', '-aAXv', '--modify-window=1']
+        if use_compression:
+            rsync_cmd.append('-z')
+        rsync_cmd.extend([source_dir + '/', dest_path])
+        subprocess.run(rsync_cmd, check=True)
+        syslog.syslog(f"Successfully copied files {'with compression' if use_compression else ''} from {source_dir} to {dest_path}")
+    except subprocess.CalledProcessError as e:
+        syslog.syslog(syslog.LOG_ERR, f"rsync failed: {e}")
+        frontend.error_dialog(
+            "Error",
+            f"Failed to copy files to {dest_path}: {e}"
+        )
+        if mount_point:
+            execute('umount', mount_point)
+            osextras.unlink_force(mount_point)
+        return False
+
+    # Clean up
+    if mount_point:
+        execute('umount', mount_point)
+        osextras.unlink_force(mount_point)
+    return True
+
+# steve@jackjump.com/grok3 added rsync user and config files
+@raise_privileges
+def is_bitlocker_device_encrypted(device):
+    """Check if any partition on the device is BitLocker encrypted."""
+    import parted_server
+    p = parted_server.PartedServer()
+    try:
+        p.select_disk(device)
+        for part in p.partitions():
+            if is_bitlocker_partition_encrypted(part[5]):  # part[5] is path
+                return True
+    except Exception:
+        syslog.syslog(syslog.LOG_ERR, f"Failed to check BitLocker on {device}")
+    return False
+
+
 @raise_privileges
 def dmimodel():
     model = ''

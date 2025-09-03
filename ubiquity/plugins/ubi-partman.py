@@ -18,6 +18,8 @@
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 from collections import namedtuple, OrderedDict
+# steve@jackjump.com/grok3 added copy drive
+import glob
 import os
 import re
 import shutil
@@ -196,6 +198,16 @@ class PageGtk(PageBase):
         cell.set_property('sensitive', False)
         self.part_auto_select_drive.pack_start(cell, True)
         self.part_auto_select_drive.add_attribute(cell, 'markup', 1)
+	
+        # steve@jackjump.com/grok3 copy drive dropdown
+        cell = Gtk.CellRendererText()
+        self.part_auto_select_copy_drive.pack_start(cell, False)
+        self.part_auto_select_copy_drive.add_attribute(cell, 'text', 0)
+        cell = Gtk.CellRendererText()
+        cell.set_property('xalign', 1.0)
+        cell.set_property('sensitive', False)
+        self.part_auto_select_copy_drive.pack_start(cell, True)
+        self.part_auto_select_copy_drive.add_attribute(cell, 'markup', 1)
         self.plugin_widgets = self.page_ask
 
         # Annoyngly, the inline toolbar has custom background, which
@@ -484,10 +496,17 @@ class PageGtk(PageBase):
         if self.current_page == self.page_ask:
             m = self.part_auto_select_drive.get_model()
             m.clear()
+            # steve@jackjump.com/grok3 added copy drive
+            m_copy = self.part_auto_select_copy_drive.get_model()
+            m_copy.clear()
             if use_device:
                 for disk in disks:
                     m.append([disk, ''])
+                    # steve@jackjump.com/grok3 added copy drive
+                    m_copy.append([disk, ''])  # Populate copy drive dropdown
                 self.part_auto_select_drive.set_active(0)
+                # steve@jackjump.com/grok3 added copy drive
+                self.part_auto_select_copy_drive.set_active(-1)  # No default selection
 
         # Currently we support crypto only in use_disk
         # TODO dmitrij.ledkov 2012-07-25 no way to go back and return
@@ -558,6 +577,116 @@ class PageGtk(PageBase):
                 dialog.run()
                 dialog.destroy()
                 return True
+
+        # steve@jackjump.com/grok3 added copy drive
+        # Pre-install copy: Check drives and copy files before partitioning
+        # Part 1: Check if install drive has Windows and is not BitLocker encrypted
+        install_device = self.extra_options.get('install_device')
+        if install_device:
+            if misc.is_bitlocker_device_encrypted(install_device):
+                self.frontend.error_dialog(
+                    "Error",
+                    "Install drive is BitLocker encrypted. Please decrypt it before proceeding."
+                )
+                return
+            mount_point = '/mnt/install_windows'
+            if not os.path.exists(mount_point):
+                os.makedirs(mount_point)
+            if misc.execute('mount', '-t', 'ntfs', install_device, mount_point):
+                self.extra_options['install_has_windows'] = os.path.exists(os.path.join(mount_point, 'Windows'))
+            else:
+                self.extra_options['install_has_windows'] = False
+            misc.execute('umount', mount_point)
+            osextras.unlink_force(mount_point)
+
+        # Part 2: Check if copy drive has Windows and is not BitLocker encrypted
+        copy_device = self.extra_options.get('copy_device')
+        if copy_device:
+            if misc.is_bitlocker_device_encrypted(copy_device):
+                self.frontend.error_dialog(
+                    "Error",
+                    "Copy drive is BitLocker encrypted. Please decrypt it or select a different drive."
+                )
+                return
+            mount_point = '/mnt/copy_windows'
+            if not os.path.exists(mount_point):
+                os.makedirs(mount_point)
+            if misc.execute('mount', '-t', 'ntfs', copy_device, mount_point):
+                self.extra_options['copy_has_windows'] = os.path.exists(os.path.join(mount_point, 'Windows'))
+            else:
+                self.extra_options['copy_has_windows'] = False
+            misc.execute('umount', mount_point)
+            osextras.unlink_force(mount_point)
+
+        # Part 1 & 2 ultimatum: Ensure install drive or copy drive has Windows
+        if not self.extra_options.get('install_has_windows', False) and not self.extra_options.get('copy_has_windows', False):
+            self.frontend.error_dialog(
+                "Error",
+                "Neither install drive or copy drive has Windows. Please select a different drive."
+            )
+            return
+
+        # Part 3: Copy user files and Windows data if install drive has Windows
+        if copy_device and self.extra_options.get('install_has_windows', False):
+            mount_point = '/mnt/install_windows'
+            if not os.path.exists(mount_point):
+                os.makedirs(mount_point)
+            if not misc.execute('mount', '-t', 'ntfs', install_device, mount_point):
+                self.frontend.error_dialog(
+                    "Error",
+                    "Failed to mount install drive for copying files. Installation cannot proceed."
+                )
+                return
+
+            # Subpart 3.1: Copy user files to jackjump/users
+            source_dir = os.path.join(mount_point, 'Users')
+            use_compression = False
+            if os.path.exists(source_dir):
+                # Check space to determine compression
+                source_size = int(subprocess.run(['du', '-s', source_dir], capture_output=True, text=True, check=True).stdout.split()[0])
+                dest_free = int(subprocess.run(['df', '-k', '/mnt/copy_drive'], capture_output=True, text=True, check=True).stdout.splitlines()[-1].split()[3])
+                if source_size > dest_free * 0.9 and source_size <= dest_free * 1.1:
+                    use_compression = True
+                if not misc.copy_to_drive(self.db, source_dir, copy_device, 'jackjump/users', self.frontend, preinstall_copied=False, was_compressed=use_compression):
+                    misc.execute('umount', mount_point)
+                    osextras.unlink_force(mount_point)
+                    self.frontend.error_dialog(
+                        "Error",
+                        "Failed to back up Windows user files before partitioning. Installation cannot proceed."
+                    )
+                    return
+                self.extra_options['preinstall_copied'] = True
+                self.extra_options['copy_compressed'] = use_compression
+            else:
+                syslog.syslog(f"Users directory {source_dir} not found, skipping user files copy")
+
+            # Subpart 3.2: Copy Windows data to jackjump/windows_data
+            windows_data_sources = [
+                os.path.join(mount_point, 'Windows/System32/config/SAM'),
+                os.path.join(mount_point, 'Windows/System32/config/SYSTEM'),
+                os.path.join(mount_point, 'Windows/System32/config/SOFTWARE'),
+                os.path.join(mount_point, 'Users/*/AppData/Roaming/Mozilla/Firefox/Profiles'),
+                os.path.join(mount_point, 'Users/*/AppData/Local/Google/Chrome/User Data/Default'),
+                os.path.join(mount_point, 'Users/*/AppData/Local/Microsoft/Edge/User Data/Default'),
+                os.path.join(mount_point, 'Users/*/AppData/Local/BraveSoftware/Brave-Browser/User Data/Default'),
+                os.path.join(mount_point, 'Users/*/AppData/Local/Vivaldi/User Data/Default'),
+                os.path.join(mount_point, 'Users/*/AppData/Roaming/Opera Software/Opera Stable'),
+                os.path.join(mount_point, 'Users/*/AppData/Local/Chromium/User Data/Default'),
+                os.path.join(mount_point, 'Users/*/AppData/Roaming/Microsoft/Outlook'),
+                os.path.join(mount_point, 'Users/*/Pictures/Wallpaper'),
+            ]
+            for src in windows_data_sources:
+                for path in glob.glob(src):
+                    if os.path.exists(path):
+                        if not misc.copy_to_drive(self.db, path, copy_device, 'jackjump/windows_data', self.frontend, preinstall_copied=True, was_compressed=use_compression):
+                            syslog.syslog(syslog.LOG_WARNING, f"Failed to copy Windows data {path}, continuing")
+                        else:
+                            syslog.syslog(f"Successfully copied Windows data {path} to jackjump/windows_data")
+                    else:
+                        syslog.syslog(f"Windows data path {path} not found, skipping")
+
+            misc.execute('umount', mount_point)
+            osextras.unlink_force(mount_point)
 
         # Return control to partman, which will call
         # get_autopartition_choice and start partitioninging the device.
@@ -777,6 +906,18 @@ class PageGtk(PageBase):
         else:
             self.initialize_use_disk_mode()
 
+    # steve@jackjump.com/grok3 added copy drive
+    def part_auto_select_copy_drive_changed(self, widget):
+        """Handle changes to the copy drive selection."""
+        i = self.part_auto_select_copy_drive.get_active_iter()
+        if not i:
+            self.extra_options['copy_device'] = None
+            return
+        m = self.part_auto_select_copy_drive.get_model()
+        val = misc.utf8(m.get_value(i, 0), errors='replace')
+        self.extra_options['copy_device'] = val
+        self.debug('Selected copy drive: %s', val)
+
     def part_auto_hidden_label_activate_link(self, unused_widget, unused):
         self.custom_partitioning.set_active(True)
         self.controller.go_forward()
@@ -879,15 +1020,17 @@ class PageGtk(PageBase):
         self.current_page = self.page_ask
 
     def get_autopartition_choice(self):
+        # steve@jackjump.com/grok3 unique copy device check
+        copy_device = self.extra_options.get('copy_device')
         if self.reuse_partition.get_active():
             return self.extra_options['reuse'][0][0], None, 'reuse_partition'
 
         if self.replace_partition.get_active():
             return (self.extra_options['replace'][0], None,
                     'reinstall_partition')
-
-        elif self.custom_partitioning.get_active():
-            return self.extra_options['manual'], None, 'manual'
+        # steve@jackjump.com/grok3 hid custom partitioning option
+        #elif self.custom_partitioning.get_active():
+        #    return self.extra_options['manual'], None, 'manual'
 
         elif self.resize_use_free.get_active():
             if 'biggest_free' in self.extra_options:
@@ -930,6 +1073,15 @@ class PageGtk(PageBase):
             i = self.part_auto_select_drive.get_active_iter()
             m = self.part_auto_select_drive.get_model()
             disk = m.get_value(i, 0)
+
+            # steve@jackjump.com/grok3 unique copy device check
+            if copy_device and disk == copy_device:
+                self.frontend.error_dialog(
+                    "Error",
+                    "The install drive and copy drive cannot be the same."
+                )
+                return None  # Prevent proceeding
+
             choice, method = choose_recipe()
             # Is the encoding necessary?
             return choice, misc.utf8(disk, errors='replace'), method

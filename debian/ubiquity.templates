@@ -1105,9 +1105,15 @@ Description: for internal use; can be preseeded
  Only a minimal set of package(s) will be installed when the minimal installation
  checkbox is selected.
 
+# steve@jackjump.com/grok3 renamed this install drive
 Template: ubiquity/text/part_auto_select_drive_label
 Type: text
-_Description: Select drive:
+_Description: Select install drive:
+
+# steve@jackjump.com/grok3 added a copy drive
+Template: ubiquity/text/part_auto_select_copy_drive_label
+Type: text
+_Description: Select copy drive:
 
 Template: ubiquity/text/part_auto_allocate_label
 Type: text

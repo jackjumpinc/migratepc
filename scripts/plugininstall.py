@@ -258,6 +258,362 @@ class Install(install_misc.InstallBase):
 
         self.install_restricted_extras()
 
+        # steve@jackjump.com/grok3 added windows user data migration
+        # Post-install copy: Handle Windows user files
+        self.next_region()
+        self.db.progress('INFO', 'ubiquity/install/copy_user_files')
+        copy_device = self.controller.dbfilter.extra_options.get('copy_device')
+        install_has_windows = self.controller.dbfilter.extra_options.get('install_has_windows', False)
+        copy_has_windows = self.controller.dbfilter.extra_options.get('copy_has_windows', False)
+        preinstall_copied = self.controller.dbfilter.extra_options.get('preinstall_copied', False)
+        copy_compressed = self.controller.dbfilter.extra_options.get('copy_compressed', False)
+
+        if copy_device:
+            if misc.is_bitlocker_device_encrypted(copy_device):
+                self.db.input('critical', 'ubiquity/install/bitlocker_copy_drive')
+                self.db.go()
+                raise install_misc.InstallStepError("Copy drive is BitLocker encrypted")
+            
+            target_user = self.db.get('passwd/username')
+            home_dir = self.target_file('home')
+            exclude_dirs = {'defaultuser0', 'public', 'defaultuser1', 'defaultuser2', 'defaultuser3', 'defaultuser4',
+                            'defaultuser5', 'defaultuser6', 'defaultuser7', 'defaultuser8', 'defaultuser9'}
+
+            # Create users for non-excluded directories
+            for user_dir in os.listdir(home_dir):
+                if user_dir.lower() in exclude_dirs:
+                    continue
+                user_path = os.path.join(home_dir, user_dir)
+                if os.path.isdir(user_path):
+                    try:
+                        subprocess.run(['chroot', self.target, 'useradd', '-m', '-d', f'/home/{user_dir.lower()}', '-s', '/bin/bash', user_dir.lower()], check=True)
+                        uid, gid = self._get_uid_gid_on_target(user_dir.lower())
+                    except subprocess.CalledProcessError as e:
+                        syslog.syslog(syslog.LOG_WARNING, f"Failed to create user {user_dir.lower()}: {e}")
+                        continue
+
+            if install_has_windows:
+                # Copy from copy drive's jackjump/users to /target/home
+                source_dir = '/mnt/copy_drive/jackjump/users'
+                if not misc.copy_to_drive(self.db, source_dir, copy_device, os.path.join(self.target, 'home'), self, preinstall_copied=preinstall_copied, was_compressed=copy_compressed):
+                    self.db.input('critical', 'ubiquity/install/copy_user_files_failed')
+                    self.db.go()
+                    raise install_misc.InstallStepError("Failed to copy backed-up Windows files to /home")
+                # Copy Windows data to /target/var/lib/jackjump
+                source_dir = '/mnt/copy_drive/jackjump/windows_data'
+                if os.path.exists(source_dir):
+                    misc.copy_to_drive(self.db, source_dir, copy_device, self.target_file('var/lib/jackjump'), self, preinstall_copied=preinstall_copied, was_compressed=copy_compressed)
+            elif copy_has_windows:
+                # Copy directly from copy drive's Windows to /target/home
+                windows_mount = '/mnt/copy_windows'
+                if not os.path.exists(windows_mount):
+                    os.makedirs(windows_mount)
+                if misc.execute('mount', '-t', 'ntfs', copy_device, windows_mount):
+                    source_dir = os.path.join(windows_mount, 'Users')
+                    if not misc.copy_to_drive(self.db, source_dir, None, os.path.join(self.target, 'home'), self, preinstall_copied=False, was_compressed=False):
+                        misc.execute('umount', windows_mount)
+                        osextras.unlink_force(windows_mount)
+                        self.db.input('critical', 'ubiquity/install/copy_user_files_failed')
+                        self.db.go()
+                        raise install_misc.InstallStepError("Failed to copy Windows files from copy drive to /home")
+                    # Copy Windows data
+                    windows_data = [
+                        os.path.join(windows_mount, 'Windows/System32/config/SAM'),
+                        os.path.join(windows_mount, 'Windows/System32/config/SYSTEM'),
+                        os.path.join(windows_mount, 'Windows/System32/config/SOFTWARE'),
+                        os.path.join(windows_mount, 'Users/*/AppData/Roaming/Mozilla/Firefox/Profiles'),
+                        os.path.join(windows_mount, 'Users/*/AppData/Local/Google/Chrome/User Data/Default'),
+                        os.path.join(windows_mount, 'Users/*/AppData/Local/Microsoft/Edge/User Data/Default'),
+                        os.path.join(windows_mount, 'Users/*/AppData/Local/BraveSoftware/Brave-Browser/User Data/Default'),
+                        os.path.join(windows_mount, 'Users/*/AppData/Local/Vivaldi/User Data/Default'),
+                        os.path.join(windows_mount, 'Users/*/AppData/Roaming/Opera Software/Opera Stable'),
+                        os.path.join(windows_mount, 'Users/*/AppData/Local/Chromium/User Data/Default'),
+                        os.path.join(windows_mount, 'Users/*/AppData/Roaming/Microsoft/Outlook'),
+                        os.path.join(windows_mount, 'Users/*/Pictures/Wallpaper'),
+                    ]
+                    for src in windows_data:
+                        if glob.glob(src):
+                            misc.copy_to_drive(self.db, src, None, self.target_file('var/lib/jackjump'), self, preinstall_copied=False, was_compressed=False)
+                    misc.execute('umount', windows_mount)
+                osextras.unlink_force(windows_mount)
+
+            # Handle case differences and set permissions
+            for user_dir in os.listdir(home_dir):
+                lower_user_dir = user_dir.lower()
+                if user_dir.lower() in exclude_dirs:
+                    shutil.rmtree(os.path.join(home_dir, user_dir), ignore_errors=True)
+                    continue
+                if user_dir != lower_user_dir and lower_user_dir in os.listdir(home_dir):
+                    # Merge capitalized and lowercase directories
+                    capitalized_path = os.path.join(home_dir, user_dir)
+                    lowercase_path = os.path.join(home_dir, lower_user_dir)
+                    subprocess.run(['rsync', '-aAXv', '--modify-window=1', capitalized_path + '/', lowercase_path], check=True)
+                    shutil.rmtree(capitalized_path)
+                    os.rename(lowercase_path, os.path.join(home_dir, lower_user_dir))
+
+            # Copy /etc/skel and set permissions for each user
+            skel_dir = self.target_file('etc/skel')
+            for user_dir in os.listdir(home_dir):
+                if user_dir.lower() in exclude_dirs:
+                    continue
+                user_path = os.path.join(home_dir, user_dir)
+                if os.path.isdir(user_path):
+                    try:
+                        uid, gid = self._get_uid_gid_on_target(user_dir.lower())
+                        self.copy_tree(skel_dir, user_path, uid, gid)
+                        for root, dirs, files in os.walk(user_path):
+                            os.lchown(root, uid, gid)
+                            os.chmod(root, 0o755)
+                            for file in files:
+                                file_path = os.path.join(root, file)
+                                os.lchown(file_path, uid, gid)
+                                os.chmod(file_path, 0o644)
+                    except Exception as e:
+                        syslog.syslog(syslog.LOG_WARNING, f"Failed to set permissions for {user_dir}: {e}")
+
+            # Handle Public directory permissions
+            public_dir = os.path.join(home_dir, 'Public')
+            if os.path.exists(public_dir):
+                os.chmod(public_dir, 0o775)
+                os.lchown(public_dir, 0, grp.getgrnam('users').gr_gid)
+                for root, dirs, files in os.walk(public_dir):
+                    os.lchown(root, 0, grp.getgrnam('users').gr_gid)
+                    os.chmod(root, 0o775)
+                    for file in files:
+                        file_path = os.path.join(root, file)
+                        os.lchown(file_path, 0, grp.getgrnam('users').gr_gid)
+                        os.chmod(file_path, 0o664)
+
+        # Install post-install script
+        with open(self.target_file('home', target_user, 'Desktop/jackjump-config.desktop'), 'w') as f:
+            f.write("""[Desktop Entry]
+Type=Application
+Name=Jackjump Configuration
+Exec=/home/%s/jackjump-config.sh
+Icon=system-software-install
+Terminal=true
+""" % target_user)
+        os.chmod(self.target_file('home', target_user, 'Desktop/jackjump-config.desktop'), 0o755)
+        with open(self.target_file('home', target_user, 'jackjump-config.sh'), 'w') as f:
+            f.write("""#!/bin/bash
+#!/bin/bash
+# Jackjump configuration script for post-install user setup
+# Run as MAIN_USER: ./jackjump-config.sh [username]
+
+set -e
+
+# Directories to exclude
+EXCLUDE_DIRS="defaultuser0 public defaultuser1 defaultuser2 defaultuser3 defaultuser4 defaultuser5 defaultuser6 defaultuser7 defaultuser8 defaultuser9"
+
+# Get MAIN_USER (uid 1000)
+MAIN_USER=$(grep '^[^:]*:.*:1000:' /etc/passwd | cut -d: -f1)
+if [ -z "$MAIN_USER" ]; then
+    echo "Error: No main user (uid 1000) found."
+    exit 1
+fi
+
+# Check if run as MAIN_USER
+if [ "$(whoami)" != "$MAIN_USER" ]; then
+    echo "Error: This script must be run as $MAIN_USER."
+    exit 1
+fi
+
+# Get valid user directories
+HOME_DIR="/home"
+VALID_USERS=()
+for user_dir in "$HOME_DIR"/*; do
+    user=$(basename "$user_dir")
+    if [ -d "$user_dir" ] && ! echo "$EXCLUDE_DIRS" | grep -qw "$user"; then
+        VALID_USERS+=("$user")
+    fi
+done
+
+# Prompt for username if not provided
+if [ -z "$1" ]; then
+    if [ ${#VALID_USERS[@]} -eq 1 ] && [ "${VALID_USERS[0]}" = "$MAIN_USER" ]; then
+        TARGET_USER="$MAIN_USER"
+    else
+        echo "Available users to configure: ${VALID_USERS[*]}"
+        read -p "Enter username to configure: " TARGET_USER
+    fi
+else
+    TARGET_USER="$1"
+fi
+
+# Validate username
+TARGET_USER=$(echo "$TARGET_USER" | tr '[:upper:]' '[:lower:]')
+if ! echo "${VALID_USERS[*]}" | grep -qw "$TARGET_USER"; then
+    echo "Error: Username '$TARGET_USER' not found. Valid users: ${VALID_USERS[*]:-none}"
+    exit 1
+fi
+
+# Check if already configured
+CONFIG_FLAG="/home/$TARGET_USER/.jackjump_config_done"
+if [ -f "$CONFIG_FLAG" ]; then
+    echo "User '$TARGET_USER' already configured."
+    exit 0
+fi
+
+# Set password if not MAIN_USER
+if [ "$TARGET_USER" != "$MAIN_USER" ]; then
+    echo "Setting password for $TARGET_USER"
+    sudo passwd "$TARGET_USER"
+fi
+
+# Add third-party repositories (removed later if not needed)
+if ! command -v brave-browser >/dev/null 2>&1; then
+    echo "Adding Brave repository..."
+    sudo apt install -y curl
+    sudo curl -fsSLo /usr/share/keyrings/brave-browser-archive-keyring.gpg https://brave-browser-apt-release.s3.brave.com/brave-browser-archive-keyring.gpg
+    echo "deb [signed-by=/usr/share/keyrings/brave-browser-archive-keyring.gpg] https://brave-browser-apt-release.s3.brave.com/ stable main" | sudo tee /etc/apt/sources.list.d/brave-browser-release.list
+fi
+if ! command -v vivaldi >/dev/null 2>&1; then
+    echo "Adding Vivaldi repository..."
+    sudo add-apt-repository -y ppa:vivaldi/stable
+fi
+if ! command -v opera >/dev/null 2>&1; then
+    echo "Adding Opera repository..."
+    sudo curl -fsSLo /usr/share/keyrings/opera-archive-keyring.gpg https://deb.opera.com/archive.key
+    echo "deb [signed-by=/usr/share/keyrings/opera-archive-keyring.gpg] https://deb.opera.com/opera-stable/ stable non-free" | sudo tee /etc/apt/sources.list.d/opera-stable.list
+fi
+
+# Browser configurations
+BROWSERS=(
+    "firefox:Firefox:/home/$TARGET_USER/.mozilla/firefox:/var/lib/jackjump/*/Firefox/Profiles"
+    "chromium:Chromium:/home/$TARGET_USER/.config/chromium:/var/lib/jackjump/*/Chrome/User Data/Default"
+    "microsoft-edge:Edge:/home/$TARGET_USER/.config/microsoft-edge:/var/lib/jackjump/*/Edge/User Data/Default"
+    "brave-browser:Brave:/home/$TARGET_USER/.config/BraveSoftware/Brave-Browser:/var/lib/jackjump/*/Brave-Browser/User Data/Default"
+    "vivaldi:Vivaldi:/home/$TARGET_USER/.config/vivaldi:/var/lib/jackjump/*/Vivaldi/User Data/Default"
+    "opera:Opera:/home/$TARGET_USER/.config/opera:/var/lib/jackjump/*/Opera Software/Opera Stable"
+    "chromium:Chromium:/home/$TARGET_USER/.config/chromium:/var/lib/jackjump/*/Chromium/User Data/Default"
+)
+
+# Initialize X display for browser initialization
+export DISPLAY=:0
+xhost +SI:localuser:$TARGET_USER
+
+for browser in "${BROWSERS[@]}"; do
+    IFS=':' read -r pkg name dest src <<< "$browser"
+    src_path=$(find /var/lib/jackjump -type d -path "$src" -maxdepth 3 | head -n 1)
+    if [ -n "$src_path" ]; then
+        if ! command -v "$pkg" >/dev/null 2>&1; then
+            echo "Installing $name..."
+            sudo apt update
+            sudo apt install -y "$pkg" || { echo "Warning: Failed to install $name, skipping"; continue; }
+        fi
+        echo "Initializing $name profile for $TARGET_USER..."
+        su - "$TARGET_USER" -c "$pkg --no-remote >/dev/null 2>&1" || { echo "Warning: Failed to initialize $name profile"; continue; }
+        mkdir -p "$dest"
+        cp -r "$src_path"/* "$dest/"
+        chown -R "$TARGET_USER:$TARGET_USER" "$dest"
+        chmod -R u+rwX,go-rwx "$dest"
+    fi
+done
+
+# Disable X access
+xhost -SI:localuser:$TARGET_USER
+
+# Desktop background
+WALLPAPER_SRC=$(find /var/lib/jackjump -type f -path "*/Wallpaper/*" -maxdepth 3 | head -n 1)
+if [ -n "$WALLPAPER_SRC" ]; then
+    mkdir -p "/home/$TARGET_USER/.local/share/backgrounds"
+    cp "$WALLPAPER_SRC" "/home/$TARGET_USER/.local/share/backgrounds/jackjump_wallpaper.jpg"
+    chown "$TARGET_USER:$TARGET_USER" "/home/$TARGET_USER/.local/share/backgrounds/jackjump_wallpaper.jpg"
+    chmod 0644 "/home/$TARGET_USER/.local/share/backgrounds/jackjump_wallpaper.jpg"
+    su - "$TARGET_USER" -c "gsettings set org.cinnamon.desktop.background picture-uri 'file:///home/$TARGET_USER/.local/share/backgrounds/jackjump_wallpaper.jpg'"
+fi
+
+# Desktop icons
+DESKTOP_SRC="/home/$TARGET_USER/Desktop"
+if [ -d "$DESKTOP_SRC" ]; then
+    mkdir -p "/home/$TARGET_USER/.jackjump/desktop_backup"
+    cp -r "$DESKTOP_SRC"/* "/home/$TARGET_USER/.jackjump/desktop_backup/"
+    chown -R "$TARGET_USER:$TARGET_USER" "/home/$TARGET_USER/.jackjump"
+    chmod -R u+rwX,go-rwx "/home/$TARGET_USER/.jackjump"
+    for file in "$DESKTOP_SRC"/*.url; do
+        if [ -f "$file" ]; then
+            URL=$(grep -i '^URL=' "$file" | cut -d= -f2-)
+            if [ -n "$URL" ]; then
+                cat > "$DESKTOP_SRC/$(basename "$file" .url).desktop" << EOF
+[Desktop Entry]
+Type=Link
+Name=$(basename "$file" .url)
+URL=$URL
+Icon=firefox
+EOF
+                chown "$TARGET_USER:$TARGET_USER" "$DESKTOP_SRC/$(basename "$file" .url).desktop"
+                chmod 0644 "$DESKTOP_SRC/$(basename "$file" .url).desktop"
+            fi
+        fi
+    done
+    find "$DESKTOP_SRC" -type f -name "*.exe" -delete
+fi
+
+# Mark as configured
+touch "$CONFIG_FLAG"
+
+# Clean up /var/lib/jackjump/users if all users are configured
+ALL_CONFIGURED=true
+for user in "${VALID_USERS[@]}"; do
+    if [ ! -f "/home/$user/.jackjump_config_done" ]; then
+        ALL_CONFIGURED=false
+        break
+    fi
+done
+if [ "$ALL_CONFIGURED" = true ]; then
+    # Check for unused third-party repositories
+    BRAVE_USED=false
+    VIVALDI_USED=false
+    OPERA_USED=false
+
+    for user in "${VALID_USERS[@]}"; do
+        if [ -d "/home/$user/.config/BraveSoftware/Brave-Browser" ]; then
+            BRAVE_USED=true
+        fi
+        if [ -d "/home/$user/.config/vivaldi" ]; then
+            VIVALDI_USED=true
+        fi
+        if [ -d "/home/$user/.config/opera" ]; then
+            OPERA_USED=true
+        fi
+    done
+
+    # Remove unused repositories
+    if [ "$BRAVE_USED" = false ]; then
+        echo "Removing Brave repository..."
+        sudo rm -f /etc/apt/sources.list.d/brave-browser-release.list
+        sudo rm -f /usr/share/keyrings/brave-browser-archive-keyring.gpg
+    fi
+    if [ "$VIVALDI_USED" = false ]; then
+        echo "Removing Vivaldi repository..."
+        sudo add-apt-repository -y --remove ppa:vivaldi/stable
+    fi
+    if [ "$OPERA_USED" = false ]; then
+        echo "Removing Opera repository..."
+        sudo rm -f /etc/apt/sources.list.d/opera-stable.list
+        sudo rm -f /usr/share/keyrings/opera-archive-keyring.gpg
+    fi
+
+    # Clean up users directory
+    sudo rm -rf /var/lib/jackjump/users
+fi
+
+# Prompt for additional users if any remain
+REMAINING_USERS=()
+for user in "${VALID_USERS[@]}"; do
+    if [ ! -f "/home/$user/.jackjump_config_done" ]; then
+        REMAINING_USERS+=("$user")
+    fi
+done
+if [ ${#REMAINING_USERS[@]} -gt 0 ]; then
+    echo "Remaining users to configure: ${REMAINING_USERS[*]}"
+    echo "Run this script again with: ./jackjump-config.sh <username>"
+fi
+
+exit 0
+""")
+        os.chmod(self.target_file('home', target_user, 'jackjump-config.sh'), 0o755)
+
         try:
             self.copy_network_config()
         except Exception:
