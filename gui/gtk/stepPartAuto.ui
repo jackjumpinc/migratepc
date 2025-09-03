@@ -162,6 +162,7 @@
             <property name="position">1</property>
           </packing>
         </child>
+        <!-- Copyright (C) 2025 Jackjump.com, Inc. -->
         <!-- steve@jackjump/grok3 added copy drive -->
         <child>
           <object class="GtkBox" id="hbox2">

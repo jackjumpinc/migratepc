@@ -578,6 +578,7 @@ class PageGtk(PageBase):
                 dialog.destroy()
                 return True
 
+        # Copyright (C) 2025 Jackjump.com, Inc.
         # steve@jackjump.com/grok3 added copy drive
         # Pre-install copy: Check drives and copy files before partitioning
         # Part 1: Check if install drive has Windows and is not BitLocker encrypted
@@ -598,6 +599,12 @@ class PageGtk(PageBase):
                 self.extra_options['install_has_windows'] = False
             misc.execute('umount', mount_point)
             osextras.unlink_force(mount_point)
+        else:
+            self.frontend.error_dialog(
+                "Error",
+                "There is no install drive. Please select an install drive."
+            )
+            return
 
         # Part 2: Check if copy drive has Windows and is not BitLocker encrypted
         copy_device = self.extra_options.get('copy_device')
@@ -617,12 +624,18 @@ class PageGtk(PageBase):
                 self.extra_options['copy_has_windows'] = False
             misc.execute('umount', mount_point)
             osextras.unlink_force(mount_point)
+        else:
+            self.frontend.error_dialog(
+                "Error",
+                "There is no copy drive. Please select a copy drive."
+            )
+            return
 
         # Part 1 & 2 ultimatum: Ensure install drive or copy drive has Windows
         if not self.extra_options.get('install_has_windows', False) and not self.extra_options.get('copy_has_windows', False):
             self.frontend.error_dialog(
                 "Error",
-                "Neither install drive or copy drive has Windows. Please select a different drive."
+                "Neither install drive nor copy drive has Windows. Please select a different drive."
             )
             return
 
@@ -658,7 +671,11 @@ class PageGtk(PageBase):
                 self.extra_options['preinstall_copied'] = True
                 self.extra_options['copy_compressed'] = use_compression
             else:
-                syslog.syslog(f"Users directory {source_dir} not found, skipping user files copy")
+                self.frontend.error_dialog(
+                    "Error",
+                    "Users directory not found on install drive. Installation cannot proceed."
+                )
+                return
 
             # Subpart 3.2: Copy Windows data to jackjump/windows_data
             windows_data_sources = [

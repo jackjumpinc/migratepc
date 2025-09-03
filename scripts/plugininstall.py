@@ -258,6 +258,7 @@ class Install(install_misc.InstallBase):
 
         self.install_restricted_extras()
 
+        # Copyright (C) 2025 Jackjump.com, Inc.
         # steve@jackjump.com/grok3 added windows user data migration
         # Post-install copy: Handle Windows user files
         self.next_region()
@@ -298,7 +299,7 @@ class Install(install_misc.InstallBase):
                 if not misc.copy_to_drive(self.db, source_dir, copy_device, os.path.join(self.target, 'home'), self, preinstall_copied=preinstall_copied, was_compressed=copy_compressed):
                     self.db.input('critical', 'ubiquity/install/copy_user_files_failed')
                     self.db.go()
-                    raise install_misc.InstallStepError("Failed to copy backed-up Windows files to /home")
+                    raise install_misc.InstallStepError("Failed to copy backed-up Windows user files to /home")
                 # Copy Windows data to /target/var/lib/jackjump
                 source_dir = '/mnt/copy_drive/jackjump/windows_data'
                 if os.path.exists(source_dir):
@@ -313,9 +314,9 @@ class Install(install_misc.InstallBase):
                     if not misc.copy_to_drive(self.db, source_dir, None, os.path.join(self.target, 'home'), self, preinstall_copied=False, was_compressed=False):
                         misc.execute('umount', windows_mount)
                         osextras.unlink_force(windows_mount)
-                        self.db.input('critical', 'ubiquity/install/copy_user_files_failed')
+                        self.db.input('critical', 'ubiquity/install/copy_bonus_files_failed')
                         self.db.go()
-                        raise install_misc.InstallStepError("Failed to copy Windows files from copy drive to /home")
+                        raise install_misc.InstallStepError("Failed to copy Windows user configuration files from copy drive to /home")
                     # Copy Windows data
                     windows_data = [
                         os.path.join(windows_mount, 'Windows/System32/config/SAM'),
@@ -397,6 +398,10 @@ Terminal=true
         with open(self.target_file('home', target_user, 'jackjump-config.sh'), 'w') as f:
             f.write("""#!/bin/bash
 #!/bin/bash
+#
+# Copyright (C) 2025 Jackjump.com, Inc.
+# Written by Steve Saunders <steve@jackjump.com>.
+#
 # Jackjump configuration script for post-install user setup
 # Run as MAIN_USER: ./jackjump-config.sh [username]
 

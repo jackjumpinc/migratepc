@@ -656,6 +656,7 @@ def create_bool(text):
         return text
 
 
+# Copyright (C) 2025 Jackjump.com, Inc.
 # steve@jackjump.com/grok3 added rsync user and config files
 def copy_to_drive(db, source_dir, copy_device, dest_dir, frontend, preinstall_copied=False, was_compressed=False):
     """Copy files from source_dir to dest_dir on the specified copy_device using rsync.
