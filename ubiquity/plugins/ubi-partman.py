@@ -657,8 +657,14 @@ class PageGtk(PageBase):
             if os.path.exists(source_dir):
                 # Check space to determine compression
                 source_size = int(subprocess.run(['du', '-s', source_dir], capture_output=True, text=True, check=True).stdout.split()[0])
-                dest_free = int(subprocess.run(['df', '-k', '/mnt/copy_drive'], capture_output=True, text=True, check=True).stdout.splitlines()[-1].split()[3])
-                if source_size > dest_free * 0.9 and source_size <= dest_free * 1.1:
+                dest_free = misc.get_dest_free(self.db, copy_device, self.frontend)
+                if dest_free is not None and source_size > dest_free:
+                    self.frontend.error_dialog(
+                        "Error",
+                        "Not enough space available on copy drive. Please select a different copy drive."
+                    )
+                    return
+                elif dest_free is not None and source_size > dest_free * 0.8:
                     use_compression = True
                 if not misc.copy_to_drive(self.db, source_dir, copy_device, 'jackjump/users', self.frontend, preinstall_copied=False, was_compressed=use_compression):
                     misc.execute('umount', mount_point)

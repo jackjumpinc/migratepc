@@ -705,18 +705,15 @@ def copy_to_drive(db, source_dir, copy_device, dest_dir, frontend, preinstall_co
         try:
             source_size = int(subprocess.run(['du', '-s', source_dir], capture_output=True, text=True, check=True).stdout.split()[0])
             dest_free = int(subprocess.run(['df', '-k', os.path.dirname(dest_path)], capture_output=True, text=True, check=True).stdout.splitlines()[-1].split()[3])
-            if source_size > dest_free * 0.9:
-                if source_size <= dest_free * 1.1:
-                    use_compression = True
-                else:
-                    frontend.error_dialog(
-                        "Error",
-                        f"Not enough space in {os.path.dirname(dest_path)} to store files."
-                    )
-                    if mount_point:
-                        execute('umount', mount_point)
-                        osextras.unlink_force(mount_point)
-                    return False
+            if source_size > dest_free:
+                frontend.error_dialog(
+                    "Error",
+                    f"Not enough space in {os.path.dirname(dest_path)} to store files."
+                )
+                if mount_point:
+                    execute('umount', mount_point)
+                    osextras.unlink_force(mount_point)
+                return False
         except subprocess.CalledProcessError as e:
             syslog.syslog(syslog.LOG_ERR, f"Failed to check space: {e}")
             frontend.error_dialog(
@@ -753,6 +750,53 @@ def copy_to_drive(db, source_dir, copy_device, dest_dir, frontend, preinstall_co
         execute('umount', mount_point)
         osextras.unlink_force(mount_point)
     return True
+
+
+# steve@jackjump.com/grok3 added rsync user and config files
+def get_dest_free(db, copy_device, frontend):
+    """Get amount of available space on the specified copy_device.
+    """
+    mount_point = None
+    if copy_device:
+        mount_point = "/mnt/copy_drive"
+        if not os.path.exists(mount_point):
+            os.makedirs(mount_point)
+
+        # Mount the copy drive
+        filesystems = ['exfat', 'ntfs', 'vfat', 'ext4', 'xfs', 'btrfs']
+        mounted = False
+        for fs in filesystems:
+            if execute('mount', '-t', fs, copy_device, mount_point):
+                mounted = True
+                break
+        if not mounted:
+            frontend.error_dialog(
+                "Error",
+                f"Failed to mount copy drive {copy_device}. Ensure it is a valid drive with a supported filesystem."
+            )
+            osextras.unlink_force(mount_point)
+            return None
+
+    # Check available space on copy drive
+    try:
+        return int(subprocess.run(['df', '-k', mount_point], capture_output=True, text=True, check=True).stdout.splitlines()[-1].split()[3])
+    except subprocess.CalledProcessError as e:
+        syslog.syslog(syslog.LOG_ERR, f"Failed to check space: {e}")
+        frontend.error_dialog(
+            "Error",
+            f"Failed to check available space in {mount_point}."
+        )
+        if mount_point:
+            execute('umount', mount_point)
+            osextras.unlink_force(mount_point)
+        return None
+
+    # Clean up
+    if mount_point:
+        execute('umount', mount_point)
+        osextras.unlink_force(mount_point)
+    return None
+
 
 # steve@jackjump.com/grok3 added rsync user and config files
 @raise_privileges
