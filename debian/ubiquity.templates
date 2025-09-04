@@ -30,14 +30,16 @@ Template: ubiquity/text/restart_to_continue
 Type: text
 _Description: Restart to Continue
 
+# steve@jackjump.com/grok3 added a copy drive
 Template: ubiquity/text/live_installer
 Type: text
 # This is used as a window title.
-_Description: Install
+_Description: Install and Migrate Users, Jackjump.com
 
+# steve@jackjump.com/grok3 added a copy drive
 Template: ubiquity/text/oem_config_title
 Type: text
-_Description: Install (OEM mode, for manufacturers only)
+_Description: Install and Migrate Users (OEM mode, for manufacturers only)
 
 Template: ubiquity/text/oem_id_label
 Type: text
@@ -248,11 +250,12 @@ Type: text
 # Omit the [ ... ] from the translation.
 _Description: _Restart[ action ]
 
+# steve@jackjump.com/grok3 added a copy drive
 Template: ubiquity/text/install_button
 Type: text
 # This is used as a button label, and should be translated as an action.
 # Omit the [ ... ] from the translation.
-_Description: _Install Now[ action ]
+_Description: _Install and Migrate Now[ action ]
 
 Template: ubiquity/text/warning_dialog
 Type: title
