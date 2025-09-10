@@ -262,13 +262,7 @@ class Wizard(BaseFrontend):
         self.have_apt_updated = False
 
         # To get a "busy mouse":
-        try:
-            self.watch = Gdk.Cursor.new(Gdk.CursorType.WATCH)
-        except:
-            # If we can't get Gdk to work, there's something wrong with the graphical session,
-            # reboot instead of crashing so we don't end up with no user account.
-            # See https://github.com/linuxmint/ubiquity/issues/102
-            self.do_reboot()
+        self.watch = Gdk.Cursor.new(Gdk.CursorType.WATCH)
         self.set_busy_cursor(True)
         atexit.register(set_root_cursor)
 
@@ -446,10 +440,14 @@ class Wizard(BaseFrontend):
                 cache.update()
                 cache.open()
                 self.have_apt_updated = True
-            except Exception:
+            except apt.cache.FetchFailedException:
                 syslog.syslog(syslog.LOG_INFO,
                               "Failed to update apt indexes; offline? "
                               "Continuing without.")
+            except apt.cache.LockFailedException:
+                syslog.syslog(syslog.LOG_WARNING,
+                              "Failed to update apt indexes, permission "
+                              "denied: running under test?")
 
             if osextras.find_on_path('ubuntu-drivers'):
                 # We already ran, were offline then, and are still offline, no

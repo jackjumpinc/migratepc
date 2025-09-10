@@ -262,7 +262,7 @@ class Install(install_misc.InstallBase):
         # steve@jackjump.com/grok3 added windows user data migration
         # Post-install copy: Handle Windows user files
         self.next_region()
-        self.db.progress('INFO', 'ubiquity/install/copy_user_files')
+        self.db.progress('INFO', 'ubiquity/install/migrate_user_files')
         copy_device = self.controller.dbfilter.extra_options.get('copy_device')
         install_has_windows = self.controller.dbfilter.extra_options.get('install_has_windows', False)
         copy_has_windows = self.controller.dbfilter.extra_options.get('copy_has_windows', False)
