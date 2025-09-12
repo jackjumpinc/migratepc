@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: ubiquity\n"
 "Report-Msgid-Bugs-To: ubiquity@packages.debian.org\n"
-"POT-Creation-Date: 2025-09-06 02:00-0500\n"
+"POT-Creation-Date: 2025-09-11 17:57-0500\n"
 "PO-Revision-Date: 2025-09-08 15:22+0000\n"
 "Last-Translator: Sergio Cxurbaty (Цхуырбаты Сергей) <Unknown>\n"
 "Language-Team: Ossetian <os@li.org>\n"
@@ -989,11 +989,11 @@ msgstr "Рæдыд шифргонд копиргæнæн диск"
 #. Description
 #: ../ubiquity.templates:142001
 msgid ""
-"An error ocurred because Bitlocker encryption was not disabled on copy "
+"An error occurred because BitLocker encryption was not disabled on copy "
 "drive  beforehand. User files cannot be copied."
 msgstr ""
-"Рæдыд æрцыд, уымæн æмæ BitLocker-ы шифрдзинад развæлгъау нæ уыд "
-"æхгæд копийы дискыл. Пайдагæнæджы файлтæн нæй гæнæн рафыссын."
+"Рæдыд æрцыд, уымæн æмæ BitLocker-ы шифрдзинад развæлгъау нæ уыд æхгæд копийы "
+"дискыл. Пайдагæнæджы файлтæн нæй гæнæн рафыссын."
 
 #. Type: error
 #. Description
@@ -1005,13 +1005,13 @@ msgstr "Рæдыд, пайдагæнæджы файлтæ рафыссын нæ 
 #. Description
 #: ../ubiquity.templates:143001
 msgid ""
-"Sorry, an error ocurred while attempting to copy user files. The files made "
+"Sorry, an error occurred while attempting to copy user files. The files made "
 "it to the users directory in copy drive but weren't able to be copied from "
 "there back to the install drive."
 msgstr ""
 "Хатыр, пайдагæнæджы файлтæ рафыссынмæ хъавгæйæ æрцыд рæдыд. Файлтæ "
-"бахаудысты пайдагæнæджы каталогмæ копиргæнæн дискы, фæлæ сæ уырдыгæй "
-"фæстæмæ копир кæнын нæ бантыст æвæрæн дискмæ."
+"бахаудысты пайдагæнæджы каталогмæ копиргæнæн дискы, фæлæ сæ уырдыгæй фæстæмæ "
+"копир кæнын нæ бантыст æвæрæн дискмæ."
 
 #. Type: error
 #. Description
@@ -1023,9 +1023,9 @@ msgstr "Рæдыд бонус файлтæ рафыссын нæ рауад"
 #. Description
 #: ../ubiquity.templates:144001
 msgid ""
-"Sorry, an error ocurred while attempting to copy bonus user files. The bonus "
-"configuration files made it to the windows_data directory in copy drive but "
-"weren't able to be copied from there back to the install drive."
+"Sorry, an error occurred while attempting to copy bonus user files. The "
+"bonus configuration files made it to the windows_data directory in copy "
+"drive but weren't able to be copied from there back to the install drive."
 msgstr ""
 "Хатыр, рæдыд æрцыд бонус пайдагæнæджы файлтæ рафыссыны рæстæджы. Бонусон "
 "конфигурацийы файлтæ бахаудысты windows_data каталогмæ копиргæнæн дискы, "

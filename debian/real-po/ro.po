@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: debian-installer\n"
 "Report-Msgid-Bugs-To: ubiquity@packages.debian.org\n"
-"POT-Creation-Date: 2025-09-06 02:00-0500\n"
+"POT-Creation-Date: 2025-09-11 17:57-0500\n"
 "PO-Revision-Date: 2025-09-06 15:03+0000\n"
 "Last-Translator: Marian Vasile <marianvasile1972@gmail.com>\n"
 "Language-Team: Romanian Gnome Team <gnomero-list@lists.sourceforge.net>\n"
@@ -1027,10 +1027,10 @@ msgstr "Eroare unitate de copiere criptată"
 #. Description
 #: ../ubiquity.templates:142001
 msgid ""
-"An error ocurred because Bitlocker encryption was not disabled on copy "
+"An error occurred because BitLocker encryption was not disabled on copy "
 "drive  beforehand. User files cannot be copied."
 msgstr ""
-"A apărut o eroare deoarece criptarea Bitlocker nu a fost dezactivată "
+"A apărut o eroare deoarece criptarea BitLocker nu a fost dezactivată "
 "anterior pe unitatea de copiere. Fișierele utilizatorului nu pot fi copiate."
 
 #. Type: error
@@ -1043,7 +1043,7 @@ msgstr "Eroare la copierea fișierelor utilizatorului, care a eșuat."
 #. Description
 #: ../ubiquity.templates:143001
 msgid ""
-"Sorry, an error ocurred while attempting to copy user files. The files made "
+"Sorry, an error occurred while attempting to copy user files. The files made "
 "it to the users directory in copy drive but weren't able to be copied from "
 "there back to the install drive."
 msgstr ""
@@ -1062,9 +1062,9 @@ msgstr "Eroare: copierea fișierelor bonus a eșuat."
 #. Description
 #: ../ubiquity.templates:144001
 msgid ""
-"Sorry, an error ocurred while attempting to copy bonus user files. The bonus "
-"configuration files made it to the windows_data directory in copy drive but "
-"weren't able to be copied from there back to the install drive."
+"Sorry, an error occurred while attempting to copy bonus user files. The "
+"bonus configuration files made it to the windows_data directory in copy "
+"drive but weren't able to be copied from there back to the install drive."
 msgstr ""
 "Ne pare rău, a apărut o eroare la încercarea de copiere a fișierelor "
 "utilizator bonus. Fișierele de configurare bonus au ajuns în directorul "
@@ -1651,8 +1651,8 @@ msgid ""
 msgstr ""
 "Acest computer folosește criptarea Windows BitLocker. Trebuie să dezactivați "
 "BitLocker în Windows înainte de a instala Linux Mint. Pentru instrucțiuni, "
-"deschideți această pagină pe un telefon sau pe alt dispozitiv: "
-"<a href=\"https://help.ubuntu.com/bitlocker\">help.ubuntu.com/bitlocker</a>"
+"deschideți această pagină pe un telefon sau pe alt dispozitiv: <a "
+"href=\"https://help.ubuntu.com/bitlocker\">help.ubuntu.com/bitlocker</a>"
 
 #. Type: text
 #. Description

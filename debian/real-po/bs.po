@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: debian-installer\n"
 "Report-Msgid-Bugs-To: ubiquity@packages.debian.org\n"
-"POT-Creation-Date: 2025-09-06 02:00-0500\n"
+"POT-Creation-Date: 2025-09-11 17:57-0500\n"
 "PO-Revision-Date: 2025-09-08 12:03+0000\n"
 "Last-Translator: Samir Ribić <Unknown>\n"
 "Language-Team: Bosnian <lokal@linux.org.ba>\n"
@@ -1022,11 +1022,11 @@ msgstr "Greška kod šifriranog kopiranja diska"
 #. Description
 #: ../ubiquity.templates:142001
 msgid ""
-"An error ocurred because Bitlocker encryption was not disabled on copy "
+"An error occurred because BitLocker encryption was not disabled on copy "
 "drive  beforehand. User files cannot be copied."
 msgstr ""
-"Došlo je do greške jer Bitlocker šifriranje nije prethodno onemogućeno "
-"na disku za kopiranje. Korisničke datoteke se ne mogu kopirati."
+"Došlo je do greške jer BitLocker šifriranje nije prethodno onemogućeno na "
+"disku za kopiranje. Korisničke datoteke se ne mogu kopirati."
 
 #. Type: error
 #. Description
@@ -1038,7 +1038,7 @@ msgstr "Greška pri kopiranju korisničkih datoteka nije uspjela"
 #. Description
 #: ../ubiquity.templates:143001
 msgid ""
-"Sorry, an error ocurred while attempting to copy user files. The files made "
+"Sorry, an error occurred while attempting to copy user files. The files made "
 "it to the users directory in copy drive but weren't able to be copied from "
 "there back to the install drive."
 msgstr ""
@@ -1056,14 +1056,14 @@ msgstr "Kopiranje bonus datoteka nije uspjelo"
 #. Description
 #: ../ubiquity.templates:144001
 msgid ""
-"Sorry, an error ocurred while attempting to copy bonus user files. The bonus "
-"configuration files made it to the windows_data directory in copy drive but "
-"weren't able to be copied from there back to the install drive."
+"Sorry, an error occurred while attempting to copy bonus user files. The "
+"bonus configuration files made it to the windows_data directory in copy "
+"drive but weren't able to be copied from there back to the install drive."
 msgstr ""
-"Žao nam je, došlo je do greške prilikom pokušaja kopiranja bonus "
-"korisničkih datoteka. Bonus konfiguracijske datoteke su stigle u "
-"direktorij windows_data na disku za kopiranje, ali ih nije bilo "
-"moguće kopirati odatle nazad na instalacijski disk."
+"Žao nam je, došlo je do greške prilikom pokušaja kopiranja bonus korisničkih "
+"datoteka. Bonus konfiguracijske datoteke su stigle u direktorij windows_data "
+"na disku za kopiranje, ali ih nije bilo moguće kopirati odatle nazad na "
+"instalacijski disk."
 
 #. Type: text
 #. Description

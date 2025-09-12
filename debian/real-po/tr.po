@@ -6,11 +6,11 @@ msgid ""
 msgstr ""
 "Project-Id-Version: debian-installer\n"
 "Report-Msgid-Bugs-To: ubiquity@packages.debian.org\n"
-"POT-Creation-Date: 2025-09-06 02:00-0500\n"
+"POT-Creation-Date: 2025-09-11 17:57-0500\n"
 "PO-Revision-Date: 2025-09-06 23:16+0000\n"
 "Last-Translator: Sabri Ünal <Unknown>\n"
 "Language-Team: Debian L10n Turkish <debian-l10n-turkish@lists.debian.org>\n"
-"Language: tr\n"
+"Language: \n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -1015,11 +1015,11 @@ msgstr "Şifrelenmiş sürücü kopyalama hatası"
 #. Description
 #: ../ubiquity.templates:142001
 msgid ""
-"An error ocurred because Bitlocker encryption was not disabled on copy "
+"An error occurred because BitLocker encryption was not disabled on copy "
 "drive  beforehand. User files cannot be copied."
 msgstr ""
-"Kopyalama sürücüsünde BitLocker şifrelemesi önceden devre dışı "
-"bırakılmadığı için bir hata oluştu. Kullanıcı dosyaları kopyalanamıyor."
+"Kopyalama sürücüsünde BitLocker şifrelemesi önceden devre dışı bırakılmadığı "
+"için bir hata oluştu. Kullanıcı dosyaları kopyalanamıyor."
 
 #. Type: error
 #. Description
@@ -1031,7 +1031,7 @@ msgstr "Kullanıcı dosyalarının kopyalanması başarısız oldu"
 #. Description
 #: ../ubiquity.templates:143001
 msgid ""
-"Sorry, an error ocurred while attempting to copy user files. The files made "
+"Sorry, an error occurred while attempting to copy user files. The files made "
 "it to the users directory in copy drive but weren't able to be copied from "
 "there back to the install drive."
 msgstr ""
@@ -1049,13 +1049,13 @@ msgstr "Bonus dosyalarının kopyalanması başarısız oldu"
 #. Description
 #: ../ubiquity.templates:144001
 msgid ""
-"Sorry, an error ocurred while attempting to copy bonus user files. The bonus "
-"configuration files made it to the windows_data directory in copy drive but "
-"weren't able to be copied from there back to the install drive."
+"Sorry, an error occurred while attempting to copy bonus user files. The "
+"bonus configuration files made it to the windows_data directory in copy "
+"drive but weren't able to be copied from there back to the install drive."
 msgstr ""
 "Üzgünüz, bonus kullanıcı dosyalarını kopyalarken bir hata oluştu. Bonus "
-"yapılandırma dosyaları kopyalama sürücüsündeki windows_data dizinine "
-"ulaştı, ancak oradan yükleme sürücüsüne geri kopyalanamadı."
+"yapılandırma dosyaları kopyalama sürücüsündeki windows_data dizinine ulaştı, "
+"ancak oradan yükleme sürücüsüne geri kopyalanamadı."
 
 #. Type: text
 #. Description

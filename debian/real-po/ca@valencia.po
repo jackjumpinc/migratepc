@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: debian-installer\n"
 "Report-Msgid-Bugs-To: ubiquity@packages.debian.org\n"
-"POT-Creation-Date: 2025-09-06 02:00-0500\n"
+"POT-Creation-Date: 2025-09-11 17:57-0500\n"
 "PO-Revision-Date: 2025-09-08 12:03+0000\n"
 "Last-Translator: David Planella <david.planella@gmail.com>\n"
 "Language-Team: Catalan\n"
@@ -1025,7 +1025,7 @@ msgstr "Error a la unitat de còpia xifrada"
 #. Description
 #: ../ubiquity.templates:142001
 msgid ""
-"An error ocurred because Bitlocker encryption was not disabled on copy "
+"An error occurred because BitLocker encryption was not disabled on copy "
 "drive  beforehand. User files cannot be copied."
 msgstr ""
 "S'ha produït un error perquè el xifratge de BitLocker no s'havia desactivat "
@@ -1041,7 +1041,7 @@ msgstr "Error en copiar els fitxers d'usuari"
 #. Description
 #: ../ubiquity.templates:143001
 msgid ""
-"Sorry, an error ocurred while attempting to copy user files. The files made "
+"Sorry, an error occurred while attempting to copy user files. The files made "
 "it to the users directory in copy drive but weren't able to be copied from "
 "there back to the install drive."
 msgstr ""
@@ -1059,14 +1059,14 @@ msgstr "Error en copiar els fitxers addicionals: no s'ha pogut fer la còpia."
 #. Description
 #: ../ubiquity.templates:144001
 msgid ""
-"Sorry, an error ocurred while attempting to copy bonus user files. The bonus "
-"configuration files made it to the windows_data directory in copy drive but "
-"weren't able to be copied from there back to the install drive."
+"Sorry, an error occurred while attempting to copy bonus user files. The "
+"bonus configuration files made it to the windows_data directory in copy "
+"drive but weren't able to be copied from there back to the install drive."
 msgstr ""
 "Ho sentim, s'ha produït un error en intentar copiar els fitxers d'usuari "
 "addicionals. Els fitxers de configuració addicionals han arribat al "
-"directori windows_data de la unitat de còpia, però no s'han pogut copiar "
-"des d'allà de nou a la unitat d'instal·lació."
+"directori windows_data de la unitat de còpia, però no s'han pogut copiar des "
+"d'allà de nou a la unitat d'instal·lació."
 
 #. Type: text
 #. Description

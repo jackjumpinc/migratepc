@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: debian-installer\n"
 "Report-Msgid-Bugs-To: ubiquity@packages.debian.org\n"
-"POT-Creation-Date: 2025-09-06 02:00-0500\n"
+"POT-Creation-Date: 2025-09-11 17:57-0500\n"
 "PO-Revision-Date: 2025-09-06 05:41+0000\n"
 "Last-Translator: YunKi Kim <Unknown>\n"
 "Language-Team: Korean <debian-l10n-korean@lists.debian.org>\n"
@@ -1015,11 +1015,11 @@ msgstr "암호화된 복사 드라이브 오류"
 #. Description
 #: ../ubiquity.templates:142001
 msgid ""
-"An error ocurred because Bitlocker encryption was not disabled on copy "
+"An error occurred because BitLocker encryption was not disabled on copy "
 "drive  beforehand. User files cannot be copied."
 msgstr ""
-"복사 드라이브에서 Bitlocker 암호화가 미리 비활성화되지 않아 오류가 발생했"
-"습니다. 사용자 파일을 복사할 수 없습니다."
+"복사 드라이브에서 BitLocker 암호화가 미리 비활성화되지 않아 오류가 발생했습니"
+"다. 사용자 파일을 복사할 수 없습니다."
 
 #. Type: error
 #. Description
@@ -1031,13 +1031,13 @@ msgstr "사용자 파일 복사에 실패했습니다."
 #. Description
 #: ../ubiquity.templates:143001
 msgid ""
-"Sorry, an error ocurred while attempting to copy user files. The files made "
+"Sorry, an error occurred while attempting to copy user files. The files made "
 "it to the users directory in copy drive but weren't able to be copied from "
 "there back to the install drive."
 msgstr ""
-"죄송합니다. 사용자 파일을 복사하는 중 오류가 발생했습니다. 파일이 복사 드라"
-"이브의 사용자 디렉터리에는 저장되었지만, 해당 디렉터리에서 설치 드라이브로 "
-"다시 복사할 수 없었습니다."
+"죄송합니다. 사용자 파일을 복사하는 중 오류가 발생했습니다. 파일이 복사 드라이"
+"브의 사용자 디렉터리에는 저장되었지만, 해당 디렉터리에서 설치 드라이브로 다"
+"시 복사할 수 없었습니다."
 
 #. Type: error
 #. Description
@@ -1049,13 +1049,13 @@ msgstr "보너스 파일 복사에 실패했습니다."
 #. Description
 #: ../ubiquity.templates:144001
 msgid ""
-"Sorry, an error ocurred while attempting to copy bonus user files. The bonus "
-"configuration files made it to the windows_data directory in copy drive but "
-"weren't able to be copied from there back to the install drive."
+"Sorry, an error occurred while attempting to copy bonus user files. The "
+"bonus configuration files made it to the windows_data directory in copy "
+"drive but weren't able to be copied from there back to the install drive."
 msgstr ""
-"죄송합니다. 보너스 사용자 파일을 복사하는 중 오류가 발생했습니다. 보너스 "
-"구성 파일이 복사 드라이브의 windows_data 디렉터리에 저장되었지만, 해당 디"
-"렉터리에서 설치 드라이브로 다시 복사할 수 없었습니다."
+"죄송합니다. 보너스 사용자 파일을 복사하는 중 오류가 발생했습니다. 보너스 구"
+"성 파일이 복사 드라이브의 windows_data 디렉터리에 저장되었지만, 해당 디렉터리"
+"에서 설치 드라이브로 다시 복사할 수 없었습니다."
 
 #. Type: text
 #. Description

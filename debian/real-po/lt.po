@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: debian-installer\n"
 "Report-Msgid-Bugs-To: ubiquity@packages.debian.org\n"
-"POT-Creation-Date: 2025-09-06 02:00-0500\n"
+"POT-Creation-Date: 2025-09-11 17:57-0500\n"
 "PO-Revision-Date: 2025-09-08 12:04+0000\n"
 "Last-Translator: Moo <hazap@hotmail.com>\n"
 "Language-Team: Lithuanian <komp_lt@konferencijos.lt>\n"
@@ -59,8 +59,8 @@ msgstr "Įdiegti ir perkelti naudotojus, Jackjump.com"
 #: ../ubiquity.templates:9001
 msgid "Install and Migrate Users (OEM mode, for manufacturers only)"
 msgstr ""
-"Įdiegti ir perkelti naudotojus (OEM režimas, kompiuterių gamintojams "
-"bei pardavėjams)"
+"Įdiegti ir perkelti naudotojus (OEM režimas, kompiuterių gamintojams bei "
+"pardavėjams)"
 
 #. Type: text
 #. Description
@@ -1025,7 +1025,7 @@ msgstr "Klaida užšifruotoje kopijos diske"
 #. Description
 #: ../ubiquity.templates:142001
 msgid ""
-"An error ocurred because Bitlocker encryption was not disabled on copy "
+"An error occurred because BitLocker encryption was not disabled on copy "
 "drive  beforehand. User files cannot be copied."
 msgstr ""
 "Įvyko klaida, nes kopijavimo diske iš anksto nebuvo išjungtas „BitLocker“ "
@@ -1041,13 +1041,13 @@ msgstr "Nepavyko kopijuoti naudotojo failų"
 #. Description
 #: ../ubiquity.templates:143001
 msgid ""
-"Sorry, an error ocurred while attempting to copy user files. The files made "
+"Sorry, an error occurred while attempting to copy user files. The files made "
 "it to the users directory in copy drive but weren't able to be copied from "
 "there back to the install drive."
 msgstr ""
-"Atsiprašome, bandant kopijuoti naudotojo failus įvyko klaida. Failai "
-"pateko į naudotojų katalogą kopijavimo diske, bet jų nepavyko "
-"nukopijuoti iš ten atgal į diegimo diską."
+"Atsiprašome, bandant kopijuoti naudotojo failus įvyko klaida. Failai pateko "
+"į naudotojų katalogą kopijavimo diske, bet jų nepavyko nukopijuoti iš ten "
+"atgal į diegimo diską."
 
 #. Type: error
 #. Description
@@ -1059,9 +1059,9 @@ msgstr "Nepavyko kopijuoti premijinių failų"
 #. Description
 #: ../ubiquity.templates:144001
 msgid ""
-"Sorry, an error ocurred while attempting to copy bonus user files. The bonus "
-"configuration files made it to the windows_data directory in copy drive but "
-"weren't able to be copied from there back to the install drive."
+"Sorry, an error occurred while attempting to copy bonus user files. The "
+"bonus configuration files made it to the windows_data directory in copy "
+"drive but weren't able to be copied from there back to the install drive."
 msgstr ""
 "Atsiprašome, bandant kopijuoti papildomus vartotojo failus įvyko klaida. "
 "Papildomi konfigūracijos failai pateko į kopijavimo disko katalogą "

@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: ubiquity\n"
 "Report-Msgid-Bugs-To: ubiquity@packages.debian.org\n"
-"POT-Creation-Date: 2025-09-06 02:00-0500\n"
+"POT-Creation-Date: 2025-09-11 17:57-0500\n"
 "PO-Revision-Date: 2025-09-08 12:03+0000\n"
 "Last-Translator: Grzegorz Kulik <Unknown>\n"
 "Language-Team: Silesian <szl@li.org>\n"
@@ -1019,11 +1019,11 @@ msgstr "Błōnd we zaszyfrowanym dysku kopiowanio"
 #. Description
 #: ../ubiquity.templates:142001
 msgid ""
-"An error ocurred because Bitlocker encryption was not disabled on copy "
+"An error occurred because BitLocker encryption was not disabled on copy "
 "drive  beforehand. User files cannot be copied."
 msgstr ""
-"Wystympoł błōnd, pōniywoż szyfrowanie BitLocker niy było wczasnij "
-"wyłōnczōne na dysku kopiowanio. Pliki używocza niy mogōm być skopiowane."
+"Wystympoł błōnd, pōniywoż szyfrowanie BitLocker niy było wczasnij wyłōnczōne "
+"na dysku kopiowanio. Pliki używocza niy mogōm być skopiowane."
 
 #. Type: error
 #. Description
@@ -1035,13 +1035,13 @@ msgstr "Błōnd kopiowanio plikōw używocza niy udało sie"
 #. Description
 #: ../ubiquity.templates:143001
 msgid ""
-"Sorry, an error ocurred while attempting to copy user files. The files made "
+"Sorry, an error occurred while attempting to copy user files. The files made "
 "it to the users directory in copy drive but weren't able to be copied from "
 "there back to the install drive."
 msgstr ""
 "Przepraszam, przi prōbie skopiowanio plikōw używoczōw wystōmpiōł błōnd. "
-"Pliki dotarły do katalogu używoczy w dysku kopiowanio, ale niy mogły "
-"być stamtōnd skopiowane nazod na dysk instalacyje."
+"Pliki dotarły do katalogu używoczy w dysku kopiowanio, ale niy mogły być "
+"stamtōnd skopiowane nazod na dysk instalacyje."
 
 #. Type: error
 #. Description
@@ -1053,13 +1053,13 @@ msgstr "Błōnd kopiowanio plikōw bōnusu niy udało sie"
 #. Description
 #: ../ubiquity.templates:144001
 msgid ""
-"Sorry, an error ocurred while attempting to copy bonus user files. The bonus "
-"configuration files made it to the windows_data directory in copy drive but "
-"weren't able to be copied from there back to the install drive."
+"Sorry, an error occurred while attempting to copy bonus user files. The "
+"bonus configuration files made it to the windows_data directory in copy "
+"drive but weren't able to be copied from there back to the install drive."
 msgstr ""
 "Przepraszam, wystympoł błōnd przi prōbie skopiowanio bōnusowych plikōw "
-"używoczy. Bonusowe pliki kōnfiguracyje dotarły do katalogu windows_data "
-"w dysku kopiowanio, ale niy mogły być skopiowane stamtōnd nazod na dysk "
+"używoczy. Bonusowe pliki kōnfiguracyje dotarły do katalogu windows_data w "
+"dysku kopiowanio, ale niy mogły być skopiowane stamtōnd nazod na dysk "
 "instalacyje."
 
 #. Type: text

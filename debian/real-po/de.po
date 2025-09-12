@@ -6,11 +6,11 @@ msgid ""
 msgstr ""
 "Project-Id-Version: debian-installer\n"
 "Report-Msgid-Bugs-To: ubiquity@packages.debian.org\n"
-"POT-Creation-Date: 2025-09-06 02:00-0500\n"
+"POT-Creation-Date: 2025-09-11 17:57-0500\n"
 "PO-Revision-Date: 2025-09-06 16:22+0000\n"
 "Last-Translator: Torsten Franz <Unknown>\n"
 "Language-Team: Debian German <debian-l10n-german@lists.debian.org>\n"
-"Language: de\n"
+"Language: \n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -58,7 +58,8 @@ msgstr "Installieren und Migrieren von Benutzern, Jackjump.com"
 #. Description
 #: ../ubiquity.templates:9001
 msgid "Install and Migrate Users (OEM mode, for manufacturers only)"
-msgstr "Installieren und Migrieren von Benutzern(OEM-Modus, nur für Hersteller)"
+msgstr ""
+"Installieren und Migrieren von Benutzern(OEM-Modus, nur für Hersteller)"
 
 #. Type: text
 #. Description
@@ -1035,12 +1036,12 @@ msgstr "Fehler beim Verschlüsseln des Kopierlaufwerks"
 #. Description
 #: ../ubiquity.templates:142001
 msgid ""
-"An error ocurred because Bitlocker encryption was not disabled on copy "
+"An error occurred because BitLocker encryption was not disabled on copy "
 "drive  beforehand. User files cannot be copied."
 msgstr ""
-"Ein Fehler ist aufgetreten, da die Bitlocker-Verschlüsselung auf dem "
-"Kopierlaufwerk nicht zuvor deaktiviert wurde. Benutzerdateien können "
-"nicht kopiert werden."
+"Ein Fehler ist aufgetreten, da die BitLocker-Verschlüsselung auf dem "
+"Kopierlaufwerk nicht zuvor deaktiviert wurde. Benutzerdateien können nicht "
+"kopiert werden."
 
 #. Type: error
 #. Description
@@ -1052,7 +1053,7 @@ msgstr "Fehler beim Kopieren der Benutzerdateien"
 #. Description
 #: ../ubiquity.templates:143001
 msgid ""
-"Sorry, an error ocurred while attempting to copy user files. The files made "
+"Sorry, an error occurred while attempting to copy user files. The files made "
 "it to the users directory in copy drive but weren't able to be copied from "
 "there back to the install drive."
 msgstr ""
@@ -1071,14 +1072,14 @@ msgstr "Fehler beim Kopieren der Bonusdateien"
 #. Description
 #: ../ubiquity.templates:144001
 msgid ""
-"Sorry, an error ocurred while attempting to copy bonus user files. The bonus "
-"configuration files made it to the windows_data directory in copy drive but "
-"weren't able to be copied from there back to the install drive."
+"Sorry, an error occurred while attempting to copy bonus user files. The "
+"bonus configuration files made it to the windows_data directory in copy "
+"drive but weren't able to be copied from there back to the install drive."
 msgstr ""
 "Beim Kopieren der Bonus-Benutzerdateien ist ein Fehler aufgetreten. Die "
 "Bonus-Konfigurationsdateien wurden zwar in das Verzeichnis „windows_data“ "
-"auf dem Kopierlaufwerk kopiert, konnten aber von dort nicht zurück auf "
-"das Installationslaufwerk kopiert werden."
+"auf dem Kopierlaufwerk kopiert, konnten aber von dort nicht zurück auf das "
+"Installationslaufwerk kopiert werden."
 
 #. Type: text
 #. Description

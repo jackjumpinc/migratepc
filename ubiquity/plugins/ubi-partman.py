@@ -18,18 +18,20 @@
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 from collections import namedtuple, OrderedDict
-# steve@jackjump.com/grok3 added copy drive
+# steve@jackjump.com/grok3 added glob, syslog & FilteredCommand
 import glob
 import os
 import re
 import shutil
 import signal
+import syslog
 
 import debconf
 
 from ubiquity import (misc, osextras, parted_server, plugin,
                       telemetry, validation)
 from ubiquity.install_misc import archdetect
+from ubiquity.filteredcommand import FilteredCommand
 
 
 NAME = 'partman'
@@ -121,6 +123,7 @@ class PageGtk(PageBase):
     plugin_is_install = True
 
     def __init__(self, controller, *args, **kwargs):
+        #super().__init__(controller, *args, **kwargs)
         self.controller = controller
         from gi.repository import Gtk
         from ubiquity.gtkwidgets import Builder
@@ -503,7 +506,7 @@ class PageGtk(PageBase):
                 for disk in disks:
                     m.append([disk, ''])
                     # steve@jackjump.com/grok3 added copy drive
-                    m_copy.append([disk, ''])  # Populate copy drive dropdown
+                    #m_copy.append([disk, ''])  # Populate copy drive dropdown
                 self.part_auto_select_drive.set_active(0)
                 # steve@jackjump.com/grok3 added copy drive
                 self.part_auto_select_copy_drive.set_active(-1)  # No default selection
@@ -585,7 +588,7 @@ class PageGtk(PageBase):
         install_device = self.extra_options.get('install_device')
         if install_device:
             if misc.is_bitlocker_device_encrypted(install_device):
-                self.frontend.error_dialog(
+                self.controller.frontend.error_dialog(
                     "Error",
                     "Install drive is BitLocker encrypted. Please decrypt it before proceeding."
                 )
@@ -600,7 +603,7 @@ class PageGtk(PageBase):
             misc.execute('umount', mount_point)
             osextras.unlink_force(mount_point)
         else:
-            self.frontend.error_dialog(
+            self.controller.frontend.error_dialog(
                 "Error",
                 "There is no install drive. Please select an install drive."
             )
@@ -610,7 +613,7 @@ class PageGtk(PageBase):
         copy_device = self.extra_options.get('copy_device')
         if copy_device:
             if misc.is_bitlocker_device_encrypted(copy_device):
-                self.frontend.error_dialog(
+                self.controller.frontend.error_dialog(
                     "Error",
                     "Copy drive is BitLocker encrypted. Please decrypt it or select a different drive."
                 )
@@ -625,7 +628,7 @@ class PageGtk(PageBase):
             misc.execute('umount', mount_point)
             osextras.unlink_force(mount_point)
         else:
-            self.frontend.error_dialog(
+            self.controller.frontend.error_dialog(
                 "Error",
                 "There is no copy drive. Please select a copy drive."
             )
@@ -633,7 +636,7 @@ class PageGtk(PageBase):
 
         # Part 1 & 2 ultimatum: Ensure install drive or copy drive has Windows
         if not self.extra_options.get('install_has_windows', False) and not self.extra_options.get('copy_has_windows', False):
-            self.frontend.error_dialog(
+            self.controller.frontend.error_dialog(
                 "Error",
                 "Neither install drive nor copy drive has Windows. Please select a different drive."
             )
@@ -645,7 +648,7 @@ class PageGtk(PageBase):
             if not os.path.exists(mount_point):
                 os.makedirs(mount_point)
             if not misc.execute('mount', '-t', 'ntfs', install_device, mount_point):
-                self.frontend.error_dialog(
+                self.controller.frontend.error_dialog(
                     "Error",
                     "Failed to mount install drive for copying files. Installation cannot proceed."
                 )
@@ -657,19 +660,19 @@ class PageGtk(PageBase):
             if os.path.exists(source_dir):
                 # Check space to determine compression
                 source_size = int(subprocess.run(['du', '-s', source_dir], capture_output=True, text=True, check=True).stdout.split()[0])
-                dest_free = misc.get_dest_free(self.db, copy_device, self.frontend)
+                dest_free = misc.get_dest_free(self.db, copy_device, self.controller.frontend)
                 if dest_free is not None and source_size > dest_free:
-                    self.frontend.error_dialog(
+                    self.controller.frontend.error_dialog(
                         "Error",
                         "Not enough space available on copy drive. Please select a different copy drive."
                     )
                     return
                 elif dest_free is not None and source_size > dest_free * 0.8:
                     use_compression = True
-                if not misc.copy_to_drive(self.db, source_dir, copy_device, 'jackjump/users', self.frontend, preinstall_copied=False, was_compressed=use_compression):
+                if not misc.copy_to_drive(self.db, source_dir, copy_device, 'jackjump/users', self.controller.frontend, preinstall_copied=False, was_compressed=use_compression):
                     misc.execute('umount', mount_point)
                     osextras.unlink_force(mount_point)
-                    self.frontend.error_dialog(
+                    self.controller.frontend.error_dialog(
                         "Error",
                         "Failed to back up Windows user files before partitioning. Installation cannot proceed."
                     )
@@ -677,7 +680,7 @@ class PageGtk(PageBase):
                 self.extra_options['preinstall_copied'] = True
                 self.extra_options['copy_compressed'] = use_compression
             else:
-                self.frontend.error_dialog(
+                self.controller.frontend.error_dialog(
                     "Error",
                     "Users directory not found on install drive. Installation cannot proceed."
                 )
@@ -701,7 +704,7 @@ class PageGtk(PageBase):
             for src in windows_data_sources:
                 for path in glob.glob(src):
                     if os.path.exists(path):
-                        if not misc.copy_to_drive(self.db, path, copy_device, 'jackjump/windows_data', self.frontend, preinstall_copied=True, was_compressed=use_compression):
+                        if not misc.copy_to_drive(self.db, path, copy_device, 'jackjump/windows_data', self.controller.frontend, preinstall_copied=True, was_compressed=use_compression):
                             syslog.syslog(syslog.LOG_WARNING, f"Failed to copy Windows data {path}, continuing")
                         else:
                             syslog.syslog(f"Successfully copied Windows data {path} to jackjump/windows_data")
@@ -1099,7 +1102,7 @@ class PageGtk(PageBase):
 
             # steve@jackjump.com/grok3 unique copy device check
             if copy_device and disk == copy_device:
-                self.frontend.error_dialog(
+                self.controller.frontend.error_dialog(
                     "Error",
                     "The install drive and copy drive cannot be the same."
                 )

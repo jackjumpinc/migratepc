@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: debian-installer\n"
 "Report-Msgid-Bugs-To: ubiquity@packages.debian.org\n"
-"POT-Creation-Date: 2025-09-06 02:00-0500\n"
+"POT-Creation-Date: 2025-09-11 17:57-0500\n"
 "PO-Revision-Date: 2025-09-06 16:14+0000\n"
 "Last-Translator: Vu Do Quynh <vdquynh@gmail.com>\n"
 "Language-Team: Vietnamese <vi-VN@googlegroups.com>\n"
@@ -58,7 +58,8 @@ msgstr "Cài đặt và di chuyển người dùng, Jackjump.com"
 #. Description
 #: ../ubiquity.templates:9001
 msgid "Install and Migrate Users (OEM mode, for manufacturers only)"
-msgstr "Cài đặt và di chuyển người dùng (chế độ OEM, chỉ dành cho nhà sản xuất)"
+msgstr ""
+"Cài đặt và di chuyển người dùng (chế độ OEM, chỉ dành cho nhà sản xuất)"
 
 #. Type: text
 #. Description
@@ -1013,11 +1014,11 @@ msgstr "Lỗi ổ đĩa sao chép được mã hóa"
 #. Description
 #: ../ubiquity.templates:142001
 msgid ""
-"An error ocurred because Bitlocker encryption was not disabled on copy "
+"An error occurred because BitLocker encryption was not disabled on copy "
 "drive  beforehand. User files cannot be copied."
 msgstr ""
-"Đã xảy ra lỗi vì mã hóa Bitlocker chưa được tắt trên ổ đĩa sao chép trước đó. "
-"Không thể sao chép tệp người dùng."
+"Đã xảy ra lỗi vì mã hóa BitLocker chưa được tắt trên ổ đĩa sao chép trước "
+"đó. Không thể sao chép tệp người dùng."
 
 #. Type: error
 #. Description
@@ -1029,13 +1030,13 @@ msgstr "Lỗi sao chép tệp người dùng không thành công"
 #. Description
 #: ../ubiquity.templates:143001
 msgid ""
-"Sorry, an error ocurred while attempting to copy user files. The files made "
+"Sorry, an error occurred while attempting to copy user files. The files made "
 "it to the users directory in copy drive but weren't able to be copied from "
 "there back to the install drive."
 msgstr ""
-"Rất tiếc, đã xảy ra lỗi khi sao chép tệp người dùng. Tệp đã được chuyển "
-"đến thư mục người dùng trong ổ đĩa sao chép nhưng không thể sao chép từ "
-"đó trở lại ổ đĩa cài đặt."
+"Rất tiếc, đã xảy ra lỗi khi sao chép tệp người dùng. Tệp đã được chuyển đến "
+"thư mục người dùng trong ổ đĩa sao chép nhưng không thể sao chép từ đó trở "
+"lại ổ đĩa cài đặt."
 
 #. Type: error
 #. Description
@@ -1047,9 +1048,9 @@ msgstr "Lỗi sao chép tệp thưởng không thành công"
 #. Description
 #: ../ubiquity.templates:144001
 msgid ""
-"Sorry, an error ocurred while attempting to copy bonus user files. The bonus "
-"configuration files made it to the windows_data directory in copy drive but "
-"weren't able to be copied from there back to the install drive."
+"Sorry, an error occurred while attempting to copy bonus user files. The "
+"bonus configuration files made it to the windows_data directory in copy "
+"drive but weren't able to be copied from there back to the install drive."
 msgstr ""
 "Rất tiếc, đã xảy ra lỗi khi sao chép tệp người dùng thưởng. Tệp cấu hình "
 "thưởng đã được chuyển đến thư mục windows_data trong ổ đĩa sao chép nhưng "

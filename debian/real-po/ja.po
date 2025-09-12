@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: debian-installer\n"
 "Report-Msgid-Bugs-To: ubiquity@packages.debian.org\n"
-"POT-Creation-Date: 2025-09-06 02:00-0500\n"
+"POT-Creation-Date: 2025-09-11 17:57-0500\n"
 "PO-Revision-Date: 2025-09-06 14:24+0000\n"
 "Last-Translator: Ikuya Awashiro <ikuya@fruitsbasket.info>\n"
 "Language-Team: Debian L10n Japanese <debian-l10n-japanese@lists.debian.org>\n"
@@ -1023,11 +1023,11 @@ msgstr "暗号化されたコピードライブのエラー"
 #. Description
 #: ../ubiquity.templates:142001
 msgid ""
-"An error ocurred because Bitlocker encryption was not disabled on copy "
+"An error occurred because BitLocker encryption was not disabled on copy "
 "drive  beforehand. User files cannot be copied."
 msgstr ""
-"コピー先のドライブでBitLocker暗号化が事前に無効にされていなかったため、"
-"エラーが発生しました。ユーザーファイルはコピーできません。"
+"コピー先のドライブでBitLocker暗号化が事前に無効にされていなかったため、エラー"
+"が発生しました。ユーザーファイルはコピーできません。"
 
 #. Type: error
 #. Description
@@ -1039,13 +1039,13 @@ msgstr "ユーザーファイルのコピーに失敗しました"
 #. Description
 #: ../ubiquity.templates:143001
 msgid ""
-"Sorry, an error ocurred while attempting to copy user files. The files made "
+"Sorry, an error occurred while attempting to copy user files. The files made "
 "it to the users directory in copy drive but weren't able to be copied from "
 "there back to the install drive."
 msgstr ""
-"申し訳ございません。ユーザーファイルのコピー中にエラーが発生しました。"
-"ファイルはコピードライブのユーザーディレクトリにはコピーされましたが、"
-"そこからインストールドライブにコピーできませんでした。"
+"申し訳ございません。ユーザーファイルのコピー中にエラーが発生しました。ファイ"
+"ルはコピードライブのユーザーディレクトリにはコピーされましたが、そこからイン"
+"ストールドライブにコピーできませんでした。"
 
 #. Type: error
 #. Description
@@ -1057,12 +1057,12 @@ msgstr "エラー：ボーナスファイルのコピーに失敗しました"
 #. Description
 #: ../ubiquity.templates:144001
 msgid ""
-"Sorry, an error ocurred while attempting to copy bonus user files. The bonus "
-"configuration files made it to the windows_data directory in copy drive but "
-"weren't able to be copied from there back to the install drive."
+"Sorry, an error occurred while attempting to copy bonus user files. The "
+"bonus configuration files made it to the windows_data directory in copy "
+"drive but weren't able to be copied from there back to the install drive."
 msgstr ""
-"申し訳ございません。ボーナスユーザーファイルのコピー中にエラーが発生しました"
-"。ボーナス設定ファイルはコピードライブのwindows_dataディレクトリにはコピー"
+"申し訳ございません。ボーナスユーザーファイルのコピー中にエラーが発生しまし"
+"た。ボーナス設定ファイルはコピードライブのwindows_dataディレクトリにはコピー"
 "されましたが、そこからインストールドライブにコピーできませんでした。"
 
 #. Type: text

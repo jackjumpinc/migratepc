@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: debian-installer\n"
 "Report-Msgid-Bugs-To: ubiquity@packages.debian.org\n"
-"POT-Creation-Date: 2025-09-06 02:00-0500\n"
+"POT-Creation-Date: 2025-09-11 17:57-0500\n"
 "PO-Revision-Date: 2025-09-08 09:15+0000\n"
 "Last-Translator: Mariot Tsitoara <mariot.tsitoara@gmail.com>\n"
 "Language-Team: Malagasy <jaonary@free.fr>\n"
@@ -975,11 +975,11 @@ msgstr "Error encrypted copie drive"
 #. Description
 #: ../ubiquity.templates:142001
 msgid ""
-"An error ocurred because Bitlocker encryption was not disabled on copy "
+"An error occurred because BitLocker encryption was not disabled on copy "
 "drive  beforehand. User files cannot be copied."
 msgstr ""
-"Nisy hadisoana nitranga satria tsy nesorina ny encryption Bitlocker "
-"tamin'ny fiara dika mitovy mialoha. Tsy azo adika ny rakitra mpampiasa."
+"Nisy hadisoana nitranga satria tsy nesorina ny encryption BitLocker tamin'ny "
+"fiara dika mitovy mialoha. Tsy azo adika ny rakitra mpampiasa."
 
 #. Type: error
 #. Description
@@ -991,7 +991,7 @@ msgstr "Tsy nahomby ny kopia ny fisie mpampiasa"
 #. Description
 #: ../ubiquity.templates:143001
 msgid ""
-"Sorry, an error ocurred while attempting to copy user files. The files made "
+"Sorry, an error occurred while attempting to copy user files. The files made "
 "it to the users directory in copy drive but weren't able to be copied from "
 "there back to the install drive."
 msgstr ""
@@ -1010,9 +1010,9 @@ msgstr "Tsy nahomby ny kopia rakitra bonus"
 #. Description
 #: ../ubiquity.templates:144001
 msgid ""
-"Sorry, an error ocurred while attempting to copy bonus user files. The bonus "
-"configuration files made it to the windows_data directory in copy drive but "
-"weren't able to be copied from there back to the install drive."
+"Sorry, an error occurred while attempting to copy bonus user files. The "
+"bonus configuration files made it to the windows_data directory in copy "
+"drive but weren't able to be copied from there back to the install drive."
 msgstr ""
 "Miala tsiny fa nisy lesoka teo am-panandramana handika ny rakitra mpampiasa "
 "bonus. Ny rakitra fanamafisana bonus dia nahatonga azy ho any amin'ny "

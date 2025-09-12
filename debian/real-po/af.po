@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: debian-installer\n"
 "Report-Msgid-Bugs-To: ubiquity@packages.debian.org\n"
-"POT-Creation-Date: 2025-09-06 02:00-0500\n"
+"POT-Creation-Date: 2025-09-11 17:57-0500\n"
 "PO-Revision-Date: 2025-09-08 11:10+0000\n"
 "Last-Translator: Bernard Stafford <Unknown>\n"
 "Language-Team: Afrikaans <af@li.org>\n"
@@ -1025,10 +1025,10 @@ msgstr "Fout met geïnkripteerde kopie-skyf`"
 #. Description
 #: ../ubiquity.templates:142001
 msgid ""
-"An error ocurred because Bitlocker encryption was not disabled on copy "
+"An error occurred because BitLocker encryption was not disabled on copy "
 "drive  beforehand. User files cannot be copied."
 msgstr ""
-"'n Fout het voorgekom omdat Bitlocker-enkripsie nie vooraf op die "
+"'n Fout het voorgekom omdat BitLocker-enkripsie nie vooraf op die "
 "kopieerskyf gedeaktiveer was nie. Gebruikerslêers kan nie gekopieer word nie."
 
 #. Type: error
@@ -1041,13 +1041,13 @@ msgstr "Fout by die kopieer van gebruikerslêers het misluk"
 #. Description
 #: ../ubiquity.templates:143001
 msgid ""
-"Sorry, an error ocurred while attempting to copy user files. The files made "
+"Sorry, an error occurred while attempting to copy user files. The files made "
 "it to the users directory in copy drive but weren't able to be copied from "
 "there back to the install drive."
 msgstr ""
-"Jammer, 'n fout het voorgekom tydens die kopieer van gebruikerslêers. "
-"Die lêers het die gebruikersgids in die kopieerskyf bereik, maar kon nie "
-"van daar af terug na die installasieskyf gekopieer word nie."
+"Jammer, 'n fout het voorgekom tydens die kopieer van gebruikerslêers. Die "
+"lêers het die gebruikersgids in die kopieerskyf bereik, maar kon nie van "
+"daar af terug na die installasieskyf gekopieer word nie."
 
 #. Type: error
 #. Description
@@ -1059,14 +1059,14 @@ msgstr "Fout by die kopieer van bonuslêers het misluk"
 #. Description
 #: ../ubiquity.templates:144001
 msgid ""
-"Sorry, an error ocurred while attempting to copy bonus user files. The bonus "
-"configuration files made it to the windows_data directory in copy drive but "
-"weren't able to be copied from there back to the install drive."
+"Sorry, an error occurred while attempting to copy bonus user files. The "
+"bonus configuration files made it to the windows_data directory in copy "
+"drive but weren't able to be copied from there back to the install drive."
 msgstr ""
 "Jammer, 'n fout het voorgekom tydens die kopieer van bonusgebruikerlêers. "
 "Die bonuskonfigurasielêers het die windows_data-gids in die kopieerskyf "
-"bereik, maar kon nie van daar af terug na die installasieskyf gekopieer "
-"word nie."
+"bereik, maar kon nie van daar af terug na die installasieskyf gekopieer word "
+"nie."
 
 #. Type: text
 #. Description

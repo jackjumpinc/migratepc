@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: ubiquity\n"
 "Report-Msgid-Bugs-To: ubiquity@packages.debian.org\n"
-"POT-Creation-Date: 2025-09-06 02:00-0500\n"
+"POT-Creation-Date: 2025-09-11 17:57-0500\n"
 "PO-Revision-Date: 2025-09-08 12:04+0000\n"
 "Last-Translator: Akerbeltz <fios@akerbeltz.org>\n"
 "Language-Team: Fòram na Gàidhlig\n"
@@ -60,8 +60,8 @@ msgstr "Stàlaich is gluais luchd-cleachdaidh, Jackjump.com"
 #: ../ubiquity.templates:9001
 msgid "Install and Migrate Users (OEM mode, for manufacturers only)"
 msgstr ""
-"Stàlaich is gluais luchd-cleachdaidh (modh OEM, airson "
-"luchd-saothrachaidh a-mhàin)"
+"Stàlaich is gluais luchd-cleachdaidh (modh OEM, airson luchd-saothrachaidh a-"
+"mhàin)"
 
 #. Type: text
 #. Description
@@ -1040,7 +1040,7 @@ msgstr "Mearachd lethbhreac crioptaichte den draibhear"
 #. Description
 #: ../ubiquity.templates:142001
 msgid ""
-"An error ocurred because Bitlocker encryption was not disabled on copy "
+"An error occurred because BitLocker encryption was not disabled on copy "
 "drive  beforehand. User files cannot be copied."
 msgstr ""
 "Thachair mearachd leis nach deach crioptachadh BitLocker a dhì-chomasachadh "
@@ -1057,14 +1057,14 @@ msgstr "Mearachd lethbhreac de fhaidhlichean cleachdaiche dh’fhàillig"
 #. Description
 #: ../ubiquity.templates:143001
 msgid ""
-"Sorry, an error ocurred while attempting to copy user files. The files made "
+"Sorry, an error occurred while attempting to copy user files. The files made "
 "it to the users directory in copy drive but weren't able to be copied from "
 "there back to the install drive."
 msgstr ""
 "Tha mi duilich, thachair mearachd fhad ’s a bha sinn a’ feuchainn ri "
-"faidhlichean cleachdaiche a chopaigeadh. Ràinig na faidhlichean am "
-"pasgan cleachdaichean air an draibh lethbhreac ach cha b’ urrainnear "
-"an lethbhreacadh às an sin air ais chun draibh stàlaidh."
+"faidhlichean cleachdaiche a chopaigeadh. Ràinig na faidhlichean am pasgan "
+"cleachdaichean air an draibh lethbhreac ach cha b’ urrainnear an "
+"lethbhreacadh às an sin air ais chun draibh stàlaidh."
 
 #. Type: error
 #. Description
@@ -1076,14 +1076,14 @@ msgstr "Mearachd lethbhreac de fhaidhlichean bònais dh’fhàillig"
 #. Description
 #: ../ubiquity.templates:144001
 msgid ""
-"Sorry, an error ocurred while attempting to copy bonus user files. The bonus "
-"configuration files made it to the windows_data directory in copy drive but "
-"weren't able to be copied from there back to the install drive."
+"Sorry, an error occurred while attempting to copy bonus user files. The "
+"bonus configuration files made it to the windows_data directory in copy "
+"drive but weren't able to be copied from there back to the install drive."
 msgstr ""
 "Tha mi duilich, thachair mearachd fhad ’s a bha sinn a’ feuchainn ri "
 "faidhlichean cleachdaiche bònas a chopaigeadh. Ràinig na faidhlichean "
-"rèiteachaidh bònas an eòlaire windows_data air an draibh lethbhreac ach "
-"cha b’ urrainnear an lethbhreacadh às an sin air ais chun draibh stàlaidh."
+"rèiteachaidh bònas an eòlaire windows_data air an draibh lethbhreac ach cha "
+"b’ urrainnear an lethbhreacadh às an sin air ais chun draibh stàlaidh."
 
 #. Type: text
 #. Description

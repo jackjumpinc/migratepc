@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: debian-installer\n"
 "Report-Msgid-Bugs-To: ubiquity@packages.debian.org\n"
-"POT-Creation-Date: 2025-09-06 02:00-0500\n"
+"POT-Creation-Date: 2025-09-11 17:57-0500\n"
 "PO-Revision-Date: 2025-09-06 17:24+0000\n"
 "Last-Translator: Jiri Grönroos <Unknown>\n"
 "Language-Team: Finnish <debian-l10n-finnish@lists.debian.org>\n"
@@ -1020,10 +1020,10 @@ msgstr "Virhe salatussa kopioasemassa"
 #. Description
 #: ../ubiquity.templates:142001
 msgid ""
-"An error ocurred because Bitlocker encryption was not disabled on copy "
+"An error occurred because BitLocker encryption was not disabled on copy "
 "drive  beforehand. User files cannot be copied."
 msgstr ""
-"Virhe tapahtui, koska Bitlocker-salausta ei ollut poistettu käytöstä "
+"Virhe tapahtui, koska BitLocker-salausta ei ollut poistettu käytöstä "
 "kopiointiasemassa etukäteen. Käyttäjätiedostoja ei voi kopioida."
 
 #. Type: error
@@ -1036,13 +1036,13 @@ msgstr "Käyttäjätiedostojen kopiointi epäonnistui"
 #. Description
 #: ../ubiquity.templates:143001
 msgid ""
-"Sorry, an error ocurred while attempting to copy user files. The files made "
+"Sorry, an error occurred while attempting to copy user files. The files made "
 "it to the users directory in copy drive but weren't able to be copied from "
 "there back to the install drive."
 msgstr ""
 "Käyttäjätiedostojen kopioinnissa tapahtui virhe. Tiedostot päätyivät "
-"käyttäjähakemistoon kopiointiasemassa, mutta niitä ei voitu kopioida "
-"sieltä takaisin asennusasemalle."
+"käyttäjähakemistoon kopiointiasemassa, mutta niitä ei voitu kopioida sieltä "
+"takaisin asennusasemalle."
 
 #. Type: error
 #. Description
@@ -1054,13 +1054,13 @@ msgstr "Virhe kopiointi bonustiedostot epäonnistui"
 #. Description
 #: ../ubiquity.templates:144001
 msgid ""
-"Sorry, an error ocurred while attempting to copy bonus user files. The bonus "
-"configuration files made it to the windows_data directory in copy drive but "
-"weren't able to be copied from there back to the install drive."
+"Sorry, an error occurred while attempting to copy bonus user files. The "
+"bonus configuration files made it to the windows_data directory in copy "
+"drive but weren't able to be copied from there back to the install drive."
 msgstr ""
-"Bonus-käyttäjätiedostojen kopioinnissa tapahtui virhe. "
-"Bonus-määritystiedostot pääsivät kopioaseman windows_data-hakemistoon, "
-"mutta niitä ei voitu kopioida sieltä takaisin asennusasemaan."
+"Bonus-käyttäjätiedostojen kopioinnissa tapahtui virhe. Bonus-"
+"määritystiedostot pääsivät kopioaseman windows_data-hakemistoon, mutta niitä "
+"ei voitu kopioida sieltä takaisin asennusasemaan."
 
 #. Type: text
 #. Description

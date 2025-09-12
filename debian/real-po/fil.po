@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: ubiquity\n"
 "Report-Msgid-Bugs-To: ubiquity@packages.debian.org\n"
-"POT-Creation-Date: 2025-09-06 02:00-0500\n"
+"POT-Creation-Date: 2025-09-11 17:57-0500\n"
 "PO-Revision-Date: 2025-09-06 16:04+0000\n"
 "Last-Translator: Arnel A. Borja <Unknown>\n"
 "Language-Team: Filipino <fil@li.org>\n"
@@ -1017,11 +1017,11 @@ msgstr "Error sa naka-encrypt na copy drive"
 #. Description
 #: ../ubiquity.templates:142001
 msgid ""
-"An error ocurred because Bitlocker encryption was not disabled on copy "
+"An error occurred because BitLocker encryption was not disabled on copy "
 "drive  beforehand. User files cannot be copied."
 msgstr ""
-"Nagkaroon ng error dahil hindi na-disable ang Bitlocker encryption sa "
-"copy drive nang una. Hindi maaaring kopyahin ang mga file ng user."
+"Nagkaroon ng error dahil hindi na-disable ang BitLocker encryption sa copy "
+"drive nang una. Hindi maaaring kopyahin ang mga file ng user."
 
 #. Type: error
 #. Description
@@ -1033,13 +1033,13 @@ msgstr "Nabigo ang pagkopya ng mga file ng user ng error"
 #. Description
 #: ../ubiquity.templates:143001
 msgid ""
-"Sorry, an error ocurred while attempting to copy user files. The files made "
+"Sorry, an error occurred while attempting to copy user files. The files made "
 "it to the users directory in copy drive but weren't able to be copied from "
 "there back to the install drive."
 msgstr ""
-"Paumanhin, may naganap na error habang sinusubukang kopyahin ang mga file "
-"ng user. Napunta ang mga file sa direktoryo ng mga user sa copy drive "
-"ngunit hindi nakopya mula doon pabalik sa install drive."
+"Paumanhin, may naganap na error habang sinusubukang kopyahin ang mga file ng "
+"user. Napunta ang mga file sa direktoryo ng mga user sa copy drive ngunit "
+"hindi nakopya mula doon pabalik sa install drive."
 
 #. Type: error
 #. Description
@@ -1051,9 +1051,9 @@ msgstr "Nabigo ang pagkopya ng mga bonus file ng error"
 #. Description
 #: ../ubiquity.templates:144001
 msgid ""
-"Sorry, an error ocurred while attempting to copy bonus user files. The bonus "
-"configuration files made it to the windows_data directory in copy drive but "
-"weren't able to be copied from there back to the install drive."
+"Sorry, an error occurred while attempting to copy bonus user files. The "
+"bonus configuration files made it to the windows_data directory in copy "
+"drive but weren't able to be copied from there back to the install drive."
 msgstr ""
 "Paumanhin, may naganap na error habang sinusubukang kopyahin ang mga bonus "
 "na file ng user. Ang mga file ng pagsasaayos ng bonus ay nakarating sa "

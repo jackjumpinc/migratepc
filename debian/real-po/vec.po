@@ -7,11 +7,11 @@ msgid ""
 msgstr ""
 "Project-Id-Version: ubiquity\n"
 "Report-Msgid-Bugs-To: ubiquity@packages.debian.org\n"
-"POT-Creation-Date: 2025-09-06 02:00-0500\n"
+"POT-Creation-Date: 2025-09-11 17:57-0500\n"
 "PO-Revision-Date: 2025-09-08 22:14+0000\n"
 "Last-Translator: Emiliano Malerba <emiliano.m@inwind.it>\n"
 "Language-Team: Venetian <vec@li.org>\n"
-"Language: vec\n"
+"Language: \n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -1021,10 +1021,10 @@ msgstr "Error in criptà de l'unità de copia"
 #. Description
 #: ../ubiquity.templates:142001
 msgid ""
-"An error ocurred because Bitlocker encryption was not disabled on copy "
+"An error occurred because BitLocker encryption was not disabled on copy "
 "drive  beforehand. User files cannot be copied."
 msgstr ""
-"Xe capità un eror parché ła critografia de Bitlocker no ła jera stà "
+"Xe capità un eror parché ła critografia de BitLocker no ła jera stà "
 "disabilità prima sul copy drive. I file utente no i pol esar copiài."
 
 #. Type: error
@@ -1037,13 +1037,13 @@ msgstr "Eror ła copia dei file utente ła xe falìa"
 #. Description
 #: ../ubiquity.templates:143001
 msgid ""
-"Sorry, an error ocurred while attempting to copy user files. The files made "
+"Sorry, an error occurred while attempting to copy user files. The files made "
 "it to the users directory in copy drive but weren't able to be copied from "
 "there back to the install drive."
 msgstr ""
-"Scusate, è verificato un errore nel tentativo di copiare i file utente. "
-"I file i xe rivài neła diretoria dei utenti inte ła unità de copia ma no "
-"i xe stà boni de esar copiài da lì indrio a l’unità de instałasion."
+"Scusate, è verificato un errore nel tentativo di copiare i file utente. I "
+"file i xe rivài neła diretoria dei utenti inte ła unità de copia ma no i xe "
+"stà boni de esar copiài da lì indrio a l’unità de instałasion."
 
 #. Type: error
 #. Description
@@ -1055,14 +1055,14 @@ msgstr "Eror de copia dei file bonus fałii"
 #. Description
 #: ../ubiquity.templates:144001
 msgid ""
-"Sorry, an error ocurred while attempting to copy bonus user files. The bonus "
-"configuration files made it to the windows_data directory in copy drive but "
-"weren't able to be copied from there back to the install drive."
+"Sorry, an error occurred while attempting to copy bonus user files. The "
+"bonus configuration files made it to the windows_data directory in copy "
+"drive but weren't able to be copied from there back to the install drive."
 msgstr ""
 "Scusate, è verificato un errore nel tentativo di copiare i file utente "
-"bonus. I file de configurasion bonus i xe rivài neła diretoria "
-"windows_data inte ła copy drive ma no i xe stà boni de esar copiài "
-"da lì indrio al disco de instałasion."
+"bonus. I file de configurasion bonus i xe rivài neła diretoria windows_data "
+"inte ła copy drive ma no i xe stà boni de esar copiài da lì indrio al disco "
+"de instałasion."
 
 #. Type: text
 #. Description

@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: ubiquity\n"
 "Report-Msgid-Bugs-To: ubiquity@packages.debian.org\n"
-"POT-Creation-Date: 2025-09-06 02:00-0500\n"
+"POT-Creation-Date: 2025-09-11 17:57-0500\n"
 "PO-Revision-Date: 2025-09-05 15:55+0000\n"
 "Last-Translator: Charif AYFARAH <ayfarah@ymail.com>\n"
 "Language-Team: Afar <aa@li.org>\n"
@@ -990,10 +990,10 @@ msgstr "Aylalokki korraq kokkobiseh"
 #. Description
 #: ../ubiquity.templates:142001
 msgid ""
-"An error ocurred because Bitlocker encryption was not disabled on copy "
+"An error occurred because BitLocker encryption was not disabled on copy "
 "drive  beforehand. User files cannot be copied."
 msgstr ""
-"Qellat yekkeh kah kinnim Bitlocker fidga matakka koppi beyto naharal. "
+"Qellat yekkeh kah kinnim BitLocker fidga matakka koppi beyto naharal. "
 "Xoqoysimâ sibaabi korsaanam maduudunta."
 
 #. Type: error
@@ -1006,7 +1006,7 @@ msgstr "Xoqoysimah faayilitteh korraq qellat radeh"
 #. Description
 #: ../ubiquity.templates:143001
 msgid ""
-"Sorry, an error ocurred while attempting to copy user files. The files made "
+"Sorry, an error occurred while attempting to copy user files. The files made "
 "it to the users directory in copy drive but weren't able to be copied from "
 "there back to the install drive."
 msgstr ""
@@ -1024,9 +1024,9 @@ msgstr "Hoxat tan korraq ossotinah sibaabi raddeh"
 #. Description
 #: ../ubiquity.templates:144001
 msgid ""
-"Sorry, an error ocurred while attempting to copy bonus user files. The bonus "
-"configuration files made it to the windows_data directory in copy drive but "
-"weren't able to be copied from there back to the install drive."
+"Sorry, an error occurred while attempting to copy bonus user files. The "
+"bonus configuration files made it to the windows_data directory in copy "
+"drive but weren't able to be copied from there back to the install drive."
 msgstr ""
 "Qafu ab, ossotinah doqaysimak sibaabi korsaanam gabbatan wak aylalokki "
 "yekke. Ossotinah kobxissoh faayilitteh bicsen windows_data directory copy "

@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: debian-installer\n"
 "Report-Msgid-Bugs-To: ubiquity@packages.debian.org\n"
-"POT-Creation-Date: 2025-09-06 02:00-0500\n"
+"POT-Creation-Date: 2025-09-11 17:57-0500\n"
 "PO-Revision-Date: 2025-09-08 12:03+0000\n"
 "Last-Translator: Quentin PAGÈS <Unknown>\n"
 "Language-Team: Tot En Òc\n"
@@ -1032,7 +1032,7 @@ msgstr "Error de unitat de còpia chifrada"
 #. Description
 #: ../ubiquity.templates:142001
 msgid ""
-"An error ocurred because Bitlocker encryption was not disabled on copy "
+"An error occurred because BitLocker encryption was not disabled on copy "
 "drive  beforehand. User files cannot be copied."
 msgstr ""
 "Una error s'es producha perque lo chiframent de BitLocker èra pas desactivat "
@@ -1049,14 +1049,14 @@ msgstr "Error de còpia dels fichièrs d'utilizaire a fracassat"
 #. Description
 #: ../ubiquity.templates:143001
 msgid ""
-"Sorry, an error ocurred while attempting to copy user files. The files made "
+"Sorry, an error occurred while attempting to copy user files. The files made "
 "it to the users directory in copy drive but weren't able to be copied from "
 "there back to the install drive."
 msgstr ""
 "O planhèm, una error s'es producha al moment de l'ensag de copiar los "
 "fichièrs d'utilizaire. Los fichièrs arribèron dins lo repertòri dels "
-"utilizaires dins l'unitat de còpia mas foguèron pas capables d'èsser "
-"copiats d'aquí enrè dins l'unitat d'installacion."
+"utilizaires dins l'unitat de còpia mas foguèron pas capables d'èsser copiats "
+"d'aquí enrè dins l'unitat d'installacion."
 
 #. Type: error
 #. Description
@@ -1068,14 +1068,14 @@ msgstr "Error de còpia dels fichièrs bonus a fracassat"
 #. Description
 #: ../ubiquity.templates:144001
 msgid ""
-"Sorry, an error ocurred while attempting to copy bonus user files. The bonus "
-"configuration files made it to the windows_data directory in copy drive but "
-"weren't able to be copied from there back to the install drive."
+"Sorry, an error occurred while attempting to copy bonus user files. The "
+"bonus configuration files made it to the windows_data directory in copy "
+"drive but weren't able to be copied from there back to the install drive."
 msgstr ""
 "O planhèm, una error s'es producha al moment de l'ensag de copiar los "
-"fichièrs d'utilizaire bonus. Los fichièrs de configuracion bonus "
-"arribèron dins lo repertòri windows_data dins l'unitat de còpia mas "
-"foguèron pas capables d'èsser copiats d'ailà cap a l'unitat d'installacion."
+"fichièrs d'utilizaire bonus. Los fichièrs de configuracion bonus arribèron "
+"dins lo repertòri windows_data dins l'unitat de còpia mas foguèron pas "
+"capables d'èsser copiats d'ailà cap a l'unitat d'installacion."
 
 #. Type: text
 #. Description

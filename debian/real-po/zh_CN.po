@@ -8,11 +8,11 @@ msgid ""
 msgstr ""
 "Project-Id-Version: debian-installer\n"
 "Report-Msgid-Bugs-To: ubiquity@packages.debian.org\n"
-"POT-Creation-Date: 2025-09-06 02:00-0500\n"
+"POT-Creation-Date: 2025-09-11 17:57-0500\n"
 "PO-Revision-Date: 2025-09-06 12:23+0000\n"
 "Last-Translator: Xhacker Liu <liu.dongyuan@gmail.com>\n"
 "Language-Team: Chinese (simplified) <i18n-zh@googlegroups.com>\n"
-"Language: zh_CN\n"
+"Language: \n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -1001,10 +1001,10 @@ msgstr "加密复制驱动器错误"
 #. Description
 #: ../ubiquity.templates:142001
 msgid ""
-"An error ocurred because Bitlocker encryption was not disabled on copy "
+"An error occurred because BitLocker encryption was not disabled on copy "
 "drive  beforehand. User files cannot be copied."
 msgstr ""
-"由于未事先在复制驱动器上禁用 Bitlocker 加密，因此发生错误。无法复制用户文件。"
+"由于未事先在复制驱动器上禁用 BitLocker 加密，因此发生错误。无法复制用户文件。"
 
 #. Type: error
 #. Description
@@ -1016,12 +1016,12 @@ msgstr "错误复制用户文件失败"
 #. Description
 #: ../ubiquity.templates:143001
 msgid ""
-"Sorry, an error ocurred while attempting to copy user files. The files made "
+"Sorry, an error occurred while attempting to copy user files. The files made "
 "it to the users directory in copy drive but weren't able to be copied from "
 "there back to the install drive."
 msgstr ""
-"抱歉，尝试复制用户文件时出错。文件已成功复制到复制驱动器中的用户目录，但无"
-"法从该目录复制回安装驱动器。"
+"抱歉，尝试复制用户文件时出错。文件已成功复制到复制驱动器中的用户目录，但无法"
+"从该目录复制回安装驱动器。"
 
 #. Type: error
 #. Description
@@ -1033,12 +1033,12 @@ msgstr "错误复制奖励文件失败"
 #. Description
 #: ../ubiquity.templates:144001
 msgid ""
-"Sorry, an error ocurred while attempting to copy bonus user files. The bonus "
-"configuration files made it to the windows_data directory in copy drive but "
-"weren't able to be copied from there back to the install drive."
+"Sorry, an error occurred while attempting to copy bonus user files. The "
+"bonus configuration files made it to the windows_data directory in copy "
+"drive but weren't able to be copied from there back to the install drive."
 msgstr ""
-"抱歉，尝试复制奖励用户文件时出错。奖励配置文件已成功复制到复制驱动器的"
-" windows_data 目录，但无法从该目录复制回安装驱动器。"
+"抱歉，尝试复制奖励用户文件时出错。奖励配置文件已成功复制到复制驱动器的 "
+"windows_data 目录，但无法从该目录复制回安装驱动器。"
 
 #. Type: text
 #. Description

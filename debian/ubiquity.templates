@@ -696,14 +696,14 @@ _Description: Migrating user files...
 Template: ubiquity/install/bitlocker_copy_drive
 Type: error
 _Description: Error encrypted copy drive
- An error ocurred because Bitlocker encryption was not disabled on copy drive 
+ An error occurred because BitLocker encryption was not disabled on copy drive 
  beforehand. User files cannot be copied.
 
 # steve@jackjump.com/grok3 added a copy drive
 Template: ubiquity/install/copy_user_files_failed
 Type: error
 _Description: Error copy user files failed
- Sorry, an error ocurred while attempting to copy user files. The files made it
+ Sorry, an error occurred while attempting to copy user files. The files made it
  to the users directory in copy drive but weren't able to be copied from there
  back to the install drive.
 
@@ -711,7 +711,7 @@ _Description: Error copy user files failed
 Template: ubiquity/install/copy_bonus_files_failed
 Type: error
 _Description: Error copy bonus files failed
- Sorry, an error ocurred while attempting to copy bonus user files. The bonus
+ Sorry, an error occurred while attempting to copy bonus user files. The bonus
  configuration files made it to the windows_data directory in copy drive but
  weren't able to be copied from there back to the install drive.
 

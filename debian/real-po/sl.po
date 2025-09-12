@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: debian-installer\n"
 "Report-Msgid-Bugs-To: ubiquity@packages.debian.org\n"
-"POT-Creation-Date: 2025-09-06 02:00-0500\n"
+"POT-Creation-Date: 2025-09-11 17:57-0500\n"
 "PO-Revision-Date: 2025-09-08 18:14+0000\n"
 "Last-Translator: Andrej Znidarsic <andrej.znidarsic@gmail.com>\n"
 "Language-Team: Slovenian <lugos-slo@lugos.si>\n"
@@ -1021,11 +1021,11 @@ msgstr "Napaka pri šifriranem kopiranju pogona"
 #. Description
 #: ../ubiquity.templates:142001
 msgid ""
-"An error ocurred because Bitlocker encryption was not disabled on copy "
+"An error occurred because BitLocker encryption was not disabled on copy "
 "drive  beforehand. User files cannot be copied."
 msgstr ""
-"Prišlo je do napake, ker šifriranje BitLocker na disku za kopiranje ni "
-"bilo predhodno onemogočeno. Uporabniških datotek ni mogoče kopirati."
+"Prišlo je do napake, ker šifriranje BitLocker na disku za kopiranje ni bilo "
+"predhodno onemogočeno. Uporabniških datotek ni mogoče kopirati."
 
 #. Type: error
 #. Description
@@ -1037,13 +1037,13 @@ msgstr "Napaka pri kopiranju uporabniških datotek ni uspela"
 #. Description
 #: ../ubiquity.templates:143001
 msgid ""
-"Sorry, an error ocurred while attempting to copy user files. The files made "
+"Sorry, an error occurred while attempting to copy user files. The files made "
 "it to the users directory in copy drive but weren't able to be copied from "
 "there back to the install drive."
 msgstr ""
-"Žal je pri poskusu kopiranja uporabniških datotek prišlo do napake. "
-"Datoteke so se znašle v imeniku uporabnikov na pogonu za kopiranje, "
-"vendar jih ni bilo mogoče kopirati nazaj na namestitveni pogon."
+"Žal je pri poskusu kopiranja uporabniških datotek prišlo do napake. Datoteke "
+"so se znašle v imeniku uporabnikov na pogonu za kopiranje, vendar jih ni "
+"bilo mogoče kopirati nazaj na namestitveni pogon."
 
 #. Type: error
 #. Description
@@ -1055,14 +1055,14 @@ msgstr "Napaka pri kopiranju bonus datotek ni uspela"
 #. Description
 #: ../ubiquity.templates:144001
 msgid ""
-"Sorry, an error ocurred while attempting to copy bonus user files. The bonus "
-"configuration files made it to the windows_data directory in copy drive but "
-"weren't able to be copied from there back to the install drive."
+"Sorry, an error occurred while attempting to copy bonus user files. The "
+"bonus configuration files made it to the windows_data directory in copy "
+"drive but weren't able to be copied from there back to the install drive."
 msgstr ""
-"Žal je pri poskusu kopiranja dodatnih uporabniških datotek prišlo do "
-"napake. Dodatne konfiguracijske datoteke so se znašle v imeniku "
-"windows_data na disku za kopiranje, vendar jih ni bilo mogoče kopirati "
-"nazaj na namestitveni disk."
+"Žal je pri poskusu kopiranja dodatnih uporabniških datotek prišlo do napake. "
+"Dodatne konfiguracijske datoteke so se znašle v imeniku windows_data na "
+"disku za kopiranje, vendar jih ni bilo mogoče kopirati nazaj na namestitveni "
+"disk."
 
 #. Type: text
 #. Description

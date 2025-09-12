@@ -6,11 +6,11 @@ msgid ""
 msgstr ""
 "Project-Id-Version: debian-installer\n"
 "Report-Msgid-Bugs-To: ubiquity@packages.debian.org\n"
-"POT-Creation-Date: 2025-09-06 02:00-0500\n"
+"POT-Creation-Date: 2025-09-11 17:57-0500\n"
 "PO-Revision-Date: 2025-09-06 18:15+0000\n"
 "Last-Translator: Åka Sikrom <Unknown>\n"
 "Language-Team: Norwegian Bokmål <i18n-nb@lister.ping.uio.no>\n"
-"Language: nb\n"
+"Language: \n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -1017,10 +1017,10 @@ msgstr "Feil med kryptert kopistasjon"
 #. Description
 #: ../ubiquity.templates:142001
 msgid ""
-"An error ocurred because Bitlocker encryption was not disabled on copy "
+"An error occurred because BitLocker encryption was not disabled on copy "
 "drive  beforehand. User files cannot be copied."
 msgstr ""
-"Det oppsto en feil fordi Bitlocker-kryptering ikke ble deaktivert på "
+"Det oppsto en feil fordi BitLocker-kryptering ikke ble deaktivert på "
 "kopieringsstasjonen på forhånd. Brukerfiler kan ikke kopieres."
 
 #. Type: error
@@ -1033,13 +1033,13 @@ msgstr "Feil ved kopiering av brukerfiler mislyktes"
 #. Description
 #: ../ubiquity.templates:143001
 msgid ""
-"Sorry, an error ocurred while attempting to copy user files. The files made "
+"Sorry, an error occurred while attempting to copy user files. The files made "
 "it to the users directory in copy drive but weren't able to be copied from "
 "there back to the install drive."
 msgstr ""
-"Beklager, det oppsto en feil under forsøk på å kopiere brukerfiler. "
-"Filene havnet i brukerkatalogen på kopieringsstasjonen, men kunne ikke "
-"kopieres derfra tilbake til installasjonsstasjonen."
+"Beklager, det oppsto en feil under forsøk på å kopiere brukerfiler. Filene "
+"havnet i brukerkatalogen på kopieringsstasjonen, men kunne ikke kopieres "
+"derfra tilbake til installasjonsstasjonen."
 
 #. Type: error
 #. Description
@@ -1051,9 +1051,9 @@ msgstr "Feil ved kopiering av bonusfiler"
 #. Description
 #: ../ubiquity.templates:144001
 msgid ""
-"Sorry, an error ocurred while attempting to copy bonus user files. The bonus "
-"configuration files made it to the windows_data directory in copy drive but "
-"weren't able to be copied from there back to the install drive."
+"Sorry, an error occurred while attempting to copy bonus user files. The "
+"bonus configuration files made it to the windows_data directory in copy "
+"drive but weren't able to be copied from there back to the install drive."
 msgstr ""
 "Beklager, det oppsto en feil under forsøk på å kopiere bonusbrukerfiler. "
 "Bonuskonfigurasjonsfilene kom seg til windows_data-katalogen på "
@@ -1640,8 +1640,8 @@ msgid ""
 msgstr ""
 "Denne datamaskinen bruker Windows BitLocker-kryptering. Du må slå av "
 "BitLocker i Windows før du installerer Linux Mint. For instruksjoner, åpne "
-"denne siden på en telefon eller annen enhet:  <a href=\"https://help.ubuntu"
-".com/bitlocker\">help.ubuntu.com/bitlocker</a>"
+"denne siden på en telefon eller annen enhet:  <a href=\"https://help.ubuntu."
+"com/bitlocker\">help.ubuntu.com/bitlocker</a>"
 
 #. Type: text
 #. Description
