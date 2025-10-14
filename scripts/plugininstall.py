@@ -5,6 +5,9 @@
 # Copyright (C) 2005, 2006, 2007, 2008, 2009 Canonical Ltd.
 # Copyright (C) 2007 Mario Limonciello
 #
+# Copyright (C) 2025 Jackjump.com, Inc.
+# Changes by Steve Saunders <steve@jackjump.com>.
+#
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation; either version 2 of the License, or
@@ -258,27 +261,28 @@ class Install(install_misc.InstallBase):
 
         self.install_restricted_extras()
 
-        # Copyright (C) 2025 Jackjump.com, Inc.
         # steve@jackjump.com/grok3 added windows user data migration
         # Post-install copy: Handle Windows user files
         self.next_region()
         self.db.progress('INFO', 'ubiquity/install/migrate_user_files')
-        copy_device = self.controller.dbfilter.extra_options.get('copy_device')
+        copy_part = self.controller.dbfilter.extra_options.get('copy_part')
         install_has_windows = self.controller.dbfilter.extra_options.get('install_has_windows', False)
         copy_has_windows = self.controller.dbfilter.extra_options.get('copy_has_windows', False)
         preinstall_copied = self.controller.dbfilter.extra_options.get('preinstall_copied', False)
         copy_compressed = self.controller.dbfilter.extra_options.get('copy_compressed', False)
 
-        if copy_device:
-            if misc.is_bitlocker_device_encrypted(copy_device):
-                self.db.input('critical', 'ubiquity/install/bitlocker_copy_drive')
-                self.db.go()
-                raise install_misc.InstallStepError("Copy drive is BitLocker encrypted")
-            
+        if copy_part:
+            #if misc.is_bitlocker_device_encrypted(copy_disk):
+                #self.db.input('critical', 'ubiquity/install/bitlocker_copy_drive')
+                #self.db.go()
+                #raise install_misc.InstallStepError("Copy drive is BitLocker encrypted")
             target_user = self.db.get('passwd/username')
             home_dir = self.target_file('home')
-            exclude_dirs = {'defaultuser0', 'public', 'defaultuser1', 'defaultuser2', 'defaultuser3', 'defaultuser4',
-                            'defaultuser5', 'defaultuser6', 'defaultuser7', 'defaultuser8', 'defaultuser9'}
+            exclude_dirs = {'public', 'default', 'default user',
+                            'all users', 'defaultuser0', 'defaultuser1',
+                            'defaultuser2', 'defaultuser3', 'defaultuser4',
+                            'defaultuser5', 'defaultuser6', 'defaultuser7',
+                            'defaultuser8', 'defaultuser9', 'defaultuser10'}
 
             # Create users for non-excluded directories
             for user_dir in os.listdir(home_dir):
@@ -290,33 +294,34 @@ class Install(install_misc.InstallBase):
                         subprocess.run(['chroot', self.target, 'useradd', '-m', '-d', f'/home/{user_dir.lower()}', '-s', '/bin/bash', user_dir.lower()], check=True)
                         uid, gid = self._get_uid_gid_on_target(user_dir.lower())
                     except subprocess.CalledProcessError as e:
-                        syslog.syslog(syslog.LOG_WARNING, f"Failed to create user {user_dir.lower()}: {e}")
+                        syslog.syslog(syslog.LOG_WARNING, f"JACKJUMP: Failed to create user {user_dir.lower()}: {e}")
                         continue
 
             if install_has_windows:
                 # Copy from copy drive's jackjump/users to /target/home
                 source_dir = '/mnt/copy_drive/jackjump/users'
-                if not misc.copy_to_drive(self.db, source_dir, copy_device, os.path.join(self.target, 'home'), self, preinstall_copied=preinstall_copied, was_compressed=copy_compressed):
+                if not misc.copy_to_drive(source_dir, copy_part, os.path.join(self.target, 'home'), db=self.db, preinstall_copied=preinstall_copied, was_compressed=copy_compressed):
                     self.db.input('critical', 'ubiquity/install/copy_user_files_failed')
                     self.db.go()
                     raise install_misc.InstallStepError("Failed to copy backed-up Windows user files to /home")
                 # Copy Windows data to /target/var/lib/jackjump
                 source_dir = '/mnt/copy_drive/jackjump/windows_data'
                 if os.path.exists(source_dir):
-                    misc.copy_to_drive(self.db, source_dir, copy_device, self.target_file('var/lib/jackjump'), self, preinstall_copied=preinstall_copied, was_compressed=copy_compressed)
+                    if not misc.copy_to_drive(source_dir, copy_part, self.target_file('var/lib/jackjump'), db=self.db, preinstall_copied=preinstall_copied, was_compressed=copy_compressed):
+                        self.db.input('critical', 'ubiquity/install/copy_config_files_failed')
+                        self.db.go()
             elif copy_has_windows:
                 # Copy directly from copy drive's Windows to /target/home
                 windows_mount = '/mnt/copy_windows'
                 if not os.path.exists(windows_mount):
-                    os.makedirs(windows_mount)
-                if misc.execute('mount', '-t', 'ntfs', copy_device, windows_mount):
+                    misc.execute_root('mkdir', '-p', windows_mount)
+                if misc.execute_root('mount', '-t', 'ntfs', '-o', 'ro', copy_part, windows_mount):
                     source_dir = os.path.join(windows_mount, 'Users')
-                    if not misc.copy_to_drive(self.db, source_dir, None, os.path.join(self.target, 'home'), self, preinstall_copied=False, was_compressed=False):
-                        misc.execute('umount', windows_mount)
-                        osextras.unlink_force(windows_mount)
-                        self.db.input('critical', 'ubiquity/install/copy_bonus_files_failed')
+                    if not misc.copy_to_drive(source_dir, None, os.path.join(self.target, 'home'), db=self.db, preinstall_copied=False, was_compressed=False):
+                        misc.execute_root('umount', windows_mount)
+                        self.db.input('critical', 'ubiquity/install/return_user_files_failed')
                         self.db.go()
-                        raise install_misc.InstallStepError("Failed to copy Windows user configuration files from copy drive to /home")
+                        raise install_misc.InstallStepError("Failed to return Windows user files from copy drive to /home")
                     # Copy Windows data
                     windows_data = [
                         os.path.join(windows_mount, 'Windows/System32/config/SAM'),
@@ -334,9 +339,11 @@ class Install(install_misc.InstallBase):
                     ]
                     for src in windows_data:
                         if glob.glob(src):
-                            misc.copy_to_drive(self.db, src, None, self.target_file('var/lib/jackjump'), self, preinstall_copied=False, was_compressed=False)
-                    misc.execute('umount', windows_mount)
-                osextras.unlink_force(windows_mount)
+                            if not misc.copy_to_drive(src, None, self.target_file('var/lib/jackjump'), db=self.db, preinstall_copied=False, was_compressed=False):
+                                self.db.input('critical', 'ubiquity/install/return_config_files_failed')
+                                self.db.go()
+                    misc.execute_root('umount', windows_mount)
+                misc.execute_root('rmdir', '--ignore-fail-on-non-empty', windows_mount)
 
             # Handle case differences and set permissions
             for user_dir in os.listdir(home_dir):
@@ -345,12 +352,10 @@ class Install(install_misc.InstallBase):
                     shutil.rmtree(os.path.join(home_dir, user_dir), ignore_errors=True)
                     continue
                 if user_dir != lower_user_dir and lower_user_dir in os.listdir(home_dir):
-                    # Merge capitalized and lowercase directories
+                    # Rename capitalized to lowercase directories
                     capitalized_path = os.path.join(home_dir, user_dir)
                     lowercase_path = os.path.join(home_dir, lower_user_dir)
-                    subprocess.run(['rsync', '-aAXv', '--modify-window=1', capitalized_path + '/', lowercase_path], check=True)
-                    shutil.rmtree(capitalized_path)
-                    os.rename(lowercase_path, os.path.join(home_dir, lower_user_dir))
+                    os.rename(capitalized_path, lowercase_path)
 
             # Copy /etc/skel and set permissions for each user
             skel_dir = self.target_file('etc/skel')
@@ -370,7 +375,7 @@ class Install(install_misc.InstallBase):
                                 os.lchown(file_path, uid, gid)
                                 os.chmod(file_path, 0o644)
                     except Exception as e:
-                        syslog.syslog(syslog.LOG_WARNING, f"Failed to set permissions for {user_dir}: {e}")
+                        syslog.syslog(syslog.LOG_WARNING, f"JACKJUMP: Failed to set permissions for {user_dir}: {e}")
 
             # Handle Public directory permissions
             public_dir = os.path.join(home_dir, 'Public')
@@ -400,7 +405,6 @@ Terminal=true
 #!/bin/bash
 #
 # Copyright (C) 2025 Jackjump.com, Inc.
-# Written by Steve Saunders <steve@jackjump.com>.
 #
 # Jackjump configuration script for post-install user setup
 # Run as MAIN_USER: ./jackjump-config.sh [username]

@@ -231,6 +231,106 @@ Template: ubiquity/text/part_auto_heading_label
 Type: text
 _Description: Installation type
 
+# steve@jackjump.com/grok3 added a copy drive
+Template: ubiquity/text/install_copy_same
+Type: error
+_Description: Install drive may not be copy drive
+ An error occurred because install drive and copy drive are the same drive.
+ Please select distinct drives to proceed.
+
+# steve@jackjump.com/grok3 added a copy drive
+Template: ubiquity/text/install_drive_encrypted
+Type: error
+_Description: Install drive is BitLocker encrypted
+ An error occurred because BitLocker encryption was not disabled on install
+ drive beforehand. Please decrypt it before proceeding.
+
+# steve@jackjump.com/grok3 added a copy drive
+Template: ubiquity/text/no_install_drive
+Type: error
+_Description: Please select a valid install drive
+ A valid install drive must be selected in order to proceed.
+
+# steve@jackjump.com/grok3 added a copy drive
+Template: ubiquity/text/copy_drive_encrypted
+Type: error
+_Description: Copy drive is BitLocker encrypted
+ An error occurred because BitLocker encryption was not disabled on copy
+ drive beforehand. Please decrypt it before proceeding.
+
+# steve@jackjump.com/grok3 added a copy drive
+Template: ubiquity/text/copy_drive_not_mounted
+Type: error
+_Description: Copy drive did not mount
+ The copy drive has an issue: its filesystem is not supported or something
+ else is making it unable to mount.
+
+# steve@jackjump.com/grok3 added a copy drive
+Template: ubiquity/text/no_copy_drive
+Type: error
+_Description: Please select a valid copy drive
+ A valid copy drive with a supported filesystem must be selected in order
+ to proceed.
+
+# steve@jackjump.com/grok3 added a copy drive
+Template: ubiquity/text/no_windows
+Type: error
+_Description: Please select a drive with Windows
+ A valid install drive or copy drive with Windows must be selected in order
+ to proceed. This is a Windows to Linux migration tool.
+
+# steve@jackjump.com/grok3 added a copy drive
+Template: ubiquity/text/install_drive_not_mounted
+Type: error
+_Description: Windows install drive not mounted
+ The install drive with Windows has an issue or something is making it unable
+ to mount.
+
+# steve@jackjump.com/grok3 added a copy drive
+Template: ubiquity/text/copy_drive_small
+Type: error
+_Description: Not enough space on copy drive
+ Room available on copy drive is less than amount required to hold Windows
+ user files from install drive.
+
+# steve@jackjump.com/grok3 added a copy drive
+Template: ubiquity/text/no_user_files
+Type: error
+_Description: Copying user files failed
+ Failed to copy Windows user files to copy drive. Installation cannot proceed.
+ More details may be found in /var/log/syslog (search for 'JACKJUMP').
+
+# steve@jackjump.com/grok3 added a copy drive
+Template: ubiquity/text/no_users_dir
+Type: error
+_Description: No Users directory on install drive
+ Users directory not found on install drive. Installation cannot proceed.
+
+# steve@jackjump.com/grok3 added a copy drive
+Template: ubiquity/text/no_config_files
+Type: error
+_Description: Copying config files failed
+ Failed to copy Windows config files to copy drive. Migration can proceed.
+
+# steve@jackjump.com/grok3 added a copy drive
+Template: ubiquity/text/no_windows_path
+Type: error
+_Description: Windows config path not found
+ Failed to find Windows configuration path. Migration can proceed.
+
+# steve@jackjump.com/grok3 added a copy drive
+Template: ubiquity/text/user_to_copy_drive
+Type: text
+_Description: Copying user files to copy drive
+ Windows user files will now be copied to copy drive before installation.
+
+# steve@jackjump.com/grok3 added a copy drive
+Template: ubiquity/text/config_to_copy_drive
+Type: text
+_Description: Copying config files to copy drive
+ Windows configuration files will now be copied to copy drive before
+ installation.
+
 Template: ubiquity/text/part_auto_files
 Type: text
 # SIZE is a variable substituted into this string, and may be '100 GB'
@@ -696,8 +796,27 @@ _Description: Migrating user files...
 Template: ubiquity/install/bitlocker_copy_drive
 Type: error
 _Description: Error encrypted copy drive
- An error occurred because BitLocker encryption was not disabled on copy drive 
+ An error occurred because BitLocker encryption was not disabled on copy drive
  beforehand. User files cannot be copied.
+
+# steve@jackjump.com/grok3 added a copy drive
+Template: ubiquity/install/mount_copy_drive
+Type: error
+_Description: Failed to mount copy drive
+ The filesystem of copy drive is not supported or there is some other drive
+ related issue.
+
+# steve@jackjump.com/grok3 added a copy drive
+Template: ubiquity/install/space_for_files
+Type: error
+_Description: Not enough space for remaining files
+ The destination directory doesn't have room for that many files.
+
+# steve@jackjump.com/grok3 added a copy drive
+Template: ubiquity/install/space_check_failed
+Type: error
+_Description: Not able to verify space available
+ The drive space check failed. Hopefully there is enough room on drive.
 
 # steve@jackjump.com/grok3 added a copy drive
 Template: ubiquity/install/copy_user_files_failed
@@ -708,12 +827,26 @@ _Description: Error copy user files failed
  back to the install drive.
 
 # steve@jackjump.com/grok3 added a copy drive
-Template: ubiquity/install/copy_bonus_files_failed
+Template: ubiquity/install/copy_config_files_failed
 Type: error
-_Description: Error copy bonus files failed
- Sorry, an error occurred while attempting to copy bonus user files. The bonus
- configuration files made it to the windows_data directory in copy drive but
- weren't able to be copied from there back to the install drive.
+_Description: Error copy config files failed
+ Sorry, an error occurred while attempting to copy configuration files. The
+ files made it to the windows_data directory in copy drive but weren't able
+ to be copied from there back to the install drive.
+
+# steve@jackjump.com/grok3 added a copy drive
+Template: ubiquity/install/return_user_files_failed
+Type: error
+_Description: Error return user files failed
+ Sorry, an error occurred while attempting to return user files from copy
+ drive to home directory in new Linux installation on install drive.
+
+# steve@jackjump.com/grok3 added a copy drive
+Template: ubiquity/install/return_config_files_failed
+Type: error
+_Description: Error return config files failed
+ Sorry, an error occurred while attempting to return configuration files from
+ copy drive to destination directory in new installation on install drive.
 
 Template: ubiquity/install/find_removables
 Type: text

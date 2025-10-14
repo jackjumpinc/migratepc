@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: ubiquity\n"
 "Report-Msgid-Bugs-To: ubiquity@packages.debian.org\n"
-"POT-Creation-Date: 2025-09-11 17:57-0500\n"
+"POT-Creation-Date: 2025-09-19 11:35-0500\n"
 "PO-Revision-Date: 2025-09-06 16:04+0000\n"
 "Last-Translator: Arnel A. Borja <Unknown>\n"
 "Language-Team: Filipino <fil@li.org>\n"
@@ -306,7 +306,7 @@ msgstr ""
 #. Description
 #. Type: text
 #. Description
-#: ../ubiquity.templates:44001 ../ubiquity.templates:348001
+#: ../ubiquity.templates:44001 ../ubiquity.templates:368001
 msgid "Passwords do not match"
 msgstr "Ang mga password ay hindi nagtutugma"
 
@@ -314,7 +314,7 @@ msgstr "Ang mga password ay hindi nagtutugma"
 #. Description
 #. Type: text
 #. Description
-#: ../ubiquity.templates:45001 ../ubiquity.templates:349001
+#: ../ubiquity.templates:45001 ../ubiquity.templates:369001
 msgid "Short password"
 msgstr "Maikling password"
 
@@ -322,7 +322,7 @@ msgstr "Maikling password"
 #. Description
 #. Type: text
 #. Description
-#: ../ubiquity.templates:46001 ../ubiquity.templates:350001
+#: ../ubiquity.templates:46001 ../ubiquity.templates:370001
 msgid "Weak password"
 msgstr "Mahinang password"
 
@@ -330,7 +330,7 @@ msgstr "Mahinang password"
 #. Description
 #. Type: text
 #. Description
-#: ../ubiquity.templates:47001 ../ubiquity.templates:351001
+#: ../ubiquity.templates:47001 ../ubiquity.templates:371001
 msgid "Fair password"
 msgstr "Katamtamang password"
 
@@ -338,7 +338,7 @@ msgstr "Katamtamang password"
 #. Description
 #. Type: text
 #. Description
-#: ../ubiquity.templates:48001 ../ubiquity.templates:352001
+#: ../ubiquity.templates:48001 ../ubiquity.templates:372001
 msgid "Good password"
 msgstr "Maayos ng password"
 
@@ -346,7 +346,7 @@ msgstr "Maayos ng password"
 #. Description
 #. Type: text
 #. Description
-#: ../ubiquity.templates:49001 ../ubiquity.templates:353001
+#: ../ubiquity.templates:49001 ../ubiquity.templates:373001
 msgid "Strong password"
 msgstr "Malakas na password"
 
@@ -368,22 +368,256 @@ msgstr "Kailanganin ang aking password para maka-log in"
 msgid "Installation type"
 msgstr "Uri ng installation"
 
+#. Type: error
+#. Description
+#: ../ubiquity.templates:53001
+msgid "Install drive may not be copy drive"
+msgstr "Walang install drive ay maaaring hindi copy drive"
+
+#. Type: error
+#. Description
+#: ../ubiquity.templates:53001
+msgid ""
+"An error occurred because install drive and copy drive are the same drive. "
+"Please select distinct drives to proceed."
+msgstr ""
+"Nagkaroon ng error dahil i-install ang drive at copy drive ay iisang "
+"drive. Mangyaring pumili ng mga natatanging drive upang magpatuloy."
+
+#. Type: error
+#. Description
+#: ../ubiquity.templates:54001
+msgid "Install drive is BitLocker encrypted"
+msgstr "Ang pag-install ng drive ay BitLocker na naka-encrypt"
+
+#. Type: error
+#. Description
+#: ../ubiquity.templates:54001
+msgid ""
+"An error occurred because BitLocker encryption was not disabled on install "
+"drive beforehand. Please decrypt it before proceeding."
+msgstr ""
+"Nagkaroon ng error dahil hindi na-disable ang pag-encrypt ng BitLocker "
+"sa drive ng pag-install. Mangyaring i-decrypt ito bago magpatuloy."
+
+#. Type: error
+#. Description
+#: ../ubiquity.templates:55001
+msgid "Please select a valid install drive"
+msgstr "Mangyaring pumili ng wastong install drive"
+
+#. Type: error
+#. Description
+#: ../ubiquity.templates:55001
+msgid "A valid install drive must be selected in order to proceed."
+msgstr "Dapat pumili ng wastong drive ng pag-install upang magpatuloy."
+
+#. Type: error
+#. Description
+#: ../ubiquity.templates:56001
+msgid "Copy drive is BitLocker encrypted"
+msgstr "Ang copy drive ay BitLocker na naka-encrypt"
+
+#. Type: error
+#. Description
+#: ../ubiquity.templates:56001
+msgid ""
+"An error occurred because BitLocker encryption was not disabled on copy "
+"drive beforehand. Please decrypt it before proceeding."
+msgstr ""
+"Nagkaroon ng error dahil hindi na-disable ang BitLocker encryption "
+"sa copy drive nang una. Mangyaring i-decrypt ito bago magpatuloy."
+
+#. Type: error
+#. Description
+#: ../ubiquity.templates:57001
+msgid "Copy drive did not mount"
+msgstr "Hindi naka-mount ang copy drive"
+
+#. Type: error
+#. Description
+#: ../ubiquity.templates:57001
+msgid ""
+"The copy drive has an issue: its filesystem is not supported or something "
+"else is making it unable to mount."
+msgstr ""
+"Ang copy drive ay may isyu: ang filesystem nito ay hindi suportado o may "
+"iba pang dahilan kung bakit hindi ito ma-mount."
+
+#. Type: error
+#. Description
+#: ../ubiquity.templates:58001
+msgid "Please select a valid copy drive"
+msgstr "Mangyaring pumili ng wastong copy drive"
+
+#. Type: error
+#. Description
+#: ../ubiquity.templates:58001
+msgid ""
+"A valid copy drive with a supported filesystem must be selected in order to "
+"proceed."
+msgstr ""
+"Dapat pumili ng wastong copy drive na may sinusuportahang filesystem "
+"upang magpatuloy."
+
+#. Type: error
+#. Description
+#: ../ubiquity.templates:59001
+msgid "Please select a drive with Windows"
+msgstr "Mangyaring pumili ng drive na may Windows"
+
+#. Type: error
+#. Description
+#: ../ubiquity.templates:59001
+msgid ""
+"A valid install drive or copy drive with Windows must be selected in order "
+"to proceed. This is a Windows to Linux migration tool."
+msgstr ""
+"Dapat pumili ng wastong install drive o copy drive na may Windows "
+"para magpatuloy. Ito ay isang tool sa paglipat ng Windows sa Linux."
+
+#. Type: error
+#. Description
+#: ../ubiquity.templates:60001
+msgid "Windows install drive not mounted"
+msgstr "Hindi naka-mount ang Windows install drive"
+
+#. Type: error
+#. Description
+#: ../ubiquity.templates:60001
+msgid ""
+"The install drive with Windows has an issue or something is making it unable "
+"to mount."
+msgstr ""
+"Ang pag-install ng drive na may Windows ay may isyu o may dahilan kung "
+"bakit hindi ito ma-mount."
+
+#. Type: error
+#. Description
+#: ../ubiquity.templates:61001
+msgid "Not enough space on copy drive"
+msgstr "Walang sapat na espasyo sa copy drive"
+
+#. Type: error
+#. Description
+#: ../ubiquity.templates:61001
+msgid ""
+"Room available on copy drive is less than amount required to hold Windows "
+"user files from install drive."
+msgstr ""
+"Ang kuwartong available sa copy drive ay mas mababa sa halagang "
+"kinakailangan para i-hold ang mga file ng user ng Windows mula sa "
+"install drive."
+
+#. Type: error
+#. Description
+#: ../ubiquity.templates:62001
+msgid "Copying user files failed"
+msgstr "Nabigo ang pagkopya ng mga file ng user"
+
+#. Type: error
+#. Description
+#: ../ubiquity.templates:62001
+msgid ""
+"Failed to copy Windows user files to copy drive. Installation cannot "
+"proceed. More details may be found in /var/log/syslog (search for "
+"'JACKJUMP')."
+msgstr ""
+"Nabigong kopyahin ang mga file ng user ng Windows upang kopyahin ang "
+"drive. Hindi maaaring magpatuloy ang pag-install. Maaaring makita ang "
+"higit pang mga detalye sa /var/log/syslog (hanapin ang 'JACKJUMP')."
+
+#. Type: error
+#. Description
+#: ../ubiquity.templates:63001
+msgid "No Users directory on install drive"
+msgstr "Walang direktoryo ng Mga User sa drive ng pag-install"
+
+#. Type: error
+#. Description
+#: ../ubiquity.templates:63001
+msgid ""
+"Users directory not found on install drive. Installation cannot proceed."
+msgstr ""
+"Hindi nakita ang direktoryo ng mga user sa drive ng pag-install. "
+"Hindi maaaring magpatuloy ang pag-install."
+
+#. Type: error
+#. Description
+#: ../ubiquity.templates:64001
+msgid "Copying config files failed"
+msgstr "Nabigo ang pagkopya ng mga config file"
+
+#. Type: error
+#. Description
+#: ../ubiquity.templates:64001
+msgid ""
+"Failed to copy Windows config files to copy drive. Migration can proceed."
+msgstr ""
+"Nabigong kopyahin ang mga file ng config ng Windows upang kopyahin "
+"ang drive. Maaaring magpatuloy ang paglipat."
+
+#. Type: error
+#. Description
+#: ../ubiquity.templates:65001
+msgid "Windows config path not found"
+msgstr "Hindi nakita ang path ng config ng Windows"
+
+#. Type: error
+#. Description
+#: ../ubiquity.templates:65001
+msgid "Failed to find Windows configuration path. Migration can proceed."
+msgstr ""
+"Nabigong mahanap ang path ng configuration ng Windows. Maaaring "
+"magpatuloy ang paglipat."
+
+#. Type: text
+#. Description
+#: ../ubiquity.templates:66001
+msgid "Copying user files to copy drive"
+msgstr "Pagkopya ng mga file ng user para kopyahin ang drive"
+
+#. Type: text
+#. Description
+#: ../ubiquity.templates:66001
+msgid ""
+"Windows user files will now be copied to copy drive before installation."
+msgstr ""
+"Kokopyahin na ngayon ang mga file ng user ng Windows upang kopyahin "
+"ang drive bago i-install."
+
+#. Type: text
+#. Description
+#: ../ubiquity.templates:67001
+msgid "Copying config files to copy drive"
+msgstr "Kinokopya ang mga config file para kopyahin ang drive"
+
+#. Type: text
+#. Description
+#: ../ubiquity.templates:67001
+msgid ""
+"Windows configuration files will now be copied to copy drive before "
+"installation."
+msgstr ""
+"Kokopyahin na ngayon ang mga file ng configuration ng Windows upang "
+"kopyahin ang drive bago i-install."
+
 #. Type: text
 #. Description
 #. SIZE is a variable substituted into this string, and may be '100 GB'
-#: ../ubiquity.templates:53001
+#: ../ubiquity.templates:68001
 msgid "Files (${SIZE})"
 msgstr "Mga File (${SIZE})"
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:54001
+#: ../ubiquity.templates:69001
 msgid "Where would you like to install Kubuntu?"
 msgstr ""
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:55001
+#: ../ubiquity.templates:70001
 msgid "Prepare partitions"
 msgstr "Ihanda ang pagkakahati"
 
@@ -391,7 +625,7 @@ msgstr "Ihanda ang pagkakahati"
 #. Description
 #. This is used as a button label, and should be translated as an action.
 #. Omit the [ ... ] from the translation.
-#: ../ubiquity.templates:56001
+#: ../ubiquity.templates:71001
 msgid "_Restart[ action ]"
 msgstr ""
 
@@ -399,31 +633,31 @@ msgstr ""
 #. Description
 #. This is used as a button label, and should be translated as an action.
 #. Omit the [ ... ] from the translation.
-#: ../ubiquity.templates:57001
+#: ../ubiquity.templates:72001
 msgid "_Install Now[ action ]"
 msgstr "_I-install na"
 
 #. Type: title
 #. Description
-#: ../ubiquity.templates:58001
+#: ../ubiquity.templates:73001
 msgid "Quit the installation?"
 msgstr "Itigil ang pag-install?"
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:59001
+#: ../ubiquity.templates:74001
 msgid "Do you really want to quit the installation now?"
 msgstr "Tiyak ka bang ititigil ang pag-iinstall ngayon na?"
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:60001
+#: ../ubiquity.templates:75001
 msgid "Bootloader install failed"
 msgstr "Pag-install ng bootloader ay nabigo"
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:61001
+#: ../ubiquity.templates:76001
 msgid ""
 "Sorry, an error occurred and it was not possible to install the bootloader "
 "at the specified location."
@@ -433,20 +667,20 @@ msgstr ""
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:62001
+#: ../ubiquity.templates:77001
 msgid "Choose a different device to install the bootloader on:"
 msgstr "Pumili ng ibang device kung saan i-iinstall ang bootloader:"
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:63001
+#: ../ubiquity.templates:78001
 msgid "Continue without a bootloader."
 msgstr "Magpatuloy ng walang bootloader."
 
 #. Type: text
 #. Description
 #. RELEASE is a variable substituted into this string, and may be 'Linux Mint'
-#: ../ubiquity.templates:64001
+#: ../ubiquity.templates:79001
 msgid ""
 "You will need to manually install a bootloader in order to start ${RELEASE}."
 msgstr ""
@@ -454,49 +688,49 @@ msgstr ""
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:65001
+#: ../ubiquity.templates:80001
 msgid "Cancel the installation."
 msgstr "Ikansel ang pag-install."
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:66001
+#: ../ubiquity.templates:81001
 msgid "This may leave your computer unable to boot."
 msgstr "Ito ay maaaring magiwan sa kompyuter na hindi kaya mag-boot."
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:67001
+#: ../ubiquity.templates:82001
 msgid "How would you like to proceed?"
 msgstr "Paano mo gusto magpatuloy?"
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:68001
+#: ../ubiquity.templates:83001
 msgid "_Skip"
 msgstr ""
 
 #. Type: title
 #. Description
-#: ../ubiquity.templates:69001
+#: ../ubiquity.templates:84001
 msgid "Installation Complete"
 msgstr "Kumpleto ang Pag-Install"
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:70001
+#: ../ubiquity.templates:85001
 msgid "Continue Testing"
 msgstr "Ipagpatuloy ang Testing"
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:71001
+#: ../ubiquity.templates:86001
 msgid "Restart Now"
 msgstr "Mag-restart ngayon na"
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:72001
+#: ../ubiquity.templates:87001
 msgid "Shutdown Now"
 msgstr "I-shutdown ngayon na"
 
@@ -504,13 +738,13 @@ msgstr "I-shutdown ngayon na"
 #. Description
 #. Type: text
 #. Description
-#: ../ubiquity.templates:74001 ../ubiquity.templates:75001
+#: ../ubiquity.templates:89001 ../ubiquity.templates:90001
 msgid "Installer crashed"
 msgstr "Nag-crash ang Installer"
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:76001
+#: ../ubiquity.templates:91001
 msgid ""
 "We're sorry; the installer crashed. After you close this window, we'll allow "
 "you to file a bug report using the integrated bug reporting tool. This will "
@@ -522,56 +756,56 @@ msgstr ""
 #. Type: text
 #. Description
 #. An indicator menu item.  The underscore goes before an accelerator key.
-#: ../ubiquity.templates:77001
+#: ../ubiquity.templates:92001
 msgid "_High Contrast"
 msgstr ""
 
 #. Type: text
 #. Description
 #. An indicator menu item.  The underscore goes before an accelerator key.
-#: ../ubiquity.templates:78001
+#: ../ubiquity.templates:93001
 msgid "_Screen Reader"
 msgstr ""
 
 #. Type: text
 #. Description
 #. An indicator menu item.  The underscore goes before an accelerator key.
-#: ../ubiquity.templates:79001
+#: ../ubiquity.templates:94001
 msgid "_Keyboard Modifiers"
 msgstr ""
 
 #. Type: text
 #. Description
 #. An indicator menu item.  The underscore goes before an accelerator key.
-#: ../ubiquity.templates:80001
+#: ../ubiquity.templates:95001
 msgid "_On-screen Keyboard"
 msgstr ""
 
 #. Type: text
 #. Description
 #. An action, displayed on a button or as a menu item.
-#: ../ubiquity.templates:81001
+#: ../ubiquity.templates:96001
 msgid "New Partition Table..."
 msgstr "Bagong Partition Table..."
 
 #. Type: text
 #. Description
 #. An action, displayed on a button or as a menu item.
-#: ../ubiquity.templates:82001
+#: ../ubiquity.templates:97001
 msgid "Add..."
 msgstr "Idagdag..."
 
 #. Type: text
 #. Description
 #. An action, displayed on a button or as a menu item.
-#: ../ubiquity.templates:83001
+#: ../ubiquity.templates:98001
 msgid "Change..."
 msgstr "Baguhin..."
 
 #. Type: text
 #. Description
 #. An action, displayed on a button or as a menu item.
-#: ../ubiquity.templates:84001
+#: ../ubiquity.templates:99001
 msgid "Delete"
 msgstr "Burahin"
 
@@ -580,20 +814,20 @@ msgstr "Burahin"
 #. An action, displayed on a button or as a menu item.
 #. Type: text
 #. Description
-#: ../ubiquity.templates:85001 ../ubiquity.templates:311001
+#: ../ubiquity.templates:100001 ../ubiquity.templates:331001
 msgid "Revert"
 msgstr "Ibalik"
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:86001
+#: ../ubiquity.templates:101001
 msgid "Recalculating partitions..."
 msgstr "Nire-rekalkula ang mga partition..."
 
 #. Type: text
 #. Description
 #. A column heading in the partitioner.
-#: ../ubiquity.templates:87001
+#: ../ubiquity.templates:102001
 msgid "Device"
 msgstr "Device"
 
@@ -601,28 +835,28 @@ msgstr "Device"
 #. Description
 #. A column heading in the partitioner. Indicates how the partition is to be
 #. used (ext2, swap, etc.).
-#: ../ubiquity.templates:88001
+#: ../ubiquity.templates:103001
 msgid "Type"
 msgstr "Uri"
 
 #. Type: text
 #. Description
 #. A column heading in the partitioner.
-#: ../ubiquity.templates:89001
+#: ../ubiquity.templates:104001
 msgid "Mount point"
 msgstr "Mount point"
 
 #. Type: text
 #. Description
 #. A column heading in the partitioner.
-#: ../ubiquity.templates:90001
+#: ../ubiquity.templates:105001
 msgid "Format?"
 msgstr "Format?"
 
 #. Type: text
 #. Description
 #. A column heading in the partitioner.
-#: ../ubiquity.templates:91001
+#: ../ubiquity.templates:106001
 msgid "Size"
 msgstr "Sukat"
 
@@ -630,89 +864,89 @@ msgstr "Sukat"
 #. Description
 #. A column heading in the partitioner. Indicates how much of the space on
 #. this partition is used by data.
-#: ../ubiquity.templates:92001
+#: ../ubiquity.templates:107001
 msgid "Used"
 msgstr "Nagamit"
 
 #. Type: text
 #. Description
 #. A column heading in the partitioner.
-#: ../ubiquity.templates:93001
+#: ../ubiquity.templates:108001
 msgid "System"
 msgstr ""
 
 #. Type: text
 #. Description
 #. Indicates unpartitioned free space on a disk.
-#: ../ubiquity.templates:94001
+#: ../ubiquity.templates:109001
 msgid "free space"
 msgstr "libreng ispasyo"
 
 #. Type: text
 #. Description
 #. Indicates that we do not know how much space is used on this partition.
-#: ../ubiquity.templates:95001
+#: ../ubiquity.templates:110001
 msgid "unknown"
 msgstr "Di-mabatid"
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:96001
+#: ../ubiquity.templates:111001
 msgid "Create partition"
 msgstr "Gumawa ng partition"
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:97001
+#: ../ubiquity.templates:112001
 msgid "Size:"
 msgstr ""
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:98001
+#: ../ubiquity.templates:113001
 msgid "Beginning of this space"
 msgstr ""
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:99001
+#: ../ubiquity.templates:114001
 msgid "End of this space"
 msgstr ""
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:100001
+#: ../ubiquity.templates:115001
 msgid "Primary"
 msgstr "Pangunahin"
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:101001
+#: ../ubiquity.templates:116001
 msgid "Logical"
 msgstr "Lohikal"
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:102001
+#: ../ubiquity.templates:117001
 msgid "Edit partition"
 msgstr "Baguhin ang partition"
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:103001
+#: ../ubiquity.templates:118001
 msgid "Edit a partition"
 msgstr "Baguhin ang partition"
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:104001
+#: ../ubiquity.templates:119001
 msgid "Boot loader"
 msgstr "Boot loader"
 
 #. Type: text
 #. Description
 #. RELEASE is a variable substituted into this string, and may be 'Linux Mint'
-#: ../ubiquity.templates:105001
+#: ../ubiquity.templates:120001
 msgid ""
 "Installation has finished.  You can continue testing ${RELEASE} now, but "
 "until you restart the computer, any changes you make or documents you save "
@@ -725,7 +959,7 @@ msgstr ""
 #. Type: text
 #. Description
 #. Translators, this text will appear on a button, so KEEP IT SHORT
-#: ../ubiquity.templates:106001
+#: ../ubiquity.templates:121001
 msgid "Go Back"
 msgstr "Bumalik"
 
@@ -735,34 +969,34 @@ msgstr "Bumalik"
 #. Type: text
 #. Description
 #. Translators, this text will appear on a button, so KEEP IT SHORT
-#: ../ubiquity.templates:107001 ../ubiquity.templates:110001
+#: ../ubiquity.templates:122001 ../ubiquity.templates:125001
 msgid "Continue"
 msgstr "Magpatuloy"
 
 #. Type: text
 #. Description
 #. Translators, this text will appear on a button, so KEEP IT SHORT
-#: ../ubiquity.templates:108001
+#: ../ubiquity.templates:123001
 msgid "Connect"
 msgstr "Kumonekta"
 
 #. Type: text
 #. Description
 #. Translators, this text will appear on a button, so KEEP IT SHORT
-#: ../ubiquity.templates:109001
+#: ../ubiquity.templates:124001
 msgid "Stop"
 msgstr "Hinto"
 
 #. Type: text
 #. Description
 #. Translators, this text will appear on a button, so KEEP IT SHORT
-#: ../ubiquity.templates:111001
+#: ../ubiquity.templates:126001
 msgid "Continue in UEFI mode"
 msgstr ""
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:112001
+#: ../ubiquity.templates:127001
 msgid ""
 "Installation is complete. You need to restart the computer in order to use "
 "the new installation."
@@ -772,31 +1006,31 @@ msgstr ""
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:113001
+#: ../ubiquity.templates:128001
 msgid "Verifying the installation configuration..."
 msgstr "Beripikahin ang configurasyon ng instolasyon..."
 
 #. Type: title
 #. Description
-#: ../ubiquity.templates:114001
+#: ../ubiquity.templates:129001
 msgid "Installing system"
 msgstr "Nag-iinstall ng sistema"
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:115001
+#: ../ubiquity.templates:130001
 msgid "Finding the distribution to copy..."
 msgstr "Hinahanap ang distribusyon na kokopyahin..."
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:117001
+#: ../ubiquity.templates:132001
 msgid "Copying files..."
 msgstr "Kinokopya ang mga files..."
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:118001
+#: ../ubiquity.templates:133001
 msgid "Almost finished copying files..."
 msgstr "Malapit ng matapos ang pagkopya ng files..."
 
@@ -810,9 +1044,9 @@ msgstr "Malapit ng matapos ang pagkopya ng files..."
 #. Description
 #. Type: select
 #. Description
-#: ../ubiquity.templates:119001 ../ubiquity.templates:120001
-#: ../ubiquity.templates:121001 ../ubiquity.templates:122001
-#: ../ubiquity.templates:123001
+#: ../ubiquity.templates:134001 ../ubiquity.templates:135001
+#: ../ubiquity.templates:136001 ../ubiquity.templates:137001
+#: ../ubiquity.templates:138001
 msgid "Installation Failed"
 msgstr "Nabigo ang Pag-iinstall"
 
@@ -824,8 +1058,8 @@ msgstr "Nabigo ang Pag-iinstall"
 #. Description
 #. Type: error
 #. Description
-#: ../ubiquity.templates:119001 ../ubiquity.templates:120001
-#: ../ubiquity.templates:121001 ../ubiquity.templates:122001
+#: ../ubiquity.templates:134001 ../ubiquity.templates:135001
+#: ../ubiquity.templates:136001 ../ubiquity.templates:137001
 msgid "The installer encountered an error copying files to the hard disk:"
 msgstr ""
 "Ang pag-iinstall ay nakatagpo ng error sa pagkokopya ng mga dokumento sa "
@@ -833,7 +1067,7 @@ msgstr ""
 
 #. Type: error
 #. Description
-#: ../ubiquity.templates:119001
+#: ../ubiquity.templates:134001
 msgid ""
 "This is due to there being insufficient disk space for the install to "
 "complete on the target partition.  Please run the installer again and select "
@@ -845,7 +1079,7 @@ msgstr ""
 
 #. Type: error
 #. Description
-#: ../ubiquity.templates:120001
+#: ../ubiquity.templates:135001
 msgid ""
 "This is often due to a faulty CD/DVD disk or drive. It may help to clean the "
 "CD/DVD, to burn the CD/DVD at a lower speed, or to clean the CD/DVD drive "
@@ -858,7 +1092,7 @@ msgstr ""
 
 #. Type: error
 #. Description
-#: ../ubiquity.templates:121001
+#: ../ubiquity.templates:136001
 msgid ""
 "This is often due to a faulty hard disk. It may help to check whether the "
 "hard disk is old and in need of replacement, or to move the system to a "
@@ -876,7 +1110,7 @@ msgstr ""
 #. Description
 #. This is used when there was an md5 mismatch during copying, meaning that
 #. the source file and destination file are not equal.
-#: ../ubiquity.templates:122001 ../ubiquity.templates:123001
+#: ../ubiquity.templates:137001 ../ubiquity.templates:138001
 msgid ""
 "This is often due to a faulty CD/DVD disk or drive, or a faulty hard disk. "
 "It may help to clean the CD/DVD, to burn the CD/DVD at a lower speed, to "
@@ -893,7 +1127,7 @@ msgstr ""
 
 #. Type: select
 #. Description
-#: ../ubiquity.templates:123001
+#: ../ubiquity.templates:138001
 msgid "The following file did not match its source copy on the CD/DVD:"
 msgstr ""
 "Ang sumusunod na dokumento ay hindi tumutugma sa pangunahing kopya na nasa "
@@ -901,137 +1135,182 @@ msgstr ""
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:124001
+#: ../ubiquity.templates:139001
 msgid "Copying installation logs..."
 msgstr "Kinokopya ang mga logs ng pag-install..."
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:125001
+#: ../ubiquity.templates:140001
 msgid "Configuring target system..."
 msgstr "Kino-configure ang target system..."
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:126001
+#: ../ubiquity.templates:141001
 msgid "Configuring system locales..."
 msgstr "Kino-configure ang system locales..."
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:127001
+#: ../ubiquity.templates:142001
 msgid "Configuring apt..."
 msgstr "Kino-configure ang apt..."
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:128001
+#: ../ubiquity.templates:143001
 msgid "Configuring time zone..."
 msgstr "Kino-configure ang time zone..."
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:129001
+#: ../ubiquity.templates:144001
 msgid "Configuring keyboard..."
 msgstr "Kino-configure ang keyboard..."
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:130001
+#: ../ubiquity.templates:145001
 msgid "Creating user..."
 msgstr "Nililikha ang gagamit..."
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:131001
+#: ../ubiquity.templates:146001
 msgid "Configuring hardware..."
 msgstr "Kino-configure ang hardware..."
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:132001
+#: ../ubiquity.templates:147001
 msgid "Installing third-party software..."
 msgstr "Ini-install ang mga programang galing sa iba"
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:133001
+#: ../ubiquity.templates:148001
 msgid "Configuring network..."
 msgstr "Kino-configure ang network..."
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:134001
+#: ../ubiquity.templates:149001
 msgid "Configuring boot loader..."
 msgstr "Kino-configure ang bootloader..."
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:135001
+#: ../ubiquity.templates:150001
 msgid "Configuring Active Directory..."
 msgstr ""
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:136001
+#: ../ubiquity.templates:151001
 msgid "Saving installed packages..."
 msgstr "Iniaadya ang mga programang nakalakip..."
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:137001
+#: ../ubiquity.templates:152001
 msgid "Restoring previously installed packages..."
 msgstr "Ibinabalik ang dating mga programang nakalakip"
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:138001
+#: ../ubiquity.templates:153001
 msgid "Installing additional packages..."
 msgstr "Ini-install ang karagdagang mga programa..."
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:139001
+#: ../ubiquity.templates:154001
 msgid "Checking for packages to install..."
 msgstr "Tinitingnan ang mga programang i-iinstall..."
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:140001
+#: ../ubiquity.templates:155001
 msgid "Removing extra packages..."
 msgstr "Inaalis ang extrang programa..."
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:141001
+#: ../ubiquity.templates:156001
 msgid "Migrating user files..."
 msgstr "Paglipat ng mga file ng user..."
 
 #. Type: error
 #. Description
-#: ../ubiquity.templates:142001
+#: ../ubiquity.templates:157001
 msgid "Error encrypted copy drive"
 msgstr "Error sa naka-encrypt na copy drive"
 
 #. Type: error
 #. Description
-#: ../ubiquity.templates:142001
+#: ../ubiquity.templates:157001
 msgid ""
 "An error occurred because BitLocker encryption was not disabled on copy "
-"drive  beforehand. User files cannot be copied."
+"drive beforehand. User files cannot be copied."
 msgstr ""
 "Nagkaroon ng error dahil hindi na-disable ang BitLocker encryption sa copy "
 "drive nang una. Hindi maaaring kopyahin ang mga file ng user."
 
 #. Type: error
 #. Description
-#: ../ubiquity.templates:143001
+#: ../ubiquity.templates:158001
+msgid "Failed to mount copy drive"
+msgstr "Failed to mount copy drive"
+
+#. Type: error
+#. Description
+#: ../ubiquity.templates:158001
+msgid ""
+"The filesystem of copy drive is not supported or there is some other drive "
+"related issue."
+msgstr ""
+"Ang filesystem ng copy drive ay hindi suportado o may iba pang isyu na "
+"nauugnay sa drive."
+
+#. Type: error
+#. Description
+#: ../ubiquity.templates:159001
+msgid "Not enough space for remaining files"
+msgstr "Walang sapat na espasyo para sa natitirang mga file"
+
+#. Type: error
+#. Description
+#: ../ubiquity.templates:159001
+msgid "The destination directory doesn't have room for that many files."
+msgstr ""
+"Ang patutunguhang direktoryo ay walang puwang para sa ganoong "
+"karaming mga file."
+
+#. Type: error
+#. Description
+#: ../ubiquity.templates:160001
+msgid "Not able to verify space available"
+msgstr "Hindi ma-verify na available ang space"
+
+#. Type: error
+#. Description
+#: ../ubiquity.templates:160001
+msgid "The drive space check failed. Hopefully there is enough room on drive."
+msgstr ""
+"Nabigo ang pagsusuri sa espasyo ng drive. Sana may sapat na espasyo "
+"sa pagmamaneho."
+
+
+#. Type: error
+#. Description
+#: ../ubiquity.templates:161001
 msgid "Error copy user files failed"
 msgstr "Nabigo ang pagkopya ng mga file ng user ng error"
 
 #. Type: error
 #. Description
-#: ../ubiquity.templates:143001
+#: ../ubiquity.templates:161001
 msgid ""
 "Sorry, an error occurred while attempting to copy user files. The files made "
 "it to the users directory in copy drive but weren't able to be copied from "
@@ -1043,68 +1322,101 @@ msgstr ""
 
 #. Type: error
 #. Description
-#: ../ubiquity.templates:144001
-msgid "Error copy bonus files failed"
-msgstr "Nabigo ang pagkopya ng mga bonus file ng error"
+#: ../ubiquity.templates:162001
+msgid "Error copy config files failed"
+msgstr "Nabigo ang pagkopya ng mga config file ng error"
 
 #. Type: error
 #. Description
-#: ../ubiquity.templates:144001
+#: ../ubiquity.templates:162001
 msgid ""
-"Sorry, an error occurred while attempting to copy bonus user files. The "
-"bonus configuration files made it to the windows_data directory in copy "
-"drive but weren't able to be copied from there back to the install drive."
+"Sorry, an error occurred while attempting to copy configuration files. The "
+"files made it to the windows_data directory in copy drive but weren't able "
+"to be copied from there back to the install drive."
 msgstr ""
-"Paumanhin, may naganap na error habang sinusubukang kopyahin ang mga bonus "
-"na file ng user. Ang mga file ng pagsasaayos ng bonus ay nakarating sa "
-"direktoryo ng windows_data sa copy drive ngunit hindi nakopya mula doon "
-"pabalik sa install drive."
+"Paumanhin, may naganap na error habang sinusubukang kopyahin ang mga "
+"configuration file. Napunta ang mga file sa direktoryo ng windows_data "
+"sa copy drive ngunit hindi nakopya mula doon pabalik sa install drive."
+
+#. Type: error
+#. Description
+#: ../ubiquity.templates:163001
+msgid "Error return user files failed"
+msgstr "Nabigo ang pagbabalik ng mga file ng user ng error"
+
+#. Type: error
+#. Description
+#: ../ubiquity.templates:163001
+msgid ""
+"Sorry, an error occurred while attempting to return user files from copy "
+"drive to home directory in new Linux installation on install drive."
+msgstr ""
+"Paumanhin, may naganap na error habang sinusubukang ibalik ang mga file "
+"ng user mula sa copy drive patungo sa home directory sa bagong pag-install "
+"ng Linux sa install drive."
+
+#. Type: error
+#. Description
+#: ../ubiquity.templates:164001
+msgid "Error return config files failed"
+msgstr "Nabigo ang pagbabalik ng mga config file ng error"
+
+#. Type: error
+#. Description
+#: ../ubiquity.templates:164001
+msgid ""
+"Sorry, an error occurred while attempting to return configuration files from "
+"copy drive to destination directory in new installation on install drive."
+msgstr ""
+"Paumanhin, may naganap na error habang sinusubukang ibalik ang mga "
+"configuration file mula sa copy drive patungo sa destination "
+"directory sa bagong pag-install sa install drive."
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:145001
+#: ../ubiquity.templates:165001
 msgid "Checking for packages to remove..."
 msgstr "Tinitingnan ang mga programang aalisin..."
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:146001
+#: ../ubiquity.templates:166001
 msgid "Downloading packages (${TIME} remaining)..."
 msgstr "Dina-download ang mga programa (${TIME} natitira)..."
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:147001
+#: ../ubiquity.templates:167001
 msgid "Downloading package lists..."
 msgstr "Dina-download ang mga listahan ng programa..."
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:148001
+#: ../ubiquity.templates:168001
 msgid "Downloading package lists (${TIME} remaining)..."
 msgstr "Dina-download ang listahan ng programa (${TIME} natitira)..."
 
 #. Type: error
 #. Description
-#: ../ubiquity.templates:150001
+#: ../ubiquity.templates:170001
 msgid "Error installing ${PACKAGE}"
 msgstr "Error sa pag-install ng programa ${PACKAGE}"
 
 #. Type: error
 #. Description
-#: ../ubiquity.templates:151001
+#: ../ubiquity.templates:171001
 msgid "Error removing ${PACKAGE}"
 msgstr "Error sa pag-alis ng ${PACKAGE}"
 
 #. Type: error
 #. Description
-#: ../ubiquity.templates:152001
+#: ../ubiquity.templates:172001
 msgid "Error while installing packages"
 msgstr "Error sa pag-iinstall ng mga programa"
 
 #. Type: error
 #. Description
-#: ../ubiquity.templates:152001
+#: ../ubiquity.templates:172001
 msgid "An error occurred while installing packages:"
 msgstr "May natagpuang error habang ini-install ang mga programa:"
 
@@ -1112,7 +1424,7 @@ msgstr "May natagpuang error habang ini-install ang mga programa:"
 #. Description
 #. Type: error
 #. Description
-#: ../ubiquity.templates:152001 ../ubiquity.templates:153001
+#: ../ubiquity.templates:172001 ../ubiquity.templates:173001
 msgid "The following packages are in a broken state:"
 msgstr "Ang mga sumusunod na programa ay nasa di maayos na kalagayan:"
 
@@ -1120,7 +1432,7 @@ msgstr "Ang mga sumusunod na programa ay nasa di maayos na kalagayan:"
 #. Description
 #. Type: error
 #. Description
-#: ../ubiquity.templates:152001 ../ubiquity.templates:153001
+#: ../ubiquity.templates:172001 ../ubiquity.templates:173001
 msgid ""
 "This may be due to using an old installer image, or it may be due to a bug "
 "in some of the packages listed above. More details may be found in /var/log/"
@@ -1140,25 +1452,25 @@ msgstr ""
 
 #. Type: error
 #. Description
-#: ../ubiquity.templates:153001
+#: ../ubiquity.templates:173001
 msgid "Error while removing packages"
 msgstr "Error sa pagalis ng programa"
 
 #. Type: error
 #. Description
-#: ../ubiquity.templates:153001
+#: ../ubiquity.templates:173001
 msgid "An error occurred while removing packages:"
 msgstr "May error na natagpuan habang inaalis ang mga programa:"
 
 #. Type: error
 #. Description
-#: ../ubiquity.templates:154001
+#: ../ubiquity.templates:174001
 msgid "Error copying network configuration"
 msgstr "Error sa pagkopya ng configurasyon ng network"
 
 #. Type: error
 #. Description
-#: ../ubiquity.templates:154001
+#: ../ubiquity.templates:174001
 msgid ""
 "An error occurred while copying the network settings.  The installation will "
 "continue, but the network configuration will have to be set up again in the "
@@ -1170,13 +1482,13 @@ msgstr ""
 
 #. Type: error
 #. Description
-#: ../ubiquity.templates:155001
+#: ../ubiquity.templates:175001
 msgid "Error copying bluetooth configuration"
 msgstr ""
 
 #. Type: error
 #. Description
-#: ../ubiquity.templates:155001
+#: ../ubiquity.templates:175001
 msgid ""
 "An error occurred while copying the bluetooth settings.  The installation "
 "will continue, but the bluetooth configuration will have to be set up again "
@@ -1185,13 +1497,13 @@ msgstr ""
 
 #. Type: error
 #. Description
-#: ../ubiquity.templates:156001
+#: ../ubiquity.templates:176001
 msgid "Error configuring connection to Active Directory"
 msgstr ""
 
 #. Type: error
 #. Description
-#: ../ubiquity.templates:156001
+#: ../ubiquity.templates:176001
 msgid ""
 "Sorry, Active Directory can't be set up at the moment. Once your system is "
 "up and running, visit help.ubuntu.com/activedirectory for help."
@@ -1199,13 +1511,13 @@ msgstr ""
 
 #. Type: error
 #. Description
-#: ../ubiquity.templates:157001
+#: ../ubiquity.templates:177001
 msgid "Error setting LUKS recovery key"
 msgstr ""
 
 #. Type: error
 #. Description
-#: ../ubiquity.templates:157001
+#: ../ubiquity.templates:177001
 msgid ""
 "An error occurred while setting the recovery key.  The installation will "
 "continue, but you may have to manually add the recovery key in the installed "
@@ -1214,37 +1526,37 @@ msgstr ""
 
 #. Type: error
 #. Description
-#: ../ubiquity.templates:157001
+#: ../ubiquity.templates:177001
 msgid "cryptsetup luksAddKey device_name"
 msgstr ""
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:161001
+#: ../ubiquity.templates:181001
 msgid "Calculating files to skip copying..."
 msgstr "Kina-kalkula ang mga dokumento na hindi kokopyahin..."
 
 #. Type: title
 #. Description
-#: ../ubiquity.templates:162001
+#: ../ubiquity.templates:182001
 msgid "Installing language packs"
 msgstr "Ini-install ang mga pakete ng mga wika..."
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:163001
+#: ../ubiquity.templates:183001
 msgid "Downloading language packs (${TIME} remaining)..."
 msgstr "Dina-download ang mga pakete ng mga wika (${TIME} natitira)..."
 
 #. Type: boolean
 #. Description
-#: ../ubiquity.templates:172001
+#: ../ubiquity.templates:192001
 msgid "Failed to unmount partitions"
 msgstr "Nabigo i-unmount ang mga partition"
 
 #. Type: boolean
 #. Description
-#: ../ubiquity.templates:172001
+#: ../ubiquity.templates:192001
 msgid ""
 "The installer needs to commit changes to partition tables, but cannot do so "
 "because partitions on the following mount points could not be unmounted:"
@@ -1254,26 +1566,26 @@ msgstr ""
 
 #. Type: boolean
 #. Description
-#: ../ubiquity.templates:172001
+#: ../ubiquity.templates:192001
 msgid "Please close any applications using these mount points."
 msgstr "Pakisara ng mga programang gumagamit ng mga mount points na ito."
 
 #. Type: boolean
 #. Description
-#: ../ubiquity.templates:172001
+#: ../ubiquity.templates:192001
 msgid "Would you like the installer to try to unmount these partitions again?"
 msgstr ""
 "Nais mo bang subukan muli ng pang-install na i-unmount itong mga partitions?"
 
 #. Type: boolean
 #. Description
-#: ../ubiquity.templates:178001
+#: ../ubiquity.templates:198001
 msgid "Do you want to return to the partitioner?"
 msgstr "Nais mo bang bumalik sa programang pang-partition?"
 
 #. Type: boolean
 #. Description
-#: ../ubiquity.templates:178001
+#: ../ubiquity.templates:198001
 msgid ""
 "Some of the partitions you created are too small.  Please make the following "
 "partitions at least this large:"
@@ -1283,7 +1595,7 @@ msgstr ""
 
 #. Type: boolean
 #. Description
-#: ../ubiquity.templates:178001
+#: ../ubiquity.templates:198001
 msgid ""
 "If you do not go back to the partitioner and increase the size of these "
 "partitions, the installation may fail."
@@ -1293,7 +1605,7 @@ msgstr ""
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:180001
+#: ../ubiquity.templates:200001
 msgid "System Configuration"
 msgstr "Configurasyon ng Sistema"
 
@@ -1301,19 +1613,19 @@ msgstr "Configurasyon ng Sistema"
 #. Description
 #. Type: text
 #. Description
-#: ../ubiquity.templates:181001 ../ubiquity.templates:264001
+#: ../ubiquity.templates:201001 ../ubiquity.templates:284001
 msgid "Welcome"
 msgstr "Mabuhay"
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:182001
+#: ../ubiquity.templates:202001
 msgid "Network configuration"
 msgstr "Configurasyon ng Network"
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:183001
+#: ../ubiquity.templates:203001
 msgid "Language"
 msgstr "Wika"
 
@@ -1321,117 +1633,117 @@ msgstr "Wika"
 #. Description
 #. Type: text
 #. Description
-#: ../ubiquity.templates:184001 ../ubiquity.templates:208001
+#: ../ubiquity.templates:204001 ../ubiquity.templates:228001
 msgid "Wireless"
 msgstr "Wireless"
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:185001
+#: ../ubiquity.templates:205001
 msgid "Software"
 msgstr ""
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:186001
+#: ../ubiquity.templates:206001
 msgid "Timezone"
 msgstr "Timezone"
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:187001
+#: ../ubiquity.templates:207001
 msgid "Keyboard"
 msgstr "Keyboard"
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:188001
+#: ../ubiquity.templates:208001
 msgid "Disk Setup"
 msgstr "Set-up ng Disk"
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:189001
+#: ../ubiquity.templates:209001
 msgid "User Info"
 msgstr "Inpormasyon tungkol sa Gumagamit"
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:190001
+#: ../ubiquity.templates:210001
 msgid "Install"
 msgstr "I-install"
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:191001
+#: ../ubiquity.templates:211001
 msgid "installation process"
 msgstr "proseso ng pag-install"
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:193001
+#: ../ubiquity.templates:213001
 msgid "Checking for installer updates"
 msgstr "Tinitiyak kung may update ng pang-install"
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:194001
+#: ../ubiquity.templates:214001
 msgid "Reading package information"
 msgstr "Binabasa ang inpormasyon tungkol sa pakete"
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:195001
+#: ../ubiquity.templates:215001
 msgid "Updating package information"
 msgstr "Ina-update ang inpormasyon tungkol sa pakete"
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:196001
+#: ../ubiquity.templates:216001
 msgid "File ${INDEX} of ${TOTAL} at ${SPEED}/s"
 msgstr "Dokumento ${INDEX} ng ${TOTAL} sa bilis na ${SPEED}/s"
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:197001
+#: ../ubiquity.templates:217001
 msgid "File ${INDEX} of ${TOTAL}"
 msgstr "Dokumento ${INDEX} ng ${TOTAL}"
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:198001
+#: ../ubiquity.templates:218001
 msgid "Installing update"
 msgstr "Ini-install ang update"
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:199001
+#: ../ubiquity.templates:219001
 msgid "Error updating installer"
 msgstr "Error sa pag-update ng pang-install"
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:199001
+#: ../ubiquity.templates:219001
 msgid "The installer encountered an error while trying to update itself:"
 msgstr "Nakatagpo ng error ang pang-install habang ito ay naga-update:"
 
 #. Type: text
 #. Description
 #. Translated acronym for Universal Serial Bus.
-#: ../ubiquity.templates:200001
+#: ../ubiquity.templates:220001
 msgid "USB disk"
 msgstr "USB disk"
 
 #. Type: text
 #. Description
 #. Translated acronym for Compact Disc.
-#: ../ubiquity.templates:201001
+#: ../ubiquity.templates:221001
 msgid "CD"
 msgstr "CD"
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:202001
+#: ../ubiquity.templates:222001
 msgid ""
 "Please choose the language to use for the install process. This language "
 "will be the default language for this computer."
@@ -1441,7 +1753,7 @@ msgstr ""
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:203001
+#: ../ubiquity.templates:223001
 msgid ""
 "Please choose the language used for the configuration process. This language "
 "will be the default language for this computer."
@@ -1453,13 +1765,13 @@ msgstr ""
 #. Description
 #. Type: text
 #. Description
-#: ../ubiquity.templates:204001 ../ubiquity.templates:205001
+#: ../ubiquity.templates:224001 ../ubiquity.templates:225001
 msgid "Installation failed"
 msgstr "Nabigo ang installation"
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:204001
+#: ../ubiquity.templates:224001
 msgid ""
 "The installer encountered an unrecoverable error.  A desktop session will "
 "now be run so that you may investigate the problem or try installing again."
@@ -1470,7 +1782,7 @@ msgstr ""
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:205001
+#: ../ubiquity.templates:225001
 msgid "The installer encountered an unrecoverable error and will now reboot."
 msgstr ""
 "May natagpuang isang unrecoverable na error ang installer at magre-reboot na "
@@ -1478,13 +1790,13 @@ msgstr ""
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:207001
+#: ../ubiquity.templates:227001
 msgid "Updates and other software"
 msgstr ""
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:209001
+#: ../ubiquity.templates:229001
 msgid ""
 "Connecting this computer to a Wi-Fi network allows you to install third-"
 "party software, download updates, automatically detect your timezone, and "
@@ -1495,56 +1807,56 @@ msgstr ""
 #. Description
 #. Type: text
 #. Description
-#: ../ubiquity.templates:210001 ../ubiquity.templates:333001
+#: ../ubiquity.templates:230001 ../ubiquity.templates:353001
 msgid "Password:"
 msgstr "Hudyat:"
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:211001
+#: ../ubiquity.templates:231001
 msgid "Display password"
 msgstr "Ipakita ang password"
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:212001
+#: ../ubiquity.templates:232001
 msgid "I don't want to connect to a Wi-Fi network right now"
 msgstr ""
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:213001
+#: ../ubiquity.templates:233001
 msgid "Connect to this network"
 msgstr "Kumunekta sa network na ito"
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:219001
+#: ../ubiquity.templates:239001
 msgid "Select install drive:"
 msgstr "Piliin ang pag-install ng drive:"
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:220001
+#: ../ubiquity.templates:240001
 msgid "Select copy drive:"
 msgstr "Pumili ng copy drive:"
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:221001
+#: ../ubiquity.templates:241001
 msgid "Allocate drive space by dragging the divider below:"
 msgstr ""
 "Maglaan ng ispasyo sa drive sa pamamagitan ng pag-drag sa divider sa ibaba:"
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:222001
+#: ../ubiquity.templates:242001
 msgid "The entire disk will be used:"
 msgstr "Ang buong disk ay gagamitin:"
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:223001
+#: ../ubiquity.templates:243001
 #, no-c-format
 msgid ""
 "<small>%d smaller partitions are hidden, use the <a href=\"\">advanced "
@@ -1555,7 +1867,7 @@ msgstr ""
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:224001
+#: ../ubiquity.templates:244001
 msgid ""
 "<small>1 smaller partition is hidden, use the <a href=\"\">advanced "
 "partitioning tool</a> for more control</small>"
@@ -1565,7 +1877,7 @@ msgstr ""
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:225001
+#: ../ubiquity.templates:245001
 #, no-c-format
 msgid ""
 "%d partitions will be deleted, use the <a href=\"\">advanced partitioning "
@@ -1576,7 +1888,7 @@ msgstr ""
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:226001
+#: ../ubiquity.templates:246001
 msgid ""
 "1 partition will be deleted, use the <a href=\"\">advanced partitioning "
 "tool</a> for more control"
@@ -1586,32 +1898,32 @@ msgstr ""
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:227001
+#: ../ubiquity.templates:247001
 msgid "Split Largest Partition"
 msgstr "Hatiin ang Pinakamalaking Partition"
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:229001
+#: ../ubiquity.templates:249001
 msgid "For best results, please ensure that this computer:"
 msgstr "Para sa pinakamagandang resulta, siguraduhing ang kompyuter na ito ay:"
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:230001
+#: ../ubiquity.templates:250001
 msgid "Sorry"
 msgstr ""
 
 #. Type: text
 #. Description
 #. RST means "Rapid Storage Technology". Don't translate it.
-#: ../ubiquity.templates:231001
+#: ../ubiquity.templates:251001
 msgid "Turn off RST"
 msgstr ""
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:232001
+#: ../ubiquity.templates:252001
 msgid ""
 "This computer uses Intel RST (Rapid Storage Technology). You need to turn "
 "off RST before installing Linux Mint. For instructions, open this page on a "
@@ -1621,13 +1933,13 @@ msgstr ""
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:233001
+#: ../ubiquity.templates:253001
 msgid "Turn off BitLocker"
 msgstr ""
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:234001
+#: ../ubiquity.templates:254001
 msgid ""
 "This computer uses Windows BitLocker encryption. You need to turn off "
 "BitLocker in Windows before installing Linux Mint. For instructions, open "
@@ -1639,32 +1951,32 @@ msgstr ""
 #. Description
 #. SIZE is a variable substituted into this string, and may be '3.7 GB'
 #. RELEASE is a variable substituted into this string, the Linux Mint flavor'
-#: ../ubiquity.templates:235001
+#: ../ubiquity.templates:255001
 msgid "You need at least ${SIZE} disk space to install ${RELEASE}."
 msgstr ""
 
 #. Type: text
 #. Description
 #. SIZE is a variable substituted into this string, and may be '3.7 GB'
-#: ../ubiquity.templates:236001
+#: ../ubiquity.templates:256001
 msgid "This computer has only ${SIZE}."
 msgstr ""
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:237001
+#: ../ubiquity.templates:257001
 msgid "is plugged in to a power source"
 msgstr "naka-lug sa isang power source"
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:238001
+#: ../ubiquity.templates:258001
 msgid "is connected to the Internet"
 msgstr "konektado sa Internet"
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:239001
+#: ../ubiquity.templates:259001
 msgid ""
 "This software is subject to license terms included with its documentation. "
 "Some is proprietary."
@@ -1672,7 +1984,7 @@ msgstr ""
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:240001
+#: ../ubiquity.templates:260001
 msgid ""
 "Install third-party software for graphics and Wi-Fi hardware and additional "
 "media formats"
@@ -1680,67 +1992,67 @@ msgstr ""
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:241001
+#: ../ubiquity.templates:261001
 msgid "Download updates while installing ${RELEASE}"
 msgstr ""
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:242001
+#: ../ubiquity.templates:262001
 msgid "This saves time after installation."
 msgstr ""
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:243001
+#: ../ubiquity.templates:263001
 msgid "Not available because there is no Internet connection."
 msgstr ""
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:244001
+#: ../ubiquity.templates:264001
 msgid "What apps would you like to install to start with?"
 msgstr ""
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:245001
+#: ../ubiquity.templates:265001
 msgid "Which applications would you like to start with?"
 msgstr ""
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:246001
+#: ../ubiquity.templates:266001
 msgid "Minimal installation"
 msgstr ""
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:247001
+#: ../ubiquity.templates:267001
 msgid "Web browser and basic utilities."
 msgstr ""
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:248001
+#: ../ubiquity.templates:268001
 msgid "Web browser plus basic utilities and applications."
 msgstr ""
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:249001
+#: ../ubiquity.templates:269001
 msgid "Normal installation"
 msgstr ""
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:250001
+#: ../ubiquity.templates:270001
 msgid "Web browser, utilities, office software, games, and media players."
 msgstr ""
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:251001
+#: ../ubiquity.templates:271001
 msgid ""
 "Web browser, utilities, office software, plus additional internet "
 "applications and media players."
@@ -1748,13 +2060,13 @@ msgstr ""
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:252001
+#: ../ubiquity.templates:272001
 msgid "Other options"
 msgstr ""
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:253001
+#: ../ubiquity.templates:273001
 msgid ""
 "Installing third-party drivers requires configuring Secure Boot. To do this, "
 "you need to choose a security key now, and enter it when the system restarts."
@@ -1762,25 +2074,25 @@ msgstr ""
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:257001
+#: ../ubiquity.templates:277001
 msgid "Layout:"
 msgstr "Layout:"
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:258001
+#: ../ubiquity.templates:278001
 msgid "Variant:"
 msgstr "Variant:"
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:259001
+#: ../ubiquity.templates:279001
 msgid "Below is an image of your current layout:"
 msgstr "Nasa baba ang isang larawan ng iyong kasalukuyang layout:"
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:260001
+#: ../ubiquity.templates:280001
 msgid ""
 "Select your location, so that the system can use appropriate display "
 "conventions for your country, fetch updates from sites close to you, and set "
@@ -1792,19 +2104,19 @@ msgstr ""
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:261001
+#: ../ubiquity.templates:281001
 msgid "Time Zone:"
 msgstr "Time Zone:"
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:262001
+#: ../ubiquity.templates:282001
 msgid "Region:"
 msgstr "Rehiyon:"
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:263001
+#: ../ubiquity.templates:283001
 msgid "[type here to change]"
 msgstr "[tumipa dito upang baguhin]"
 
@@ -1812,14 +2124,14 @@ msgstr "[tumipa dito upang baguhin]"
 #. Description
 #. OS is a variable substituted into this string, and may be 'Windows 7'
 #. DISTRO is a variable substituted into this string, and may be 'Linux Mint'
-#: ../ubiquity.templates:266001
+#: ../ubiquity.templates:286001
 msgid "Replace ${OS} with ${DISTRO}"
 msgstr "Palitan ang ${OS} ng ${DISTRO}"
 
 #. Type: text
 #. Description
 #. OS is a variable substituted into this string, and may be 'Windows 7'
-#: ../ubiquity.templates:266001
+#: ../ubiquity.templates:286001
 msgid ""
 "<span foreground=\"darkred\">Warning:</span> This will delete all of your "
 "${OS} programs, documents, photos, music, and any other files."
@@ -1831,7 +2143,7 @@ msgstr ""
 #. Description
 #. DISTRO is a variable substituted into this string, and may be 'Linux Mint'
 #. OS is a variable substituted into this string, and may be 'Windows 7'
-#: ../ubiquity.templates:267001
+#: ../ubiquity.templates:287001
 msgid "Install ${DISTRO} alongside ${OS}"
 msgstr "I-install ang ${DISTRO} katabi ng ${OS}"
 
@@ -1843,8 +2155,8 @@ msgstr "I-install ang ${DISTRO} katabi ng ${OS}"
 #. Description
 #. Type: text
 #. Description
-#: ../ubiquity.templates:267001 ../ubiquity.templates:268001
-#: ../ubiquity.templates:271001 ../ubiquity.templates:276001
+#: ../ubiquity.templates:287001 ../ubiquity.templates:288001
+#: ../ubiquity.templates:291001 ../ubiquity.templates:296001
 msgid ""
 "Documents, music, and other personal files will be kept. You can choose "
 "which operating system you want each time the computer starts up."
@@ -1857,20 +2169,20 @@ msgstr ""
 #. Description
 #. DISTRO is a variable substituted into this string, and may be 'Linux Mint'
 #. OS is a variable substituted into this string, and may be 'Windows 7'
-#: ../ubiquity.templates:268001
+#: ../ubiquity.templates:288001
 msgid "Install ${DISTRO} inside ${OS}"
 msgstr "I-install ang ${DISTRO} sa loob ng ${OS}"
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:269001
+#: ../ubiquity.templates:289001
 msgid "Something else"
 msgstr "Iba pa"
 
 #. Type: text
 #. Description
 #. DISTRO is a variable substituted into this string, and may be 'Linux Mint'
-#: ../ubiquity.templates:269001
+#: ../ubiquity.templates:289001
 msgid ""
 "You can create or resize partitions yourself, or choose multiple partitions "
 "for ${DISTRO}."
@@ -1881,14 +2193,14 @@ msgstr ""
 #. Type: text
 #. Description
 #. CURDISTRO is a variable substituted into this string, and may be 'Linux Mint 10.10'
-#: ../ubiquity.templates:270001
+#: ../ubiquity.templates:290001
 msgid "Erase ${CURDISTRO} and reinstall"
 msgstr "Burahin ang ${CURDISTRO} at mag-reinstall"
 
 #. Type: text
 #. Description
 #. CURDISTRO is a variable substituted into this string, and may be 'Linux Mint 10.10'
-#: ../ubiquity.templates:270001
+#: ../ubiquity.templates:290001
 msgid ""
 "<span foreground=\"darkred\">Warning:</span> This will delete all your "
 "${CURDISTRO} programs, documents, photos, music, and any other files."
@@ -1901,7 +2213,7 @@ msgstr ""
 #. DISTRO is a variable substituted into this string, and may be 'Linux Mint'
 #. VER is a variable substituted into this string, and may be '11.04'
 #. CURDISTRO is a variable substituted into this string, and may be 'Linux Mint 10.10'
-#: ../ubiquity.templates:271001
+#: ../ubiquity.templates:291001
 msgid "Install ${DISTRO} ${VER} alongside ${CURDISTRO}"
 msgstr "I-install ang ${DISTRO} ${VER} katabi ang ${CURDISTRO}"
 
@@ -1911,13 +2223,13 @@ msgstr "I-install ang ${DISTRO} ${VER} katabi ang ${CURDISTRO}"
 #. Type: text
 #. Description
 #. DISTRO is a variable substituted into this string, and may be 'Linux Mint'
-#: ../ubiquity.templates:272001 ../ubiquity.templates:275001
+#: ../ubiquity.templates:292001 ../ubiquity.templates:295001
 msgid "Erase disk and install ${DISTRO}"
 msgstr "Burahin ang disk at i-install ang ${DISTRO}"
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:272001
+#: ../ubiquity.templates:292001
 msgid ""
 "<span foreground=\"darkred\">Warning:</span> This will delete any files on "
 "the disk."
@@ -1927,7 +2239,7 @@ msgstr ""
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:273001
+#: ../ubiquity.templates:293001
 msgid "Erase everything and reinstall"
 msgstr "Burahin ang lahat at mag-reinstall"
 
@@ -1935,7 +2247,7 @@ msgstr "Burahin ang lahat at mag-reinstall"
 #. Description
 #. OS is a variable substituted into this string, and may be 'Windows 7'
 #. CURDISTRO is a variable substituted into this string, and may be 'Linux Mint 10.10'
-#: ../ubiquity.templates:273001
+#: ../ubiquity.templates:293001
 msgid ""
 "<span foreground=\"darkred\">Warning:</span> This will delete all your "
 "programs, documents, photos, music, and other files in both ${OS} and "
@@ -1948,13 +2260,13 @@ msgstr ""
 #. Type: text
 #. Description
 #. CURDISTRO is a variable substituted into this string, and may be 'Linux Mint 10.10'
-#: ../ubiquity.templates:274001
+#: ../ubiquity.templates:294001
 msgid "Reinstall ${CURDISTRO}"
 msgstr "I-reinstall ang ${CURDISTRO}"
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:274001
+#: ../ubiquity.templates:294001
 msgid ""
 "Documents, music, and other personal files will be kept. Installed software "
 "and system-wide settings will be cleared."
@@ -1962,7 +2274,7 @@ msgstr ""
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:275001
+#: ../ubiquity.templates:295001
 msgid ""
 "<span foreground=\"darkred\">Warning:</span> This will delete all your "
 "programs, documents, photos, music, and any other files in all operating "
@@ -1975,14 +2287,14 @@ msgstr ""
 #. Type: text
 #. Description
 #. DISTRO is a variable substituted into this string, and may be 'Linux Mint'
-#: ../ubiquity.templates:276001
+#: ../ubiquity.templates:296001
 msgid "Install ${DISTRO} alongside them"
 msgstr "I-install ang ${DISTRO} katabi ng mga ito"
 
 #. Type: text
 #. Description
 #. OS is a variable substituted into this string, and may be 'Windows 7'
-#: ../ubiquity.templates:277001
+#: ../ubiquity.templates:297001
 msgid "This computer currently has ${OS} on it. What would you like to do?"
 msgstr "Ang kompyuter na ito ay kasalukuyang may ${OS}. Anong nais mong gawin?"
 
@@ -1990,7 +2302,7 @@ msgstr "Ang kompyuter na ito ay kasalukuyang may ${OS}. Anong nais mong gawin?"
 #. Description
 #. OS1 is a variable substituted into this string, and may be 'Windows 7'
 #. OS2 is a variable substituted into this string, and may be 'Mac OS X'
-#: ../ubiquity.templates:278001
+#: ../ubiquity.templates:298001
 msgid ""
 "This computer currently has ${OS1} and ${OS2} on it. What would you like to "
 "do?"
@@ -2000,7 +2312,7 @@ msgstr ""
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:279001
+#: ../ubiquity.templates:299001
 msgid ""
 "This computer currently has multiple operating systems on it. What would you "
 "like to do?"
@@ -2010,7 +2322,7 @@ msgstr ""
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:280001
+#: ../ubiquity.templates:300001
 msgid ""
 "This computer currently has no detected operating systems. What would you "
 "like to do?"
@@ -2020,37 +2332,37 @@ msgstr ""
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:281001
+#: ../ubiquity.templates:301001
 msgid "Before:"
 msgstr ""
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:282001
+#: ../ubiquity.templates:302001
 msgid "After:"
 msgstr ""
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:283001
+#: ../ubiquity.templates:303001
 msgid "Encrypt the new ${RELEASE} installation for security"
 msgstr ""
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:284001
+#: ../ubiquity.templates:304001
 msgid "You will choose a security key in the next step."
 msgstr ""
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:285001
+#: ../ubiquity.templates:305001
 msgid "Use LVM with the new ${RELEASE} installation"
 msgstr ""
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:286001
+#: ../ubiquity.templates:306001
 msgid ""
 "This will set up Logical Volume Management. It allows taking snapshots and "
 "easier partition resizing."
@@ -2058,13 +2370,13 @@ msgstr ""
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:287001
+#: ../ubiquity.templates:307001
 msgid "Erase disk and use ZFS"
 msgstr ""
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:288001
+#: ../ubiquity.templates:308001
 msgid ""
 "<span foreground=\"darkred\">Warning:</span> This will delete all your files "
 "on all operating systems."
@@ -2072,13 +2384,13 @@ msgstr ""
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:290001
+#: ../ubiquity.templates:310001
 msgid "Advanced Features"
 msgstr ""
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:291001
+#: ../ubiquity.templates:311001
 msgid "None"
 msgstr ""
 
@@ -2086,55 +2398,55 @@ msgstr ""
 #. Description
 #. Type: text
 #. Description
-#: ../ubiquity.templates:292001 ../ubiquity.templates:294001
+#: ../ubiquity.templates:312001 ../ubiquity.templates:314001
 msgid "None selected"
 msgstr ""
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:293001
+#: ../ubiquity.templates:313001
 msgid "Advanced features..."
 msgstr ""
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:295001
+#: ../ubiquity.templates:315001
 msgid "LVM selected"
 msgstr ""
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:296001
+#: ../ubiquity.templates:316001
 msgid "LVM and encryption selected"
 msgstr ""
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:297001
+#: ../ubiquity.templates:317001
 msgid "ZFS selected"
 msgstr ""
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:298001
+#: ../ubiquity.templates:318001
 msgid "ZFS and encryption selected"
 msgstr ""
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:299001
+#: ../ubiquity.templates:319001
 msgid "Confirm the security key:"
 msgstr ""
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:300001
+#: ../ubiquity.templates:320001
 msgid "Choose a security key:"
 msgstr ""
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:301001
+#: ../ubiquity.templates:321001
 msgid ""
 "Disk encryption protects your files in case you lose your computer. It "
 "requires you to enter a security key each time the computer starts up."
@@ -2142,13 +2454,13 @@ msgstr ""
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:302001
+#: ../ubiquity.templates:322001
 msgid "Any files outside of ${RELEASE} will not be encrypted."
 msgstr ""
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:303001
+#: ../ubiquity.templates:323001
 msgid ""
 "<span foreground=\"darkred\">Warning:</span> If you lose this security key, "
 "all data will be lost. If you need to, write down your key and keep it in a "
@@ -2157,61 +2469,61 @@ msgstr ""
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:304001
+#: ../ubiquity.templates:324001
 msgid "For more security:"
 msgstr ""
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:305001
+#: ../ubiquity.templates:325001
 msgid "Overwrite empty disk space"
 msgstr ""
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:306001
+#: ../ubiquity.templates:326001
 msgid "The installation may take much longer."
 msgstr ""
 
 #. Type: text
 #. description
-#: ../ubiquity.templates:307001
+#: ../ubiquity.templates:327001
 msgid "LVM..."
 msgstr ""
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:308001
+#: ../ubiquity.templates:328001
 msgid "Volume groups:"
 msgstr ""
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:309001
+#: ../ubiquity.templates:329001
 msgid "Encryption Options"
 msgstr ""
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:310001
+#: ../ubiquity.templates:330001
 msgid "Physical volumes:"
 msgstr ""
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:312001
+#: ../ubiquity.templates:332001
 msgid "Encrypt this partition (LUKS)"
 msgstr ""
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:313001
+#: ../ubiquity.templates:333001
 msgid "MB"
 msgstr ""
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:314001
+#: ../ubiquity.templates:334001
 msgid ""
 "Logical Volume Management (LVM) lets ${RELEASE} treat multiple physical "
 "volumes as a single volume."
@@ -2219,25 +2531,25 @@ msgstr ""
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:315001
+#: ../ubiquity.templates:335001
 msgid "Logical Volume Management"
 msgstr ""
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:316001
+#: ../ubiquity.templates:336001
 msgid "Encryption options..."
 msgstr ""
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:317001
+#: ../ubiquity.templates:337001
 msgid "UEFI Secure Boot"
 msgstr ""
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:318001
+#: ../ubiquity.templates:338001
 msgid ""
 "You have chosen to enable third-party software as part of your install, "
 "which for this system includes hardware drivers for graphics and/or Wi-Fi "
@@ -2247,7 +2559,7 @@ msgstr ""
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:318001
+#: ../ubiquity.templates:338001
 msgid ""
 "After installation completes, Linux Mint will assist you in configuring UEFI "
 "Secure Boot. To ensure that this change is being made by you as an "
@@ -2257,7 +2569,7 @@ msgstr ""
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:318001
+#: ../ubiquity.templates:338001
 msgid ""
 "<span foreground=\"darkred\">Warning</span>: If you choose not to install "
 "these drivers, or if you proceed but do not confirm the password upon "
@@ -2267,134 +2579,134 @@ msgstr ""
 
 #. Type: password
 #. Description
-#: ../ubiquity.templates:319001
+#: ../ubiquity.templates:339001
 msgid "SecureBoot key for MokPW"
 msgstr ""
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:320001
+#: ../ubiquity.templates:340001
 #, no-c-format
 msgid "partition #%(partid)s as %(parttype)s used for %(partusage)s"
 msgstr ""
 
 #. Type: password
 #. Description
-#: ../ubiquity.templates:321001
+#: ../ubiquity.templates:341001
 msgid "Key to secure the keystore on ZFS installations"
 msgstr ""
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:322001
+#: ../ubiquity.templates:342001
 msgid "Authenticate against a directory"
 msgstr ""
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:323001
+#: ../ubiquity.templates:343001
 msgid "Active Directory domain name"
 msgstr ""
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:324001
+#: ../ubiquity.templates:344001
 msgid "Administrator to join the domain"
 msgstr ""
 
 #. Type: password
 #. Description
-#: ../ubiquity.templates:325001
+#: ../ubiquity.templates:345001
 msgid "Administrator password to join the domain"
 msgstr ""
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:326001
+#: ../ubiquity.templates:346001
 msgid "Use Active Directory"
 msgstr ""
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:327001
+#: ../ubiquity.templates:347001
 msgid " You'll enter domain and other details in the next step."
 msgstr ""
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:328001
+#: ../ubiquity.templates:348001
 msgid "Domain:"
 msgstr ""
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:329001
+#: ../ubiquity.templates:349001
 msgid "You must enter a domain name"
 msgstr ""
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:330001
+#: ../ubiquity.templates:350001
 msgid "Test Connection"
 msgstr ""
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:331001
+#: ../ubiquity.templates:351001
 msgid "Domain Administrator:"
 msgstr ""
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:332001
+#: ../ubiquity.templates:352001
 msgid "You must enter a user name"
 msgstr ""
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:334001
+#: ../ubiquity.templates:354001
 msgid "Configure Active Directory"
 msgstr ""
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:335001
+#: ../ubiquity.templates:355001
 msgid "That name already exists on the network."
 msgstr ""
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:336001
+#: ../ubiquity.templates:356001
 msgid "Failed to connect to domain."
 msgstr ""
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:337001
+#: ../ubiquity.templates:357001
 msgid "Enable recovery key:"
 msgstr ""
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:338001
+#: ../ubiquity.templates:358001
 msgid "Recovery key:"
 msgstr ""
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:339001
+#: ../ubiquity.templates:359001
 msgid "Confirm recovery key:"
 msgstr ""
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:340001
+#: ../ubiquity.templates:360001
 msgid "Display recovery key:"
 msgstr ""
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:341001
+#: ../ubiquity.templates:361001
 msgid ""
 "A recovery key is generated and will be temporarily saved on the live "
 "system. You can select an alternate location. Save this file and keep it in "
@@ -2403,43 +2715,43 @@ msgstr ""
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:342001
+#: ../ubiquity.templates:362001
 msgid "Location:"
 msgstr ""
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:343001
+#: ../ubiquity.templates:363001
 msgid "It is not recommended to store the key on a non removable device."
 msgstr ""
 
 #. Type: password
 #. Description
-#: ../ubiquity.templates:344001
+#: ../ubiquity.templates:364001
 msgid "Crypto key for LUKS + LVM"
 msgstr ""
 
 #. Type: password
 #. Description
-#: ../ubiquity.templates:345001
+#: ../ubiquity.templates:365001
 msgid "Recovery key for LUKS + LVM"
 msgstr ""
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:346001
+#: ../ubiquity.templates:366001
 msgid "Could not save recovery key:"
 msgstr ""
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:346001
+#: ../ubiquity.templates:366001
 msgid "${ERRORMSG}"
 msgstr ""
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:347001
+#: ../ubiquity.templates:367001
 msgid "Enter recovery key filename"
 msgstr ""
 
@@ -2506,3 +2818,13 @@ msgstr ""
 #: ../oem-config.templates:3001
 msgid "Removing packages"
 msgstr "Nagtatanggal ng mga pakete"
+
+#~ msgid ""
+#~ "Sorry, an error occurred while attempting to copy bonus user files. The "
+#~ "bonus configuration files made it to the windows_data directory in copy "
+#~ "drive but weren't able to be copied from there back to the install drive."
+#~ msgstr ""
+#~ "Paumanhin, may naganap na error habang sinusubukang kopyahin ang mga "
+#~ "bonus na file ng user. Ang mga file ng pagsasaayos ng bonus ay nakarating "
+#~ "sa direktoryo ng windows_data sa copy drive ngunit hindi nakopya mula "
+#~ "doon pabalik sa install drive."

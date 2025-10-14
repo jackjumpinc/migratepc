@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: ubiquity\n"
 "Report-Msgid-Bugs-To: ubiquity@packages.debian.org\n"
-"POT-Creation-Date: 2025-09-11 17:57-0500\n"
+"POT-Creation-Date: 2025-09-19 11:35-0500\n"
 "PO-Revision-Date: 2025-09-08 13:53+0000\n"
 "Last-Translator: Wint Theingi Aung <Unknown>\n"
 "Language-Team: Burmese <my@li.org>\n"
@@ -304,7 +304,7 @@ msgstr "သင် အမှားပြင်ဆင်မှုစနစ်တ�
 #. Description
 #. Type: text
 #. Description
-#: ../ubiquity.templates:44001 ../ubiquity.templates:348001
+#: ../ubiquity.templates:44001 ../ubiquity.templates:368001
 msgid "Passwords do not match"
 msgstr "စကားဝှက် မကိုက်ညီပါ"
 
@@ -312,7 +312,7 @@ msgstr "စကားဝှက် မကိုက်ညီပါ"
 #. Description
 #. Type: text
 #. Description
-#: ../ubiquity.templates:45001 ../ubiquity.templates:349001
+#: ../ubiquity.templates:45001 ../ubiquity.templates:369001
 msgid "Short password"
 msgstr "စကားဝှက်တိုတောင်းနေပါသည်"
 
@@ -320,7 +320,7 @@ msgstr "စကားဝှက်တိုတောင်းနေပါသည်
 #. Description
 #. Type: text
 #. Description
-#: ../ubiquity.templates:46001 ../ubiquity.templates:350001
+#: ../ubiquity.templates:46001 ../ubiquity.templates:370001
 msgid "Weak password"
 msgstr "စကားဝှက် အားမကောင်းပါ"
 
@@ -328,7 +328,7 @@ msgstr "စကားဝှက် အားမကောင်းပါ"
 #. Description
 #. Type: text
 #. Description
-#: ../ubiquity.templates:47001 ../ubiquity.templates:351001
+#: ../ubiquity.templates:47001 ../ubiquity.templates:371001
 msgid "Fair password"
 msgstr "သင့်တင့်သော စကားဝှက်ဖြစ်ပါသည်"
 
@@ -336,7 +336,7 @@ msgstr "သင့်တင့်သော စကားဝှက်ဖြစ်�
 #. Description
 #. Type: text
 #. Description
-#: ../ubiquity.templates:48001 ../ubiquity.templates:352001
+#: ../ubiquity.templates:48001 ../ubiquity.templates:372001
 msgid "Good password"
 msgstr "ကောင်းမွန်သော စကားဝှက်ဖြစ်ပါသည်"
 
@@ -344,7 +344,7 @@ msgstr "ကောင်းမွန်သော စကားဝှက်ဖြ�
 #. Description
 #. Type: text
 #. Description
-#: ../ubiquity.templates:49001 ../ubiquity.templates:353001
+#: ../ubiquity.templates:49001 ../ubiquity.templates:373001
 msgid "Strong password"
 msgstr "ခိုင်မာသော စကားဝှက်ဖြစ်ပါသည်"
 
@@ -366,22 +366,226 @@ msgstr "log in လုပ်ရန် မိမိ စကားဝှက်လိ
 msgid "Installation type"
 msgstr "Install ပြုလုပ်ခြင်းအမျိုးအစား"
 
+#. Type: error
+#. Description
+#: ../ubiquity.templates:53001
+msgid "Install drive may not be copy drive"
+msgstr "install drive သည် copy drive မဟုတ်ပေ။"
+
+#. Type: error
+#. Description
+#: ../ubiquity.templates:53001
+msgid ""
+"An error occurred because install drive and copy drive are the same drive. "
+"Please select distinct drives to proceed."
+msgstr ""
+
+#. Type: error
+#. Description
+#: ../ubiquity.templates:54001
+msgid "Install drive is BitLocker encrypted"
+msgstr "ထည့်သွင်းထားသော drive ကို BitLocker ကုဒ်ဝှက်ထားသည်။"
+
+#. Type: error
+#. Description
+#: ../ubiquity.templates:54001
+msgid ""
+"An error occurred because BitLocker encryption was not disabled on install "
+"drive beforehand. Please decrypt it before proceeding."
+msgstr ""
+
+#. Type: error
+#. Description
+#: ../ubiquity.templates:55001
+msgid "Please select a valid install drive"
+msgstr "ကျေးဇူးပြု၍ မှန်ကန်သော ထည့်သွင်းမှုဒရိုက်ကို ရွေးချယ်ပါ။"
+
+#. Type: error
+#. Description
+#: ../ubiquity.templates:55001
+msgid "A valid install drive must be selected in order to proceed."
+msgstr ""
+
+#. Type: error
+#. Description
+#: ../ubiquity.templates:56001
+msgid "Copy drive is BitLocker encrypted"
+msgstr "Copy drive ကို BitLocker ကုဒ်ဝှက်ထားသည်။"
+
+#. Type: error
+#. Description
+#: ../ubiquity.templates:56001
+msgid ""
+"An error occurred because BitLocker encryption was not disabled on copy "
+"drive beforehand. Please decrypt it before proceeding."
+msgstr ""
+
+#. Type: error
+#. Description
+#: ../ubiquity.templates:57001
+msgid "Copy drive did not mount"
+msgstr "Copy drive ကို mount မလုပ်ခဲ့ပါ။"
+
+#. Type: error
+#. Description
+#: ../ubiquity.templates:57001
+msgid ""
+"The copy drive has an issue: its filesystem is not supported or something "
+"else is making it unable to mount."
+msgstr ""
+
+#. Type: error
+#. Description
+#: ../ubiquity.templates:58001
+msgid "Please select a valid copy drive"
+msgstr "ကျေးဇူးပြု၍ တရားဝင်မိတ္တူဒရိုက်ကို ရွေးပါ။"
+
+#. Type: error
+#. Description
+#: ../ubiquity.templates:58001
+msgid ""
+"A valid copy drive with a supported filesystem must be selected in order to "
+"proceed."
+msgstr ""
+
+#. Type: error
+#. Description
+#: ../ubiquity.templates:59001
+msgid "Please select a drive with Windows"
+msgstr "Windows ပါသော drive တစ်ခုကို ရွေးပါ။"
+
+#. Type: error
+#. Description
+#: ../ubiquity.templates:59001
+msgid ""
+"A valid install drive or copy drive with Windows must be selected in order "
+"to proceed. This is a Windows to Linux migration tool."
+msgstr ""
+
+#. Type: error
+#. Description
+#: ../ubiquity.templates:60001
+msgid "Windows install drive not mounted"
+msgstr "Windows install drive ကို မတပ်ဆင်ပါ။"
+
+#. Type: error
+#. Description
+#: ../ubiquity.templates:60001
+msgid ""
+"The install drive with Windows has an issue or something is making it unable "
+"to mount."
+msgstr ""
+
+#. Type: error
+#. Description
+#: ../ubiquity.templates:61001
+msgid "Not enough space on copy drive"
+msgstr "ကော်ပီဒရိုက်တွင် နေရာမလုံလောက်ပါ။"
+
+#. Type: error
+#. Description
+#: ../ubiquity.templates:61001
+msgid ""
+"Room available on copy drive is less than amount required to hold Windows "
+"user files from install drive."
+msgstr ""
+
+#. Type: error
+#. Description
+#: ../ubiquity.templates:62001
+msgid "Copying user files failed"
+msgstr "အသုံးပြုသူဖိုင်များကို ကူးယူခြင်း မအောင်မြင်ပါ။"
+
+#. Type: error
+#. Description
+#: ../ubiquity.templates:62001
+msgid ""
+"Failed to copy Windows user files to copy drive. Installation cannot "
+"proceed. More details may be found in /var/log/syslog (search for "
+"'JACKJUMP')."
+msgstr ""
+
+#. Type: error
+#. Description
+#: ../ubiquity.templates:63001
+msgid "No Users directory on install drive"
+msgstr "install drive တွင် Users directory မရှိပါ။"
+
+#. Type: error
+#. Description
+#: ../ubiquity.templates:63001
+msgid ""
+"Users directory not found on install drive. Installation cannot proceed."
+msgstr ""
+
+#. Type: error
+#. Description
+#: ../ubiquity.templates:64001
+msgid "Copying config files failed"
+msgstr "config ဖိုင်များကို ကူးယူခြင်း မအောင်မြင်ပါ။"
+
+#. Type: error
+#. Description
+#: ../ubiquity.templates:64001
+msgid ""
+"Failed to copy Windows config files to copy drive. Migration can proceed."
+msgstr ""
+
+#. Type: error
+#. Description
+#: ../ubiquity.templates:65001
+msgid "Windows config path not found"
+msgstr "Windows config လမ်းကြောင်းကို ရှာမတွေ့ပါ။"
+
+#. Type: error
+#. Description
+#: ../ubiquity.templates:65001
+msgid "Failed to find Windows configuration path. Migration can proceed."
+msgstr ""
+
+#. Type: text
+#. Description
+#: ../ubiquity.templates:66001
+msgid "Copying user files to copy drive"
+msgstr "Drive ကိုကော်ပီကူးရန်အသုံးပြုသူဖိုင်များကိုကူးခြင်း။"
+
+#. Type: text
+#. Description
+#: ../ubiquity.templates:66001
+msgid ""
+"Windows user files will now be copied to copy drive before installation."
+msgstr ""
+
+#. Type: text
+#. Description
+#: ../ubiquity.templates:67001
+msgid "Copying config files to copy drive"
+msgstr "Drive ကိုကူးယူရန် config ဖိုင်များကိုကူးယူခြင်း။"
+
+#. Type: text
+#. Description
+#: ../ubiquity.templates:67001
+msgid ""
+"Windows configuration files will now be copied to copy drive before "
+"installation."
+msgstr ""
+
 #. Type: text
 #. Description
 #. SIZE is a variable substituted into this string, and may be '100 GB'
-#: ../ubiquity.templates:53001
+#: ../ubiquity.templates:68001
 msgid "Files (${SIZE})"
 msgstr "ဖိုင် (${SIZE})"
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:54001
+#: ../ubiquity.templates:69001
 msgid "Where would you like to install Kubuntu?"
 msgstr "Kubuntu ကို မည်သည့်နေရာတွင် တပ်ဆင်လိုပါသနည်း။"
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:55001
+#: ../ubiquity.templates:70001
 msgid "Prepare partitions"
 msgstr "အခန်းကန့်ရန်  ပြင်ဆင်သည်"
 
@@ -389,7 +593,7 @@ msgstr "အခန်းကန့်ရန်  ပြင်ဆင်သည်"
 #. Description
 #. This is used as a button label, and should be translated as an action.
 #. Omit the [ ... ] from the translation.
-#: ../ubiquity.templates:56001
+#: ../ubiquity.templates:71001
 msgid "_Restart[ action ]"
 msgstr "__ပြန်လည်စတင်ပါ[လုပ်ဆောင်ချက်]"
 
@@ -397,31 +601,31 @@ msgstr "__ပြန်လည်စတင်ပါ[လုပ်ဆောင်ခ
 #. Description
 #. This is used as a button label, and should be translated as an action.
 #. Omit the [ ... ] from the translation.
-#: ../ubiquity.templates:57001
+#: ../ubiquity.templates:72001
 msgid "_Install Now[ action ]"
 msgstr "_Install Now[ action ]"
 
 #. Type: title
 #. Description
-#: ../ubiquity.templates:58001
+#: ../ubiquity.templates:73001
 msgid "Quit the installation?"
 msgstr "ထည့်သွင်းမှုမှ ထွက်မှာပါလား။"
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:59001
+#: ../ubiquity.templates:74001
 msgid "Do you really want to quit the installation now?"
 msgstr "စနစ်ထည့်သွင်းမှုမှ အမှန်တကယ် ထွက်လိုပါသလား။"
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:60001
+#: ../ubiquity.templates:75001
 msgid "Bootloader install failed"
 msgstr "စနစ်စတင်ရန် ဆွဲယူမှု မအောင်မြင်ပါ"
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:61001
+#: ../ubiquity.templates:76001
 msgid ""
 "Sorry, an error occurred and it was not possible to install the bootloader "
 "at the specified location."
@@ -430,69 +634,69 @@ msgstr ""
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:62001
+#: ../ubiquity.templates:77001
 msgid "Choose a different device to install the bootloader on:"
 msgstr "စနစ်စတင်ရန် ဆွဲယူမှုကို ထည့်သွင်းရန် အခြား ကိရိယာတစ်ခုကို ရွေးချယ်ပါ :"
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:63001
+#: ../ubiquity.templates:78001
 msgid "Continue without a bootloader."
 msgstr "စနစ်စတင်ရန် ဆွဲယူမှုမပါဘဲ ဆက်လက်လုပ်ဆောင်ပါ"
 
 #. Type: text
 #. Description
 #. RELEASE is a variable substituted into this string, and may be 'Linux Mint'
-#: ../ubiquity.templates:64001
+#: ../ubiquity.templates:79001
 msgid ""
 "You will need to manually install a bootloader in order to start ${RELEASE}."
 msgstr "${RELEASE} ကို စတင်ရန် သင်ကိုယ်တိုင် စနစ်စတင်ရန် ဆွဲယူမှုကို ထည့်သွင်းပေးရန် လိုအပ်ပါသည်။"
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:65001
+#: ../ubiquity.templates:80001
 msgid "Cancel the installation."
 msgstr "စနစ်ထည့်သွင်းမှု ကို ဖျက်သိမ်းပါ။"
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:66001
+#: ../ubiquity.templates:81001
 msgid "This may leave your computer unable to boot."
 msgstr "ဤသို့လုပ်ဆောင်လျှင် သင့် ကွန်ပျူတာကို စတင်ခြင်း မလုပ်ဆောင်နိုင်ပါ။"
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:67001
+#: ../ubiquity.templates:82001
 msgid "How would you like to proceed?"
 msgstr "မည်ကဲ့သို့ ရှေ့ဆက်လုပ်ဆောင်လိုပါသဲ"
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:68001
+#: ../ubiquity.templates:83001
 msgid "_Skip"
 msgstr "_Sကျော်မည်"
 
 #. Type: title
 #. Description
-#: ../ubiquity.templates:69001
+#: ../ubiquity.templates:84001
 msgid "Installation Complete"
 msgstr "စနစ်ထည့်သွင်းမှု ပြီးစီးပါသည်။"
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:70001
+#: ../ubiquity.templates:85001
 msgid "Continue Testing"
 msgstr "စမ်းသပ်မှု ဆက်လုပ်လုပ်ဆောင်ပါ။"
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:71001
+#: ../ubiquity.templates:86001
 msgid "Restart Now"
 msgstr "စနစ်ကို ပြန်လည် စတင်ပါ"
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:72001
+#: ../ubiquity.templates:87001
 msgid "Shutdown Now"
 msgstr "ယခု စက်ပိတ်ပါ"
 
@@ -500,13 +704,13 @@ msgstr "ယခု စက်ပိတ်ပါ"
 #. Description
 #. Type: text
 #. Description
-#: ../ubiquity.templates:74001 ../ubiquity.templates:75001
+#: ../ubiquity.templates:89001 ../ubiquity.templates:90001
 msgid "Installer crashed"
 msgstr "ထည့်သွင်းမှု ပျက်စီးသွားပါသည်။"
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:76001
+#: ../ubiquity.templates:91001
 msgid ""
 "We're sorry; the installer crashed. After you close this window, we'll allow "
 "you to file a bug report using the integrated bug reporting tool. This will "
@@ -523,56 +727,56 @@ msgstr ""
 #. Type: text
 #. Description
 #. An indicator menu item.  The underscore goes before an accelerator key.
-#: ../ubiquity.templates:77001
+#: ../ubiquity.templates:92001
 msgid "_High Contrast"
 msgstr "_High Contrast"
 
 #. Type: text
 #. Description
 #. An indicator menu item.  The underscore goes before an accelerator key.
-#: ../ubiquity.templates:78001
+#: ../ubiquity.templates:93001
 msgid "_Screen Reader"
 msgstr "_Screen Reader"
 
 #. Type: text
 #. Description
 #. An indicator menu item.  The underscore goes before an accelerator key.
-#: ../ubiquity.templates:79001
+#: ../ubiquity.templates:94001
 msgid "_Keyboard Modifiers"
 msgstr "_Keyboard Modifiers"
 
 #. Type: text
 #. Description
 #. An indicator menu item.  The underscore goes before an accelerator key.
-#: ../ubiquity.templates:80001
+#: ../ubiquity.templates:95001
 msgid "_On-screen Keyboard"
 msgstr "_ကွန်ပျူတာမျက်နှာပြင်ပေါ်မှ ကီးဘုတ်"
 
 #. Type: text
 #. Description
 #. An action, displayed on a button or as a menu item.
-#: ../ubiquity.templates:81001
+#: ../ubiquity.templates:96001
 msgid "New Partition Table..."
 msgstr "အခန်းအသစ်၏ ဇယား..."
 
 #. Type: text
 #. Description
 #. An action, displayed on a button or as a menu item.
-#: ../ubiquity.templates:82001
+#: ../ubiquity.templates:97001
 msgid "Add..."
 msgstr "ပေါင်းထည့်ပါ..."
 
 #. Type: text
 #. Description
 #. An action, displayed on a button or as a menu item.
-#: ../ubiquity.templates:83001
+#: ../ubiquity.templates:98001
 msgid "Change..."
 msgstr "ပြောင်းလဲပါ..."
 
 #. Type: text
 #. Description
 #. An action, displayed on a button or as a menu item.
-#: ../ubiquity.templates:84001
+#: ../ubiquity.templates:99001
 msgid "Delete"
 msgstr "ဖျက်ပါ..."
 
@@ -581,20 +785,20 @@ msgstr "ဖျက်ပါ..."
 #. An action, displayed on a button or as a menu item.
 #. Type: text
 #. Description
-#: ../ubiquity.templates:85001 ../ubiquity.templates:311001
+#: ../ubiquity.templates:100001 ../ubiquity.templates:331001
 msgid "Revert"
 msgstr "မူလအခြေအနေသို့ ပြန်လုပ်ပါ"
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:86001
+#: ../ubiquity.templates:101001
 msgid "Recalculating partitions..."
 msgstr "အခန်းကန့်ခြင်းကို ပြန်လည် တွက်ချက်ခြင်း"
 
 #. Type: text
 #. Description
 #. A column heading in the partitioner.
-#: ../ubiquity.templates:87001
+#: ../ubiquity.templates:102001
 msgid "Device"
 msgstr "ကိရိယာ"
 
@@ -602,28 +806,28 @@ msgstr "ကိရိယာ"
 #. Description
 #. A column heading in the partitioner. Indicates how the partition is to be
 #. used (ext2, swap, etc.).
-#: ../ubiquity.templates:88001
+#: ../ubiquity.templates:103001
 msgid "Type"
 msgstr "အမျိုးအစား"
 
 #. Type: text
 #. Description
 #. A column heading in the partitioner.
-#: ../ubiquity.templates:89001
+#: ../ubiquity.templates:104001
 msgid "Mount point"
 msgstr "တပ်ဆင်မည့် အမှတ်"
 
 #. Type: text
 #. Description
 #. A column heading in the partitioner.
-#: ../ubiquity.templates:90001
+#: ../ubiquity.templates:105001
 msgid "Format?"
 msgstr "Format လုပ်မည်လား"
 
 #. Type: text
 #. Description
 #. A column heading in the partitioner.
-#: ../ubiquity.templates:91001
+#: ../ubiquity.templates:106001
 msgid "Size"
 msgstr "အရွယ်အစား"
 
@@ -631,89 +835,89 @@ msgstr "အရွယ်အစား"
 #. Description
 #. A column heading in the partitioner. Indicates how much of the space on
 #. this partition is used by data.
-#: ../ubiquity.templates:92001
+#: ../ubiquity.templates:107001
 msgid "Used"
 msgstr "အသုံးပြုပြီး"
 
 #. Type: text
 #. Description
 #. A column heading in the partitioner.
-#: ../ubiquity.templates:93001
+#: ../ubiquity.templates:108001
 msgid "System"
 msgstr "စနစ်ဆိုင်ရာ"
 
 #. Type: text
 #. Description
 #. Indicates unpartitioned free space on a disk.
-#: ../ubiquity.templates:94001
+#: ../ubiquity.templates:109001
 msgid "free space"
 msgstr "နေရာလွတ်"
 
 #. Type: text
 #. Description
 #. Indicates that we do not know how much space is used on this partition.
-#: ../ubiquity.templates:95001
+#: ../ubiquity.templates:110001
 msgid "unknown"
 msgstr "မသိရသေးသော"
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:96001
+#: ../ubiquity.templates:111001
 msgid "Create partition"
 msgstr "အခန်း ဖန်တီးပါ"
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:97001
+#: ../ubiquity.templates:112001
 msgid "Size:"
 msgstr "အရွယ်အစား"
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:98001
+#: ../ubiquity.templates:113001
 msgid "Beginning of this space"
 msgstr "ဤနေရာ၏အစ"
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:99001
+#: ../ubiquity.templates:114001
 msgid "End of this space"
 msgstr "ဤနေရာ၏အဆုံး"
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:100001
+#: ../ubiquity.templates:115001
 msgid "Primary"
 msgstr "မူလ"
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:101001
+#: ../ubiquity.templates:116001
 msgid "Logical"
 msgstr "Logical"
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:102001
+#: ../ubiquity.templates:117001
 msgid "Edit partition"
 msgstr "အကန့်ကို တည်းဖြတ်ပါ"
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:103001
+#: ../ubiquity.templates:118001
 msgid "Edit a partition"
 msgstr "အကန့်တစ်ခုကို တည်းဖြတ်ပါ"
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:104001
+#: ../ubiquity.templates:119001
 msgid "Boot loader"
 msgstr "စတင်ရန် ဆွဲယူမှု"
 
 #. Type: text
 #. Description
 #. RELEASE is a variable substituted into this string, and may be 'Linux Mint'
-#: ../ubiquity.templates:105001
+#: ../ubiquity.templates:120001
 msgid ""
 "Installation has finished.  You can continue testing ${RELEASE} now, but "
 "until you restart the computer, any changes you make or documents you save "
@@ -725,7 +929,7 @@ msgstr ""
 #. Type: text
 #. Description
 #. Translators, this text will appear on a button, so KEEP IT SHORT
-#: ../ubiquity.templates:106001
+#: ../ubiquity.templates:121001
 msgid "Go Back"
 msgstr "နောက်သို့"
 
@@ -735,34 +939,34 @@ msgstr "နောက်သို့"
 #. Type: text
 #. Description
 #. Translators, this text will appear on a button, so KEEP IT SHORT
-#: ../ubiquity.templates:107001 ../ubiquity.templates:110001
+#: ../ubiquity.templates:122001 ../ubiquity.templates:125001
 msgid "Continue"
 msgstr "ရှေ့ဆက်လုပ်ဆောင်ပါ"
 
 #. Type: text
 #. Description
 #. Translators, this text will appear on a button, so KEEP IT SHORT
-#: ../ubiquity.templates:108001
+#: ../ubiquity.templates:123001
 msgid "Connect"
 msgstr "ချိတ်ဆက်"
 
 #. Type: text
 #. Description
 #. Translators, this text will appear on a button, so KEEP IT SHORT
-#: ../ubiquity.templates:109001
+#: ../ubiquity.templates:124001
 msgid "Stop"
 msgstr "ရပ်မည်"
 
 #. Type: text
 #. Description
 #. Translators, this text will appear on a button, so KEEP IT SHORT
-#: ../ubiquity.templates:111001
+#: ../ubiquity.templates:126001
 msgid "Continue in UEFI mode"
 msgstr "UEFI မုဒ်တွင် ဆက်လက်လုပ်ဆောင်ပါ။"
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:112001
+#: ../ubiquity.templates:127001
 msgid ""
 "Installation is complete. You need to restart the computer in order to use "
 "the new installation."
@@ -772,31 +976,31 @@ msgstr ""
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:113001
+#: ../ubiquity.templates:128001
 msgid "Verifying the installation configuration..."
 msgstr "စနစ်ထည့်သွင်းမှု ပြင်ဆင်ချိန်ညှိမှုများ စစ်ဆေးနေပါသည်..."
 
 #. Type: title
 #. Description
-#: ../ubiquity.templates:114001
+#: ../ubiquity.templates:129001
 msgid "Installing system"
 msgstr "စနစ် ထည့်သွင်းနေပါသည်"
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:115001
+#: ../ubiquity.templates:130001
 msgid "Finding the distribution to copy..."
 msgstr "ဖြန့်ချိမှုကို ကူးယူရန် ရှာဖွေနေပါသည်..."
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:117001
+#: ../ubiquity.templates:132001
 msgid "Copying files..."
 msgstr "ဖိုင်များ ကူးယူနေပါသည်..."
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:118001
+#: ../ubiquity.templates:133001
 msgid "Almost finished copying files..."
 msgstr "ဖိုင်များ ကူးယူမှု ပြီးစီးရန် နီးကပ်နေပါပြီ..."
 
@@ -810,9 +1014,9 @@ msgstr "ဖိုင်များ ကူးယူမှု ပြီးစီ�
 #. Description
 #. Type: select
 #. Description
-#: ../ubiquity.templates:119001 ../ubiquity.templates:120001
-#: ../ubiquity.templates:121001 ../ubiquity.templates:122001
-#: ../ubiquity.templates:123001
+#: ../ubiquity.templates:134001 ../ubiquity.templates:135001
+#: ../ubiquity.templates:136001 ../ubiquity.templates:137001
+#: ../ubiquity.templates:138001
 msgid "Installation Failed"
 msgstr "စနစ်ထည့်သွင်းမှု မအောင်မြင်ပါ"
 
@@ -824,14 +1028,14 @@ msgstr "စနစ်ထည့်သွင်းမှု မအောင်မ�
 #. Description
 #. Type: error
 #. Description
-#: ../ubiquity.templates:119001 ../ubiquity.templates:120001
-#: ../ubiquity.templates:121001 ../ubiquity.templates:122001
+#: ../ubiquity.templates:134001 ../ubiquity.templates:135001
+#: ../ubiquity.templates:136001 ../ubiquity.templates:137001
 msgid "The installer encountered an error copying files to the hard disk:"
 msgstr "hard disk သို့ ဖိုင်ကူးယူမှုမှာ ချို့ယွင်းမှု တွေ့ရှိရပါသည် :"
 
 #. Type: error
 #. Description
-#: ../ubiquity.templates:119001
+#: ../ubiquity.templates:134001
 msgid ""
 "This is due to there being insufficient disk space for the install to "
 "complete on the target partition.  Please run the installer again and select "
@@ -842,7 +1046,7 @@ msgstr ""
 
 #. Type: error
 #. Description
-#: ../ubiquity.templates:120001
+#: ../ubiquity.templates:135001
 msgid ""
 "This is often due to a faulty CD/DVD disk or drive. It may help to clean the "
 "CD/DVD, to burn the CD/DVD at a lower speed, or to clean the CD/DVD drive "
@@ -854,7 +1058,7 @@ msgstr ""
 
 #. Type: error
 #. Description
-#: ../ubiquity.templates:121001
+#: ../ubiquity.templates:136001
 msgid ""
 "This is often due to a faulty hard disk. It may help to check whether the "
 "hard disk is old and in need of replacement, or to move the system to a "
@@ -872,7 +1076,7 @@ msgstr ""
 #. Description
 #. This is used when there was an md5 mismatch during copying, meaning that
 #. the source file and destination file are not equal.
-#: ../ubiquity.templates:122001 ../ubiquity.templates:123001
+#: ../ubiquity.templates:137001 ../ubiquity.templates:138001
 msgid ""
 "This is often due to a faulty CD/DVD disk or drive, or a faulty hard disk. "
 "It may help to clean the CD/DVD, to burn the CD/DVD at a lower speed, to "
@@ -889,141 +1093,179 @@ msgstr ""
 
 #. Type: select
 #. Description
-#: ../ubiquity.templates:123001
+#: ../ubiquity.templates:138001
 msgid "The following file did not match its source copy on the CD/DVD:"
 msgstr "အောက်ပါ ဖိုင်သည် CD/DVD မှ မူရင်း ဖိုင်နှင့် တူညီမှု မရှိပါ :"
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:124001
+#: ../ubiquity.templates:139001
 msgid "Copying installation logs..."
 msgstr "ထည့်သွင်းမှု မှတ်တမ်းများ ကူးယူနေပါသည်..."
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:125001
+#: ../ubiquity.templates:140001
 msgid "Configuring target system..."
 msgstr "သတ်မှတ်ထားသော စနစ်ကို ပြင်ဆင်ချိန်ညှိနေပါသည်..."
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:126001
+#: ../ubiquity.templates:141001
 msgid "Configuring system locales..."
 msgstr "စနစ်ပင်ရင်းများကို ပြင်ဆင်ချိန်ညှိနေပါသည်..."
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:127001
+#: ../ubiquity.templates:142001
 msgid "Configuring apt..."
 msgstr "apt ကို ပြင်ဆင်ချိန်ညှိနေပါသည်..."
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:128001
+#: ../ubiquity.templates:143001
 msgid "Configuring time zone..."
 msgstr "အချိန်​ဒေသဇုန်များ ပြင်ဆင်ချိန်ညှိနေပါသည်..."
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:129001
+#: ../ubiquity.templates:144001
 msgid "Configuring keyboard..."
 msgstr "ကီးဘုတ် ပြင်ဆင်ချိန်ညှိနေပါသည်..."
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:130001
+#: ../ubiquity.templates:145001
 msgid "Creating user..."
 msgstr "အသုံးပြုသူ ဖန်တီးနေပါသည်..."
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:131001
+#: ../ubiquity.templates:146001
 msgid "Configuring hardware..."
 msgstr "hardware ပြင်ဆင်ချိန်ညှိနေပါသည်..."
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:132001
+#: ../ubiquity.templates:147001
 msgid "Installing third-party software..."
 msgstr "တတိယ-အဖွဲ့အစည်း ဆော့ဝဲများ ထည့်သွင်းနေပါသည်..."
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:133001
+#: ../ubiquity.templates:148001
 msgid "Configuring network..."
 msgstr "ကွန်ယက် ပြင်ဆင်ချိန်ညှိနေပါသည်..."
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:134001
+#: ../ubiquity.templates:149001
 msgid "Configuring boot loader..."
 msgstr "စနစ်စတင်ရန် ဆွဲယူမှု ပြင်ဆင်ချိန်ညှိနေပါသည်..."
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:135001
+#: ../ubiquity.templates:150001
 msgid "Configuring Active Directory..."
 msgstr "Active Directory အား ပြင်ဆင်သတ်မှတ်နေသည်..."
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:136001
+#: ../ubiquity.templates:151001
 msgid "Saving installed packages..."
 msgstr "ထည့်သွင်းပြီးသော အစုအဝေးများ သိမ်းဆည်းနေပါသည်..."
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:137001
+#: ../ubiquity.templates:152001
 msgid "Restoring previously installed packages..."
 msgstr "ယခင် ထည့်သွင်းထားသော အစုအဝေးများ ပြန်လည် တင်သွင်းနေပါသည်..."
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:138001
+#: ../ubiquity.templates:153001
 msgid "Installing additional packages..."
 msgstr "ထပ်မံပေါင်းထည့်ထားသော အစုအဝေးများ ထည့်သွင်းနေပါသည်..."
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:139001
+#: ../ubiquity.templates:154001
 msgid "Checking for packages to install..."
 msgstr "ထည့်သွင်းရန် အစုအဝေးများ စစ်ဆေးနေပါသည်..."
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:140001
+#: ../ubiquity.templates:155001
 msgid "Removing extra packages..."
 msgstr "အပို အစုအဝေးများ ဖယ်ရှားနေပါသည်..."
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:141001
+#: ../ubiquity.templates:156001
 msgid "Migrating user files..."
 msgstr "အသုံးပြုသူဖိုင်များကို ရွှေ့ပြောင်းခြင်း။..."
 
 #. Type: error
 #. Description
-#: ../ubiquity.templates:142001
+#: ../ubiquity.templates:157001
 msgid "Error encrypted copy drive"
 msgstr "ကုဒ်ဝှက်ထားသော မိတ္တူဒရိုက်ကို အမှားလုပ်ထားသည်။"
 
 #. Type: error
 #. Description
-#: ../ubiquity.templates:142001
+#: ../ubiquity.templates:157001
 msgid ""
 "An error occurred because BitLocker encryption was not disabled on copy "
-"drive  beforehand. User files cannot be copied."
+"drive beforehand. User files cannot be copied."
 msgstr ""
 
 #. Type: error
 #. Description
-#: ../ubiquity.templates:143001
+#: ../ubiquity.templates:158001
+msgid "Failed to mount copy drive"
+msgstr "မိတ္တူဒရိုက်ကို တပ်ဆင်၍မရပါ။"
+
+#. Type: error
+#. Description
+#: ../ubiquity.templates:158001
+msgid ""
+"The filesystem of copy drive is not supported or there is some other drive "
+"related issue."
+msgstr ""
+
+#. Type: error
+#. Description
+#: ../ubiquity.templates:159001
+msgid "Not enough space for remaining files"
+msgstr "ကျန်ဖိုင်များအတွက် နေရာမလုံလောက်ပါ။"
+
+#. Type: error
+#. Description
+#: ../ubiquity.templates:159001
+msgid "The destination directory doesn't have room for that many files."
+msgstr ""
+
+#. Type: error
+#. Description
+#: ../ubiquity.templates:160001
+msgid "Not able to verify space available"
+msgstr "ရနိုင်သောနေရာအား အတည်ပြု၍မရပါ။"
+
+#. Type: error
+#. Description
+#: ../ubiquity.templates:160001
+msgid "The drive space check failed. Hopefully there is enough room on drive."
+msgstr ""
+
+#. Type: error
+#. Description
+#: ../ubiquity.templates:161001
 msgid "Error copy user files failed"
 msgstr "အသုံးပြုသူဖိုင်များကို ကူးယူရာတွင် အမှားအယွင်း မအောင်မြင်ပါ။"
 
 #. Type: error
 #. Description
-#: ../ubiquity.templates:143001
+#: ../ubiquity.templates:161001
 msgid ""
 "Sorry, an error occurred while attempting to copy user files. The files made "
 "it to the users directory in copy drive but weren't able to be copied from "
@@ -1032,64 +1274,92 @@ msgstr ""
 
 #. Type: error
 #. Description
-#: ../ubiquity.templates:144001
-msgid "Error copy bonus files failed"
-msgstr "ဘောနပ်စ်ဖိုင်များကို ကူးယူရာတွင် အမှားအယွင်း မအောင်မြင်ပါ။"
+#: ../ubiquity.templates:162001
+msgid "Error copy config files failed"
+msgstr "config ဖိုင်များကို မိတ္တူကူးရာတွင် အမှားအယွင်း မအောင်မြင်ပါ။"
 
 #. Type: error
 #. Description
-#: ../ubiquity.templates:144001
+#: ../ubiquity.templates:162001
 msgid ""
-"Sorry, an error occurred while attempting to copy bonus user files. The "
-"bonus configuration files made it to the windows_data directory in copy "
-"drive but weren't able to be copied from there back to the install drive."
+"Sorry, an error occurred while attempting to copy configuration files. The "
+"files made it to the windows_data directory in copy drive but weren't able "
+"to be copied from there back to the install drive."
+msgstr ""
+
+#. Type: error
+#. Description
+#: ../ubiquity.templates:163001
+msgid "Error return user files failed"
+msgstr "အသုံးပြုသူဖိုင်များကို ပြန်ပေးရာတွင် အမှားအယွင်း မအောင်မြင်ပါ။"
+
+#. Type: error
+#. Description
+#: ../ubiquity.templates:163001
+msgid ""
+"Sorry, an error occurred while attempting to return user files from copy "
+"drive to home directory in new Linux installation on install drive."
+msgstr ""
+
+#. Type: error
+#. Description
+#: ../ubiquity.templates:164001
+msgid "Error return config files failed"
+msgstr "config ဖိုင်များကို ပြန်ပေးရာတွင် အမှားအယွင်း မအောင်မြင်ပါ။"
+
+#. Type: error
+#. Description
+#: ../ubiquity.templates:164001
+msgid ""
+"Sorry, an error occurred while attempting to return configuration files from "
+"copy drive to destination directory in new installation on install drive."
 msgstr ""
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:145001
+#: ../ubiquity.templates:165001
 msgid "Checking for packages to remove..."
 msgstr "ဖယ်ရှားရန် အစုအဝေးများ စစ်ဆေးနေပါသည်..."
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:146001
+#: ../ubiquity.templates:166001
 msgid "Downloading packages (${TIME} remaining)..."
 msgstr "အစုအဝေးများ ဆွဲယူနေပါသည် (${TIME} ကျန်ရှိပါသေးသည်)..."
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:147001
+#: ../ubiquity.templates:167001
 msgid "Downloading package lists..."
 msgstr "အစုအဝေးစာရင်းများ ဆွဲယူနေပါသည်..."
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:148001
+#: ../ubiquity.templates:168001
 msgid "Downloading package lists (${TIME} remaining)..."
 msgstr "အစုအဝေးစာရင်းများ ဆွဲယူနေပါသည် (${TIME} ကျန်ပါသေးသည်)..."
 
 #. Type: error
 #. Description
-#: ../ubiquity.templates:150001
+#: ../ubiquity.templates:170001
 msgid "Error installing ${PACKAGE}"
 msgstr "${PACKAGE} ထည့်သွင်းမှု ချို့ယွင်းနေပါသည်"
 
 #. Type: error
 #. Description
-#: ../ubiquity.templates:151001
+#: ../ubiquity.templates:171001
 msgid "Error removing ${PACKAGE}"
 msgstr "${PACKAGE} ဖယ်ရှားရာတွင် ချို့ယွင်းနေပါသည်"
 
 #. Type: error
 #. Description
-#: ../ubiquity.templates:152001
+#: ../ubiquity.templates:172001
 msgid "Error while installing packages"
 msgstr "အစုအဝေးများ ထည့်သွင်းနေစဉ် ချို့ယွင်းချက်ရှိပါသည်"
 
 #. Type: error
 #. Description
-#: ../ubiquity.templates:152001
+#: ../ubiquity.templates:172001
 msgid "An error occurred while installing packages:"
 msgstr "အစုအဝေးများထည့်သွင်းနေစဉ် ချို့ယွင်းချက်တွေ့ရပါသည်:"
 
@@ -1097,7 +1367,7 @@ msgstr "အစုအဝေးများထည့်သွင်းနေစဉ
 #. Description
 #. Type: error
 #. Description
-#: ../ubiquity.templates:152001 ../ubiquity.templates:153001
+#: ../ubiquity.templates:172001 ../ubiquity.templates:173001
 msgid "The following packages are in a broken state:"
 msgstr "အောက်ပါ အစုအဝေးများတွင် ပျက်စီးမှုတွေ့ရပါသည်:"
 
@@ -1105,7 +1375,7 @@ msgstr "အောက်ပါ အစုအဝေးများတွင် ပ�
 #. Description
 #. Type: error
 #. Description
-#: ../ubiquity.templates:152001 ../ubiquity.templates:153001
+#: ../ubiquity.templates:172001 ../ubiquity.templates:173001
 msgid ""
 "This may be due to using an old installer image, or it may be due to a bug "
 "in some of the packages listed above. More details may be found in /var/log/"
@@ -1124,25 +1394,25 @@ msgstr ""
 
 #. Type: error
 #. Description
-#: ../ubiquity.templates:153001
+#: ../ubiquity.templates:173001
 msgid "Error while removing packages"
 msgstr "အစုအဝေးများ ဖယ်ရှားရာတွင် ချို့ယွင်းချက်တွေ့ရှိရပါသည်"
 
 #. Type: error
 #. Description
-#: ../ubiquity.templates:153001
+#: ../ubiquity.templates:173001
 msgid "An error occurred while removing packages:"
 msgstr "အစုအဝေးများ ဖယ်ရှားနေစဉ် ချို့ယွင်းချက် တစ်ခုတွေ့ရှိရပါသည်:"
 
 #. Type: error
 #. Description
-#: ../ubiquity.templates:154001
+#: ../ubiquity.templates:174001
 msgid "Error copying network configuration"
 msgstr "ကွန်ယက် ချိန်ညှိမှုများ ကူးယူနေစဉ် ချို့ယွင်းချက် တွေ့ရပါသည်"
 
 #. Type: error
 #. Description
-#: ../ubiquity.templates:154001
+#: ../ubiquity.templates:174001
 msgid ""
 "An error occurred while copying the network settings.  The installation will "
 "continue, but the network configuration will have to be set up again in the "
@@ -1153,13 +1423,13 @@ msgstr ""
 
 #. Type: error
 #. Description
-#: ../ubiquity.templates:155001
+#: ../ubiquity.templates:175001
 msgid "Error copying bluetooth configuration"
 msgstr "bluetooth ချိန်ညှိမှု ကူးယူရာတွင် ချို့ယွင်းချက်ဖြစ်နေပါသည်"
 
 #. Type: error
 #. Description
-#: ../ubiquity.templates:155001
+#: ../ubiquity.templates:175001
 msgid ""
 "An error occurred while copying the bluetooth settings.  The installation "
 "will continue, but the bluetooth configuration will have to be set up again "
@@ -1171,13 +1441,13 @@ msgstr ""
 
 #. Type: error
 #. Description
-#: ../ubiquity.templates:156001
+#: ../ubiquity.templates:176001
 msgid "Error configuring connection to Active Directory"
 msgstr "Active Directory သို့ စီစဉ်ချိတ်ဆက်ရာတွင် အမှားအယွင်းရှိနေသည်။"
 
 #. Type: error
 #. Description
-#: ../ubiquity.templates:156001
+#: ../ubiquity.templates:176001
 msgid ""
 "Sorry, Active Directory can't be set up at the moment. Once your system is "
 "up and running, visit help.ubuntu.com/activedirectory for help."
@@ -1187,13 +1457,13 @@ msgstr ""
 
 #. Type: error
 #. Description
-#: ../ubiquity.templates:157001
+#: ../ubiquity.templates:177001
 msgid "Error setting LUKS recovery key"
 msgstr "LUKS Recovery Key ဆက်တင်အမှားအယွင်း"
 
 #. Type: error
 #. Description
-#: ../ubiquity.templates:157001
+#: ../ubiquity.templates:177001
 msgid ""
 "An error occurred while setting the recovery key.  The installation will "
 "continue, but you may have to manually add the recovery key in the installed "
@@ -1205,37 +1475,37 @@ msgstr ""
 
 #. Type: error
 #. Description
-#: ../ubiquity.templates:157001
+#: ../ubiquity.templates:177001
 msgid "cryptsetup luksAddKey device_name"
 msgstr "cryptsetup luksAddKey device_name"
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:161001
+#: ../ubiquity.templates:181001
 msgid "Calculating files to skip copying..."
 msgstr "ကျော်ပစ်ရမည့် ကူးယူရမည့် ဖိုင်များ တွက်ချက်နေပါသည်..."
 
 #. Type: title
 #. Description
-#: ../ubiquity.templates:162001
+#: ../ubiquity.templates:182001
 msgid "Installing language packs"
 msgstr "ဘာသာစကား ထည့်သွင်းနေပါသည်"
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:163001
+#: ../ubiquity.templates:183001
 msgid "Downloading language packs (${TIME} remaining)..."
 msgstr "ဘာသာစကားအစုအဝေးများ ဆွဲချနေပါသည် (${TIME} ကျန်ရှိပါသေးသည်)..."
 
 #. Type: boolean
 #. Description
-#: ../ubiquity.templates:172001
+#: ../ubiquity.templates:192001
 msgid "Failed to unmount partitions"
 msgstr "အခန်းအကန့် ဖြုတ်ချရန် မအောင်မြင်ပါ"
 
 #. Type: boolean
 #. Description
-#: ../ubiquity.templates:172001
+#: ../ubiquity.templates:192001
 msgid ""
 "The installer needs to commit changes to partition tables, but cannot do so "
 "because partitions on the following mount points could not be unmounted:"
@@ -1245,25 +1515,25 @@ msgstr ""
 
 #. Type: boolean
 #. Description
-#: ../ubiquity.templates:172001
+#: ../ubiquity.templates:192001
 msgid "Please close any applications using these mount points."
 msgstr "တပ်ဆင်ရမည့်အမှတ်ရှိ အသုံးပြုနေသော ဆော့ဝဲများကို ကျေးဇူးပြု၍ ပိတ်လိုက်ပါ"
 
 #. Type: boolean
 #. Description
-#: ../ubiquity.templates:172001
+#: ../ubiquity.templates:192001
 msgid "Would you like the installer to try to unmount these partitions again?"
 msgstr "စနစ်ထည့်သွင်းမှုမှ ဤ အခန်းအကန့်များကို ထပ်မံ ဖြုတ်ချရန် ပြုလုပ်စေလိုပါသလား။"
 
 #. Type: boolean
 #. Description
-#: ../ubiquity.templates:178001
+#: ../ubiquity.templates:198001
 msgid "Do you want to return to the partitioner?"
 msgstr "အခန်းကန့်သည့်နေရာသို့ ပြန်သွားလိုပါသလား။"
 
 #. Type: boolean
 #. Description
-#: ../ubiquity.templates:178001
+#: ../ubiquity.templates:198001
 msgid ""
 "Some of the partitions you created are too small.  Please make the following "
 "partitions at least this large:"
@@ -1273,7 +1543,7 @@ msgstr ""
 
 #. Type: boolean
 #. Description
-#: ../ubiquity.templates:178001
+#: ../ubiquity.templates:198001
 msgid ""
 "If you do not go back to the partitioner and increase the size of these "
 "partitions, the installation may fail."
@@ -1283,7 +1553,7 @@ msgstr ""
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:180001
+#: ../ubiquity.templates:200001
 msgid "System Configuration"
 msgstr "စနစ် ပြင်ဆင်ချိန်ညှိမှု"
 
@@ -1291,19 +1561,19 @@ msgstr "စနစ် ပြင်ဆင်ချိန်ညှိမှု"
 #. Description
 #. Type: text
 #. Description
-#: ../ubiquity.templates:181001 ../ubiquity.templates:264001
+#: ../ubiquity.templates:201001 ../ubiquity.templates:284001
 msgid "Welcome"
 msgstr "ကြိုဆိုပါတယ်"
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:182001
+#: ../ubiquity.templates:202001
 msgid "Network configuration"
 msgstr "ကွန်ယက် ချိန်ညှိမှု"
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:183001
+#: ../ubiquity.templates:203001
 msgid "Language"
 msgstr "ဘာသာစကား"
 
@@ -1311,117 +1581,117 @@ msgstr "ဘာသာစကား"
 #. Description
 #. Type: text
 #. Description
-#: ../ubiquity.templates:184001 ../ubiquity.templates:208001
+#: ../ubiquity.templates:204001 ../ubiquity.templates:228001
 msgid "Wireless"
 msgstr "ကြိုးမဲ့"
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:185001
+#: ../ubiquity.templates:205001
 msgid "Software"
 msgstr "ဆော့ဖ်ဝဲလ်"
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:186001
+#: ../ubiquity.templates:206001
 msgid "Timezone"
 msgstr "အချိန်ဇုန်"
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:187001
+#: ../ubiquity.templates:207001
 msgid "Keyboard"
 msgstr "ကီးဘုတ်"
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:188001
+#: ../ubiquity.templates:208001
 msgid "Disk Setup"
 msgstr "Disk တည်ဆောက်မှု"
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:189001
+#: ../ubiquity.templates:209001
 msgid "User Info"
 msgstr "အသုံးပြုသူ အချက်အလက်"
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:190001
+#: ../ubiquity.templates:210001
 msgid "Install"
 msgstr "ထည့်သွင်းပါ"
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:191001
+#: ../ubiquity.templates:211001
 msgid "installation process"
 msgstr "ထည့်သွင်းမှု လုပ်ငန်းစဉ်"
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:193001
+#: ../ubiquity.templates:213001
 msgid "Checking for installer updates"
 msgstr "ထည့်သွင်းမှု နောက်ဆုံးအဆင့်အထိ ရှိမရှိ စစ်ဆေးခြင်း"
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:194001
+#: ../ubiquity.templates:214001
 msgid "Reading package information"
 msgstr "အစုအဝေး အချက်အလက်များ ဖတ်ရှုခြင်း"
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:195001
+#: ../ubiquity.templates:215001
 msgid "Updating package information"
 msgstr "အစုအဝေး အချက်အလက်များ အသစ်ထွက်ရှိမှုသို့ ပြောင်းလဲခြင်း"
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:196001
+#: ../ubiquity.templates:216001
 msgid "File ${INDEX} of ${TOTAL} at ${SPEED}/s"
 msgstr "File ${INDEX} of ${TOTAL} at ${SPEED}/s"
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:197001
+#: ../ubiquity.templates:217001
 msgid "File ${INDEX} of ${TOTAL}"
 msgstr "File ${INDEX} of ${TOTAL}"
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:198001
+#: ../ubiquity.templates:218001
 msgid "Installing update"
 msgstr "အသစ်ထွက်ရှိမှုများ ထည့်သွင်းခြင်း"
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:199001
+#: ../ubiquity.templates:219001
 msgid "Error updating installer"
 msgstr "အသစ်ထွက်ရှိမှု ထည့်သွင်းခြင်း ချို့ယွင်းချက်"
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:199001
+#: ../ubiquity.templates:219001
 msgid "The installer encountered an error while trying to update itself:"
 msgstr "အသစ်ထွက်ရှိမှုများ ကိုယ်တိုင် ထည့်သွင်းရာတွင် ချို့ယွင်းချက် တစ်ခု တွေ့ရှိရပါသည်။"
 
 #. Type: text
 #. Description
 #. Translated acronym for Universal Serial Bus.
-#: ../ubiquity.templates:200001
+#: ../ubiquity.templates:220001
 msgid "USB disk"
 msgstr "USB disk"
 
 #. Type: text
 #. Description
 #. Translated acronym for Compact Disc.
-#: ../ubiquity.templates:201001
+#: ../ubiquity.templates:221001
 msgid "CD"
 msgstr "CD"
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:202001
+#: ../ubiquity.templates:222001
 msgid ""
 "Please choose the language to use for the install process. This language "
 "will be the default language for this computer."
@@ -1431,7 +1701,7 @@ msgstr ""
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:203001
+#: ../ubiquity.templates:223001
 msgid ""
 "Please choose the language used for the configuration process. This language "
 "will be the default language for this computer."
@@ -1443,13 +1713,13 @@ msgstr ""
 #. Description
 #. Type: text
 #. Description
-#: ../ubiquity.templates:204001 ../ubiquity.templates:205001
+#: ../ubiquity.templates:224001 ../ubiquity.templates:225001
 msgid "Installation failed"
 msgstr "ထည့်သွင်းမှု မအောင်မြင်ပါ"
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:204001
+#: ../ubiquity.templates:224001
 msgid ""
 "The installer encountered an unrecoverable error.  A desktop session will "
 "now be run so that you may investigate the problem or try installing again."
@@ -1459,19 +1729,19 @@ msgstr ""
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:205001
+#: ../ubiquity.templates:225001
 msgid "The installer encountered an unrecoverable error and will now reboot."
 msgstr "စနစ်ထည့်သွင်းမှုမှ ပြန်လည် မပြင်ဆင်နိုင်သော ချို့ယွင်းချက် တစ်ခု တွေ့ရှိရ၍ စက်ကို ပြန်လည် စတင်ရပါမည်။"
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:207001
+#: ../ubiquity.templates:227001
 msgid "Updates and other software"
 msgstr "Updates နှင့် အခြားဆော့ဖ်ဝဲများ"
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:209001
+#: ../ubiquity.templates:229001
 msgid ""
 "Connecting this computer to a Wi-Fi network allows you to install third-"
 "party software, download updates, automatically detect your timezone, and "
@@ -1485,55 +1755,55 @@ msgstr ""
 #. Description
 #. Type: text
 #. Description
-#: ../ubiquity.templates:210001 ../ubiquity.templates:333001
+#: ../ubiquity.templates:230001 ../ubiquity.templates:353001
 msgid "Password:"
 msgstr "စကားဝှက်-"
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:211001
+#: ../ubiquity.templates:231001
 msgid "Display password"
 msgstr "စကားဝှက်ပြမည်"
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:212001
+#: ../ubiquity.templates:232001
 msgid "I don't want to connect to a Wi-Fi network right now"
 msgstr "ကျွန်ုပ်သည် ယခုအချိန်တွင် Wi-Fi ကွန်ရက်သို့ မချိတ်ဆက်ချင်ပါ။"
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:213001
+#: ../ubiquity.templates:233001
 msgid "Connect to this network"
 msgstr "ဤကွန်ယက်နှင့်ချိတ်ဆက်မည်"
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:219001
+#: ../ubiquity.templates:239001
 msgid "Select install drive:"
 msgstr "install drive ကို ရွေးပါ"
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:220001
+#: ../ubiquity.templates:240001
 msgid "Select copy drive:"
 msgstr "မိတ္တူဒရိုက်ကို ရွေးပါ-"
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:221001
+#: ../ubiquity.templates:241001
 msgid "Allocate drive space by dragging the divider below:"
 msgstr "ခွဲခြားမှတ်ကို အောက်တွင် ဆွဲယူ၍ drive နေရာလွတ်ကို နေရာချပါ :"
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:222001
+#: ../ubiquity.templates:242001
 msgid "The entire disk will be used:"
 msgstr "disk တစ်ခုလုံးသည် အသုံးပြုပါမည်:"
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:223001
+#: ../ubiquity.templates:243001
 #, no-c-format
 msgid ""
 "<small>%d smaller partitions are hidden, use the <a href=\"\">advanced "
@@ -1544,7 +1814,7 @@ msgstr ""
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:224001
+#: ../ubiquity.templates:244001
 msgid ""
 "<small>1 smaller partition is hidden, use the <a href=\"\">advanced "
 "partitioning tool</a> for more control</small>"
@@ -1554,7 +1824,7 @@ msgstr ""
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:225001
+#: ../ubiquity.templates:245001
 #, no-c-format
 msgid ""
 "%d partitions will be deleted, use the <a href=\"\">advanced partitioning "
@@ -1564,7 +1834,7 @@ msgstr ""
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:226001
+#: ../ubiquity.templates:246001
 msgid ""
 "1 partition will be deleted, use the <a href=\"\">advanced partitioning "
 "tool</a> for more control"
@@ -1573,32 +1843,32 @@ msgstr ""
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:227001
+#: ../ubiquity.templates:247001
 msgid "Split Largest Partition"
 msgstr "အကြီးဆုံး အကန့်ကို ကန့်သတ်ခွဲခြားပါ"
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:229001
+#: ../ubiquity.templates:249001
 msgid "For best results, please ensure that this computer:"
 msgstr "အကောင်းဆုံးရလဒ်ရရိရန်၊  သင့်ကွန်ပျူတာကို အောက်ပါ တို့ကို သေချာရန် ပြုလုပ်ပါ :"
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:230001
+#: ../ubiquity.templates:250001
 msgid "Sorry"
 msgstr "ဝမ်းနည်းပါသည်။"
 
 #. Type: text
 #. Description
 #. RST means "Rapid Storage Technology". Don't translate it.
-#: ../ubiquity.templates:231001
+#: ../ubiquity.templates:251001
 msgid "Turn off RST"
 msgstr "RST အား ပိတ်ပါ။"
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:232001
+#: ../ubiquity.templates:252001
 msgid ""
 "This computer uses Intel RST (Rapid Storage Technology). You need to turn "
 "off RST before installing Linux Mint. For instructions, open this page on a "
@@ -1612,13 +1882,13 @@ msgstr ""
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:233001
+#: ../ubiquity.templates:253001
 msgid "Turn off BitLocker"
 msgstr "BitLocker အား ပိတ်ပါ။"
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:234001
+#: ../ubiquity.templates:254001
 msgid ""
 "This computer uses Windows BitLocker encryption. You need to turn off "
 "BitLocker in Windows before installing Linux Mint. For instructions, open "
@@ -1634,32 +1904,32 @@ msgstr ""
 #. Description
 #. SIZE is a variable substituted into this string, and may be '3.7 GB'
 #. RELEASE is a variable substituted into this string, the Linux Mint flavor'
-#: ../ubiquity.templates:235001
+#: ../ubiquity.templates:255001
 msgid "You need at least ${SIZE} disk space to install ${RELEASE}."
 msgstr "${RELEASE} ထည့်သွင်းရန် သင်သည် အနည်းဆုံး ${SIZE} disk space လိုအပ်ပါသည်။"
 
 #. Type: text
 #. Description
 #. SIZE is a variable substituted into this string, and may be '3.7 GB'
-#: ../ubiquity.templates:236001
+#: ../ubiquity.templates:256001
 msgid "This computer has only ${SIZE}."
 msgstr "ဤကွန်ပျူတာတွင် ${SIZE} သာရှိသည်။"
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:237001
+#: ../ubiquity.templates:257001
 msgid "is plugged in to a power source"
 msgstr "လျှပ်စစ်ပလပ်ပေါက် ချိတ်ဆက်ထားမှု ရှိမရှိ"
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:238001
+#: ../ubiquity.templates:258001
 msgid "is connected to the Internet"
 msgstr "အင်တာနက်သို့ ချိတ်ဆက်ထားမှု ရှိမရှိ"
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:239001
+#: ../ubiquity.templates:259001
 msgid ""
 "This software is subject to license terms included with its documentation. "
 "Some is proprietary."
@@ -1669,7 +1939,7 @@ msgstr ""
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:240001
+#: ../ubiquity.templates:260001
 msgid ""
 "Install third-party software for graphics and Wi-Fi hardware and additional "
 "media formats"
@@ -1679,67 +1949,67 @@ msgstr ""
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:241001
+#: ../ubiquity.templates:261001
 msgid "Download updates while installing ${RELEASE}"
 msgstr "${RELEASE} ထည့်သွင်းနေစဉ် Updates အား Download လုပ်ပါ။"
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:242001
+#: ../ubiquity.templates:262001
 msgid "This saves time after installation."
 msgstr "၎င်းသည် ထည့်သွင်းပြီးနောက် အချိန်သက်သာစေသည်။"
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:243001
+#: ../ubiquity.templates:263001
 msgid "Not available because there is no Internet connection."
 msgstr "အင်တာနက်ချိတ်ဆက်မှု မရှိသောကြောင့် မရနိုင်ပါ။"
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:244001
+#: ../ubiquity.templates:264001
 msgid "What apps would you like to install to start with?"
 msgstr "စတင်ရန် မည်သည့် Apps ကို ထည့်သွင်းလိုသနည်း။"
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:245001
+#: ../ubiquity.templates:265001
 msgid "Which applications would you like to start with?"
 msgstr "မည်သည့် Applications ဖြင့် စတင်လိုသနည်း။"
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:246001
+#: ../ubiquity.templates:266001
 msgid "Minimal installation"
 msgstr "အနည်းဆုံးထည့်သွင်းခြင်း"
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:247001
+#: ../ubiquity.templates:267001
 msgid "Web browser and basic utilities."
 msgstr "Web ရှာဖွေမှုနှင့် အခြေခံ Utilities။"
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:248001
+#: ../ubiquity.templates:268001
 msgid "Web browser plus basic utilities and applications."
 msgstr "Web ရှာဖွေမှုအပါအဝင် အခြေခံ Utilities နှင့် အက်ပလီကေးရှင်းများ။"
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:249001
+#: ../ubiquity.templates:269001
 msgid "Normal installation"
 msgstr "ပုံမှန်ထည့်သွင်းခြင်း"
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:250001
+#: ../ubiquity.templates:270001
 msgid "Web browser, utilities, office software, games, and media players."
 msgstr "Web ရှာဖွေမှု၊ Utilities၊ ရုံးသုံးဆော့ဖ်ဝဲရ်၊ ဂိမ်းများနှင့် မီဒီယာဖွင့်ရန်များ။"
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:251001
+#: ../ubiquity.templates:271001
 msgid ""
 "Web browser, utilities, office software, plus additional internet "
 "applications and media players."
@@ -1748,13 +2018,13 @@ msgstr ""
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:252001
+#: ../ubiquity.templates:272001
 msgid "Other options"
 msgstr "အခြားရွေးချယ်စရာများ"
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:253001
+#: ../ubiquity.templates:273001
 msgid ""
 "Installing third-party drivers requires configuring Secure Boot. To do this, "
 "you need to choose a security key now, and enter it when the system restarts."
@@ -1764,25 +2034,25 @@ msgstr ""
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:257001
+#: ../ubiquity.templates:277001
 msgid "Layout:"
 msgstr "ပုံစံ:"
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:258001
+#: ../ubiquity.templates:278001
 msgid "Variant:"
 msgstr "မူကွဲ:"
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:259001
+#: ../ubiquity.templates:279001
 msgid "Below is an image of your current layout:"
 msgstr "အောက်ပါပုံသည် သင့် လက်ရှိ ပုံစံ၏ ပုံရိပ်ဖြစ်ပါသည် :"
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:260001
+#: ../ubiquity.templates:280001
 msgid ""
 "Select your location, so that the system can use appropriate display "
 "conventions for your country, fetch updates from sites close to you, and set "
@@ -1793,19 +2063,19 @@ msgstr ""
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:261001
+#: ../ubiquity.templates:281001
 msgid "Time Zone:"
 msgstr "အချိန် ဇုန်:"
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:262001
+#: ../ubiquity.templates:282001
 msgid "Region:"
 msgstr "နယ်မြေ:"
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:263001
+#: ../ubiquity.templates:283001
 msgid "[type here to change]"
 msgstr "[ပြောင်းလဲရန် ဤနေရာတွင် ရိုက်ပါ]"
 
@@ -1813,14 +2083,14 @@ msgstr "[ပြောင်းလဲရန် ဤနေရာတွင် ရိ
 #. Description
 #. OS is a variable substituted into this string, and may be 'Windows 7'
 #. DISTRO is a variable substituted into this string, and may be 'Linux Mint'
-#: ../ubiquity.templates:266001
+#: ../ubiquity.templates:286001
 msgid "Replace ${OS} with ${DISTRO}"
 msgstr "${OS} ကို ${DISTRO} နှင့် အစားထိုးပါ"
 
 #. Type: text
 #. Description
 #. OS is a variable substituted into this string, and may be 'Windows 7'
-#: ../ubiquity.templates:266001
+#: ../ubiquity.templates:286001
 msgid ""
 "<span foreground=\"darkred\">Warning:</span> This will delete all of your "
 "${OS} programs, documents, photos, music, and any other files."
@@ -1832,7 +2102,7 @@ msgstr ""
 #. Description
 #. DISTRO is a variable substituted into this string, and may be 'Linux Mint'
 #. OS is a variable substituted into this string, and may be 'Windows 7'
-#: ../ubiquity.templates:267001
+#: ../ubiquity.templates:287001
 msgid "Install ${DISTRO} alongside ${OS}"
 msgstr "${OS} နှင့်တွဲဖက်၍ ${DISTRO} ကိုထည့်သွင်းပါ"
 
@@ -1844,8 +2114,8 @@ msgstr "${OS} နှင့်တွဲဖက်၍ ${DISTRO} ကိုထည်�
 #. Description
 #. Type: text
 #. Description
-#: ../ubiquity.templates:267001 ../ubiquity.templates:268001
-#: ../ubiquity.templates:271001 ../ubiquity.templates:276001
+#: ../ubiquity.templates:287001 ../ubiquity.templates:288001
+#: ../ubiquity.templates:291001 ../ubiquity.templates:296001
 msgid ""
 "Documents, music, and other personal files will be kept. You can choose "
 "which operating system you want each time the computer starts up."
@@ -1857,20 +2127,20 @@ msgstr ""
 #. Description
 #. DISTRO is a variable substituted into this string, and may be 'Linux Mint'
 #. OS is a variable substituted into this string, and may be 'Windows 7'
-#: ../ubiquity.templates:268001
+#: ../ubiquity.templates:288001
 msgid "Install ${DISTRO} inside ${OS}"
 msgstr "${OS} အတွင်းတွင် ${DISTRO} ကို ထည့်သွင်းပါ။"
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:269001
+#: ../ubiquity.templates:289001
 msgid "Something else"
 msgstr "အခြားအရာ"
 
 #. Type: text
 #. Description
 #. DISTRO is a variable substituted into this string, and may be 'Linux Mint'
-#: ../ubiquity.templates:269001
+#: ../ubiquity.templates:289001
 msgid ""
 "You can create or resize partitions yourself, or choose multiple partitions "
 "for ${DISTRO}."
@@ -1881,14 +2151,14 @@ msgstr ""
 #. Type: text
 #. Description
 #. CURDISTRO is a variable substituted into this string, and may be 'Linux Mint 10.10'
-#: ../ubiquity.templates:270001
+#: ../ubiquity.templates:290001
 msgid "Erase ${CURDISTRO} and reinstall"
 msgstr "${CURDISTRO} ကိုဖျက်၍ ပြန်လည် ထည့်သွင်းပါ။"
 
 #. Type: text
 #. Description
 #. CURDISTRO is a variable substituted into this string, and may be 'Linux Mint 10.10'
-#: ../ubiquity.templates:270001
+#: ../ubiquity.templates:290001
 msgid ""
 "<span foreground=\"darkred\">Warning:</span> This will delete all your "
 "${CURDISTRO} programs, documents, photos, music, and any other files."
@@ -1901,7 +2171,7 @@ msgstr ""
 #. DISTRO is a variable substituted into this string, and may be 'Linux Mint'
 #. VER is a variable substituted into this string, and may be '11.04'
 #. CURDISTRO is a variable substituted into this string, and may be 'Linux Mint 10.10'
-#: ../ubiquity.templates:271001
+#: ../ubiquity.templates:291001
 msgid "Install ${DISTRO} ${VER} alongside ${CURDISTRO}"
 msgstr "${DISTRO} ${VER} ကို နှင့် ယှဉ်တွဲ၍ ထည့်သွင်းပါ"
 
@@ -1911,13 +2181,13 @@ msgstr "${DISTRO} ${VER} ကို နှင့် ယှဉ်တွဲ၍ ထ�
 #. Type: text
 #. Description
 #. DISTRO is a variable substituted into this string, and may be 'Linux Mint'
-#: ../ubiquity.templates:272001 ../ubiquity.templates:275001
+#: ../ubiquity.templates:292001 ../ubiquity.templates:295001
 msgid "Erase disk and install ${DISTRO}"
 msgstr "disk ကို ဖျက်သိမ်း၍ ${DISTRO} ကို ထည့်သွင်းပါ"
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:272001
+#: ../ubiquity.templates:292001
 msgid ""
 "<span foreground=\"darkred\">Warning:</span> This will delete any files on "
 "the disk."
@@ -1927,7 +2197,7 @@ msgstr ""
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:273001
+#: ../ubiquity.templates:293001
 msgid "Erase everything and reinstall"
 msgstr "အရာအားလုံး ဖျက်သိမ်း၍ ပြန်လည် ထည့်သွင်းပါ။"
 
@@ -1935,7 +2205,7 @@ msgstr "အရာအားလုံး ဖျက်သိမ်း၍ ပြန�
 #. Description
 #. OS is a variable substituted into this string, and may be 'Windows 7'
 #. CURDISTRO is a variable substituted into this string, and may be 'Linux Mint 10.10'
-#: ../ubiquity.templates:273001
+#: ../ubiquity.templates:293001
 msgid ""
 "<span foreground=\"darkred\">Warning:</span> This will delete all your "
 "programs, documents, photos, music, and other files in both ${OS} and "
@@ -1948,13 +2218,13 @@ msgstr ""
 #. Type: text
 #. Description
 #. CURDISTRO is a variable substituted into this string, and may be 'Linux Mint 10.10'
-#: ../ubiquity.templates:274001
+#: ../ubiquity.templates:294001
 msgid "Reinstall ${CURDISTRO}"
 msgstr "${CURDISTRO} ကို ပြန်လည် ထည့်သွင်းပါ"
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:274001
+#: ../ubiquity.templates:294001
 msgid ""
 "Documents, music, and other personal files will be kept. Installed software "
 "and system-wide settings will be cleared."
@@ -1964,7 +2234,7 @@ msgstr ""
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:275001
+#: ../ubiquity.templates:295001
 msgid ""
 "<span foreground=\"darkred\">Warning:</span> This will delete all your "
 "programs, documents, photos, music, and any other files in all operating "
@@ -1977,14 +2247,14 @@ msgstr ""
 #. Type: text
 #. Description
 #. DISTRO is a variable substituted into this string, and may be 'Linux Mint'
-#: ../ubiquity.templates:276001
+#: ../ubiquity.templates:296001
 msgid "Install ${DISTRO} alongside them"
 msgstr "${DISTRO} ကို ၎င်းတို့နှင့်အတူ ထည့်သွင်းပါ"
 
 #. Type: text
 #. Description
 #. OS is a variable substituted into this string, and may be 'Windows 7'
-#: ../ubiquity.templates:277001
+#: ../ubiquity.templates:297001
 msgid "This computer currently has ${OS} on it. What would you like to do?"
 msgstr "ဤကွန်ပျဓတာတွင် လက်ရှိ ${OS} ရှိနေပါသည်။ သင်မည်သို့ လုပ်ဆောင်လိုပါသလဲ။"
 
@@ -1992,7 +2262,7 @@ msgstr "ဤကွန်ပျဓတာတွင် လက်ရှိ ${OS} ရ�
 #. Description
 #. OS1 is a variable substituted into this string, and may be 'Windows 7'
 #. OS2 is a variable substituted into this string, and may be 'Mac OS X'
-#: ../ubiquity.templates:278001
+#: ../ubiquity.templates:298001
 msgid ""
 "This computer currently has ${OS1} and ${OS2} on it. What would you like to "
 "do?"
@@ -2000,7 +2270,7 @@ msgstr "ဤကွန်ပျူတာတွင် လက်ရှိ  ${OS1} �
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:279001
+#: ../ubiquity.templates:299001
 msgid ""
 "This computer currently has multiple operating systems on it. What would you "
 "like to do?"
@@ -2008,7 +2278,7 @@ msgstr "ဤကွန်ပျူတာတွင် အလုပ်လုပ်�
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:280001
+#: ../ubiquity.templates:300001
 msgid ""
 "This computer currently has no detected operating systems. What would you "
 "like to do?"
@@ -2016,37 +2286,37 @@ msgstr "ဤကွန်ပျူတာတွင် အလုပ်လုပ်�
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:281001
+#: ../ubiquity.templates:301001
 msgid "Before:"
 msgstr "ခင်မှာ -"
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:282001
+#: ../ubiquity.templates:302001
 msgid "After:"
 msgstr "ပြီးနောက် -"
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:283001
+#: ../ubiquity.templates:303001
 msgid "Encrypt the new ${RELEASE} installation for security"
 msgstr "လုံခြုံရေးအတွက် ${RELEASE} အသစ်ထည့်သွင်းခြင်းအား Encrypt လုပ်ပါ။"
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:284001
+#: ../ubiquity.templates:304001
 msgid "You will choose a security key in the next step."
 msgstr "သင်မယ့်ခြေလှမ်းအတွက်လုံခြုံရေးအဓိကသော့ချက်ကိုရွေးချယ်ပါလိမ့်မည် ။"
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:285001
+#: ../ubiquity.templates:305001
 msgid "Use LVM with the new ${RELEASE} installation"
 msgstr "${RELEASE} အသစ်ထည့်သွင်းခြင်းဖြင့် LVM အား သုံးပါ။"
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:286001
+#: ../ubiquity.templates:306001
 msgid ""
 "This will set up Logical Volume Management. It allows taking snapshots and "
 "easier partition resizing."
@@ -2056,13 +2326,13 @@ msgstr ""
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:287001
+#: ../ubiquity.templates:307001
 msgid "Erase disk and use ZFS"
 msgstr "Disk ဖျက်ပြီး ZFS ကို သုံးပါ။"
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:288001
+#: ../ubiquity.templates:308001
 msgid ""
 "<span foreground=\"darkred\">Warning:</span> This will delete all your files "
 "on all operating systems."
@@ -2072,13 +2342,13 @@ msgstr ""
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:290001
+#: ../ubiquity.templates:310001
 msgid "Advanced Features"
 msgstr "အဆင့်မြင့်အင်္ဂါရပ်များ"
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:291001
+#: ../ubiquity.templates:311001
 msgid "None"
 msgstr "တစ်ခုမှမဟုတ်"
 
@@ -2086,55 +2356,55 @@ msgstr "တစ်ခုမှမဟုတ်"
 #. Description
 #. Type: text
 #. Description
-#: ../ubiquity.templates:292001 ../ubiquity.templates:294001
+#: ../ubiquity.templates:312001 ../ubiquity.templates:314001
 msgid "None selected"
 msgstr "တစ်ခုမှမရွေးချယ်ပါ။"
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:293001
+#: ../ubiquity.templates:313001
 msgid "Advanced features..."
 msgstr "အဆင့်မြင့်အင်္ဂါရပ်များ..."
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:295001
+#: ../ubiquity.templates:315001
 msgid "LVM selected"
 msgstr "LVM ကို ရွေးချယ်ထားသည်။"
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:296001
+#: ../ubiquity.templates:316001
 msgid "LVM and encryption selected"
 msgstr "LVM နှင့် encryption ကို ရွေးချယ်ထားသည်။"
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:297001
+#: ../ubiquity.templates:317001
 msgid "ZFS selected"
 msgstr "ZFS ကို ရွေးချယ်ထားသည်။"
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:298001
+#: ../ubiquity.templates:318001
 msgid "ZFS and encryption selected"
 msgstr "ZFS နှင့် encryption ကို ရွေးချယ်ထားသည်။"
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:299001
+#: ../ubiquity.templates:319001
 msgid "Confirm the security key:"
 msgstr "လုံခြုံရေးကီးကို အတည်ပြုပါ-"
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:300001
+#: ../ubiquity.templates:320001
 msgid "Choose a security key:"
 msgstr "လုံခြုံရေးကီးကို ရွေးပါ-"
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:301001
+#: ../ubiquity.templates:321001
 msgid ""
 "Disk encryption protects your files in case you lose your computer. It "
 "requires you to enter a security key each time the computer starts up."
@@ -2144,13 +2414,13 @@ msgstr ""
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:302001
+#: ../ubiquity.templates:322001
 msgid "Any files outside of ${RELEASE} will not be encrypted."
 msgstr "[${RELEASE}] ပြင်ပမဆိုဖိုင်တွေကိုစာဝှက်လိမ့်မည်မဟုတ်ပါ ။"
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:303001
+#: ../ubiquity.templates:323001
 msgid ""
 "<span foreground=\"darkred\">Warning:</span> If you lose this security key, "
 "all data will be lost. If you need to, write down your key and keep it in a "
@@ -2161,61 +2431,61 @@ msgstr ""
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:304001
+#: ../ubiquity.templates:324001
 msgid "For more security:"
 msgstr "ပိုမိုလုံခြုံရေးအတွက် -"
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:305001
+#: ../ubiquity.templates:325001
 msgid "Overwrite empty disk space"
 msgstr "အချည်းနှီး disk space ကို Overwrite"
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:306001
+#: ../ubiquity.templates:326001
 msgid "The installation may take much longer."
 msgstr "အဆိုပါတပ်ဆင်ခြင်းတာရှည်ကြာနိုင်ပါသည်။"
 
 #. Type: text
 #. description
-#: ../ubiquity.templates:307001
+#: ../ubiquity.templates:327001
 msgid "LVM..."
 msgstr "LVM ..."
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:308001
+#: ../ubiquity.templates:328001
 msgid "Volume groups:"
 msgstr "Volume groups:"
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:309001
+#: ../ubiquity.templates:329001
 msgid "Encryption Options"
 msgstr "Encryption Options များ"
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:310001
+#: ../ubiquity.templates:330001
 msgid "Physical volumes:"
 msgstr "ရုပ်ပိုင်းဆိုင်ရာ volumes ကို:"
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:312001
+#: ../ubiquity.templates:332001
 msgid "Encrypt this partition (LUKS)"
 msgstr "ဒီ partition ကို Encrypt (LUKS)"
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:313001
+#: ../ubiquity.templates:333001
 msgid "MB"
 msgstr "မဂ္ဂါဘိုက်"
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:314001
+#: ../ubiquity.templates:334001
 msgid ""
 "Logical Volume Management (LVM) lets ${RELEASE} treat multiple physical "
 "volumes as a single volume."
@@ -2225,25 +2495,25 @@ msgstr ""
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:315001
+#: ../ubiquity.templates:335001
 msgid "Logical Volume Management"
 msgstr "လောဂျစ်ပမာဏအစီအမံ"
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:316001
+#: ../ubiquity.templates:336001
 msgid "Encryption options..."
 msgstr "encryption ကိုရွေးချယ်စရာ ..."
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:317001
+#: ../ubiquity.templates:337001
 msgid "UEFI Secure Boot"
 msgstr "UEFI Secure Boot"
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:318001
+#: ../ubiquity.templates:338001
 msgid ""
 "You have chosen to enable third-party software as part of your install, "
 "which for this system includes hardware drivers for graphics and/or Wi-Fi "
@@ -2257,7 +2527,7 @@ msgstr ""
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:318001
+#: ../ubiquity.templates:338001
 msgid ""
 "After installation completes, Linux Mint will assist you in configuring UEFI "
 "Secure Boot. To ensure that this change is being made by you as an "
@@ -2271,7 +2541,7 @@ msgstr ""
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:318001
+#: ../ubiquity.templates:338001
 msgid ""
 "<span foreground=\"darkred\">Warning</span>: If you choose not to install "
 "these drivers, or if you proceed but do not confirm the password upon "
@@ -2284,134 +2554,134 @@ msgstr ""
 
 #. Type: password
 #. Description
-#: ../ubiquity.templates:319001
+#: ../ubiquity.templates:339001
 msgid "SecureBoot key for MokPW"
 msgstr "MokPW အတွက် SecureBoot ကီး"
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:320001
+#: ../ubiquity.templates:340001
 #, no-c-format
 msgid "partition #%(partid)s as %(parttype)s used for %(partusage)s"
 msgstr "%(partusage)s အတွက် %(parttype)s အဖြစ် အပိုင်းခွဲ #%(partid)s"
 
 #. Type: password
 #. Description
-#: ../ubiquity.templates:321001
+#: ../ubiquity.templates:341001
 msgid "Key to secure the keystore on ZFS installations"
 msgstr "ZFS ထည့်သွင်းမှုများတွင် keystore ကို လုံခြုံစေရန် ကီး"
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:322001
+#: ../ubiquity.templates:342001
 msgid "Authenticate against a directory"
 msgstr "ဖိုင်လမ်းညွှန်ကိုဆန့်ကျင်သည့် ခွင့်ပြုချက်"
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:323001
+#: ../ubiquity.templates:343001
 msgid "Active Directory domain name"
 msgstr "ဒိုမိန်းအမည်နှင့် လုပ်ဆောင်နေသောဖိုင်လမ်းညွှန်"
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:324001
+#: ../ubiquity.templates:344001
 msgid "Administrator to join the domain"
 msgstr "ဒိုမိန်းတွင် ပါဝင်ရန် စီမံခန့်ခွဲသူ"
 
 #. Type: password
 #. Description
-#: ../ubiquity.templates:325001
+#: ../ubiquity.templates:345001
 msgid "Administrator password to join the domain"
 msgstr "ဒိုမိန်းတွင်ပါဝင်ရန် စီမံခန့်ခွဲသူ စကားဝှက်"
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:326001
+#: ../ubiquity.templates:346001
 msgid "Use Active Directory"
 msgstr "လုပ်ဆောင်နေသောဖိုင်လမ်းညွှန်ကို အသုံးပြုပါ။"
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:327001
+#: ../ubiquity.templates:347001
 msgid " You'll enter domain and other details in the next step."
 msgstr " နောက်တစ်ဆင့်တွင် သင်သည် ဒိုမိန်းနှင့် အခြားအသေးစိတ်အချက်အလက်များကို ထည့်သွင်းရပါမည်။"
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:328001
+#: ../ubiquity.templates:348001
 msgid "Domain:"
 msgstr "ဒိုမိန်း -"
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:329001
+#: ../ubiquity.templates:349001
 msgid "You must enter a domain name"
 msgstr "ဒိုမိန်းအမည်တစ်ခု ထည့်သွင်းရပါမည်။"
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:330001
+#: ../ubiquity.templates:350001
 msgid "Test Connection"
 msgstr "စမ်းသပ်ချိတ်ဆက်မှု"
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:331001
+#: ../ubiquity.templates:351001
 msgid "Domain Administrator:"
 msgstr "ဒိုမိန်းစီမံခန့်ခွဲသူ -"
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:332001
+#: ../ubiquity.templates:352001
 msgid "You must enter a user name"
 msgstr "အသုံးပြုသူအမည်ကို ထည့်သွင်းရပါမည်။"
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:334001
+#: ../ubiquity.templates:354001
 msgid "Configure Active Directory"
 msgstr "လုပ်ဆောင်နေသောဖိုင်လမ်းညွှန်အား စီစဉ်သတ်မှတ်သည်။"
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:335001
+#: ../ubiquity.templates:355001
 msgid "That name already exists on the network."
 msgstr "ထိုအမည်သည် ကွန်ရက်ပေါ်တွင် ရှိနှင့်ပြီးဖြစ်သည်။"
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:336001
+#: ../ubiquity.templates:356001
 msgid "Failed to connect to domain."
 msgstr "ဒိုမိန်းသို့ ချိတ်ဆက်၍မရပါ။"
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:337001
+#: ../ubiquity.templates:357001
 msgid "Enable recovery key:"
 msgstr "Recovery Key ကို ဖွင့်ပါ -"
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:338001
+#: ../ubiquity.templates:358001
 msgid "Recovery key:"
 msgstr "Recovery key:"
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:339001
+#: ../ubiquity.templates:359001
 msgid "Confirm recovery key:"
 msgstr "Recovery Key ကို အတည်ပြုပါ -"
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:340001
+#: ../ubiquity.templates:360001
 msgid "Display recovery key:"
 msgstr "Recovery key ကို ပြသပါ -"
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:341001
+#: ../ubiquity.templates:361001
 msgid ""
 "A recovery key is generated and will be temporarily saved on the live "
 "system. You can select an alternate location. Save this file and keep it in "
@@ -2422,43 +2692,43 @@ msgstr ""
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:342001
+#: ../ubiquity.templates:362001
 msgid "Location:"
 msgstr "တည်နေရာ-"
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:343001
+#: ../ubiquity.templates:363001
 msgid "It is not recommended to store the key on a non removable device."
 msgstr "ကီးကို ဖြုတ်တပ်၍မရသောစက်တွင် သိမ်းဆည်းရန်အတွက် အကြံပြုထားခြင်း မရှိပါ။"
 
 #. Type: password
 #. Description
-#: ../ubiquity.templates:344001
+#: ../ubiquity.templates:364001
 msgid "Crypto key for LUKS + LVM"
 msgstr "LUKS + LVM အတွက် Crypto ကီး"
 
 #. Type: password
 #. Description
-#: ../ubiquity.templates:345001
+#: ../ubiquity.templates:365001
 msgid "Recovery key for LUKS + LVM"
 msgstr "LUKS + LVM အတွက် Recovery key"
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:346001
+#: ../ubiquity.templates:366001
 msgid "Could not save recovery key:"
 msgstr ""
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:346001
+#: ../ubiquity.templates:366001
 msgid "${ERRORMSG}"
 msgstr "${ERRORMSG}"
 
 #. Type: text
 #. Description
-#: ../ubiquity.templates:347001
+#: ../ubiquity.templates:367001
 msgid "Enter recovery key filename"
 msgstr "Recovery key ဖိုင်အမည်ကို ထည့်ပါ။"
 

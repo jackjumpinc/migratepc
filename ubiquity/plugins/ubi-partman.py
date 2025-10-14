@@ -3,6 +3,9 @@
 # Copyright (C) 2006, 2007, 2008 Canonical Ltd.
 # Written by Colin Watson <cjwatson@ubuntu.com>.
 #
+# Copyright (C) 2025 Jackjump.com, Inc.
+# Changes by Steve Saunders <steve@jackjump.com>.
+#
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation; either version 2 of the License, or
@@ -18,20 +21,16 @@
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 from collections import namedtuple, OrderedDict
-# steve@jackjump.com/grok3 added glob, syslog & FilteredCommand
-import glob
 import os
 import re
 import shutil
 import signal
-import syslog
 
 import debconf
 
 from ubiquity import (misc, osextras, parted_server, plugin,
                       telemetry, validation)
 from ubiquity.install_misc import archdetect
-from ubiquity.filteredcommand import FilteredCommand
 
 
 NAME = 'partman'
@@ -123,7 +122,6 @@ class PageGtk(PageBase):
     plugin_is_install = True
 
     def __init__(self, controller, *args, **kwargs):
-        #super().__init__(controller, *args, **kwargs)
         self.controller = controller
         from gi.repository import Gtk
         from ubiquity.gtkwidgets import Builder
@@ -201,7 +199,7 @@ class PageGtk(PageBase):
         cell.set_property('sensitive', False)
         self.part_auto_select_drive.pack_start(cell, True)
         self.part_auto_select_drive.add_attribute(cell, 'markup', 1)
-	
+        
         # steve@jackjump.com/grok3 copy drive dropdown
         cell = Gtk.CellRendererText()
         self.part_auto_select_copy_drive.pack_start(cell, False)
@@ -224,7 +222,7 @@ class PageGtk(PageBase):
         # GtkBuilder signal mapping is broken (LP: # 852054).
         self.part_auto_hidden_label.connect(
             'activate-link', self.part_auto_hidden_label_activate_link)
-
+        
         # Define a list to save grub imformation
         self.grub_options = []
 
@@ -454,6 +452,17 @@ class PageGtk(PageBase):
         return ('bitlocker' in self.extra_options or
                 os.environ.get('SHOW_BITLOCKER_UI', '0') == '1')
 
+    # steve@jackjump.com/grok3 added title toggle 
+    @plugin.only_this_page
+    def update_title(self, title):
+        if hasattr(self.controller.frontend, 'set_title'):
+            self.controller.frontend.set_title(title)  # Update GTK window title
+        else:
+            import syslog
+            syslog.syslog(f"JACKJUMP: Frontend lacks set_title, falling back to debconf info: {title}")
+            self.db.info(title)  # Fallback for non-GTK contexts
+        return None
+
     def plugin_on_next_clicked(self):
         reuse = self.reuse_partition.get_active()
         replace = self.replace_partition.get_active()
@@ -505,8 +514,6 @@ class PageGtk(PageBase):
             if use_device:
                 for disk in disks:
                     m.append([disk, ''])
-                    # steve@jackjump.com/grok3 added copy drive
-                    #m_copy.append([disk, ''])  # Populate copy drive dropdown
                 self.part_auto_select_drive.set_active(0)
                 # steve@jackjump.com/grok3 added copy drive
                 self.part_auto_select_copy_drive.set_active(-1)  # No default selection
@@ -581,138 +588,600 @@ class PageGtk(PageBase):
                 dialog.destroy()
                 return True
 
-        # Copyright (C) 2025 Jackjump.com, Inc.
         # steve@jackjump.com/grok3 added copy drive
         # Pre-install copy: Check drives and copy files before partitioning
         # Part 1: Check if install drive has Windows and is not BitLocker encrypted
-        install_device = self.extra_options.get('install_device')
+        i = self.part_auto_select_drive.get_active_iter()
+        if not i:
+            return
+        m = self.part_auto_select_drive.get_model()
+        install_device = misc.utf8(m.get_value(i, 0), errors='replace')
+        #if self.oem_user_config:
+            #self.db.info('ubiquity/text/oem_user_config_title')
+        #else:
+            #self.db.info('ubiquity/text/live_installer')
+        install_part = None
+        copy_part = None
+        copy_free = 0
+        install_has_windows = False
+        copy_has_windows = False
+        install_has_bitlocker = False
+        copy_has_bitlocker = False
+        users_part = None
+        documents_part = None
+        pictures_part = None
+        desktop_part = None
+        videos_part = None
+        music_part = None
+        downloads_part = None
+        parts_needed_accurate = True
+        users_part_needed = True
+        documents_part_needed = True
+        pictures_part_needed = True
+        desktop_part_needed = True
+        videos_part_needed = True
+        music_part_needed = True
+        downloads_part_needed = True
+        install_parts = []
+        install_used = []
+        copy_parts = []
+        copy_used = []
+        other_parts = []
+        other_used = []
+        import syslog
+        syslog.syslog("JACKJUMP: Part 1.")
         if install_device:
-            if misc.is_bitlocker_device_encrypted(install_device):
-                self.controller.frontend.error_dialog(
-                    "Error",
-                    "Install drive is BitLocker encrypted. Please decrypt it before proceeding."
-                )
+            install_disk = misc.get_disk(install_device)
+            if not install_disk:
+                syslog.syslog(f"JACKJUMP: a valid install disk entry must exist for selected install drive {install_device} in order to proceed (which is weird since an install drive is selected).")
                 return
             mount_point = '/mnt/install_windows'
             if not os.path.exists(mount_point):
-                os.makedirs(mount_point)
-            if misc.execute('mount', '-t', 'ntfs', install_device, mount_point):
-                self.extra_options['install_has_windows'] = os.path.exists(os.path.join(mount_point, 'Windows'))
-            else:
+                misc.execute_root('mkdir', '-p', mount_point)
+            # PartedServer 2: size 4: fs 5: dev
+            # layout       1: size 3: fs 0: dev
+            for partition in self.disk_layout[install_disk]:
+                if partition[3] == 'BitLocker':  # fs
+                    install_has_bitlocker = True
+                    break
+                elif (partition[3] == 'ntfs' or partition[3] == 'unknown') and partition[1] > 19777216:
+                    if misc.execute_root('mount', '-t', 'ntfs-3g', '-o', 'ro', partition[0], mount_point):
+                        install_has_windows = os.path.exists(os.path.join(mount_point, 'Windows'))
+                        source_dir = os.path.join(mount_point, 'Users')
+                        install_has_users = os.path.exists(source_dir)
+                        if install_has_windows and install_has_users:
+                            self.extra_options['install_has_windows'] = install_has_windows
+                            install_part = partition[0]
+                            if install_part not in install_parts:
+                                install_parts.append(partition[0])
+                                # Check used space of partition
+                                source_size = misc.get_used(source_dir)
+                                if source_size:
+                                    install_used.append(source_size)
+                            syslog.syslog(f"JACKJUMP: Install drive {partition[0]} has Windows.")
+                            windows_users_extra_dirs = [
+                                os.path.join(mount_point, 'Users/Public'),
+                                os.path.join(mount_point, 'Users/Default'),
+                                os.path.join(mount_point, 'Users/Default User'),
+                                os.path.join(mount_point, 'Users/All Users'),
+                                os.path.join(mount_point, 'Users/Defaultuser0'),
+                                os.path.join(mount_point, 'Users/Defaultuser1'),
+                                os.path.join(mount_point, 'Users/Defaultuser2'),
+                                os.path.join(mount_point, 'Users/Defaultuser3'),
+                                os.path.join(mount_point, 'Users/Defaultuser4'),
+                                os.path.join(mount_point, 'Users/Defaultuser5'),
+                                os.path.join(mount_point, 'Users/Defaultuser6'),
+                            ]
+                            import subprocess
+                            try:
+                                users_reparse = subprocess.run(['getfattr', '-h', '-n', 'system.ntfs_reparse_data', '-e', 'hex', os.path.join(mount_point, 'Users')], capture_output=True, text=True, check=False)
+                                if users_reparse.returncode == 1 and 'No such attribute' in users_reparse.stderr:
+                                    users_part_needed = False
+                                if not users_part_needed:
+                                    import glob
+                                    for documents_path in glob.glob(os.path.join(mount_point, 'Users/*/Documents')):
+                                        if os.path.dirname(documents_path) not in windows_users_extra_dirs and os.path.exists(documents_path):
+                                            syslog.syslog(f"JACKJUMP: Documents path {documents_path}.")
+                                            documents_reparse = subprocess.run(['getfattr', '-h', '-n', 'system.ntfs_reparse_data', '-e', 'hex', documents_path], capture_output=True, text=True, check=False)
+                                            if documents_reparse.returncode == 1 and 'No such attribute' in documents_reparse.stderr:
+                                                documents_part_needed = False
+                                    for pictures_path in glob.glob(os.path.join(mount_point, 'Users/*/Pictures')):
+                                        if os.path.dirname(pictures_path) not in windows_users_extra_dirs and os.path.exists(pictures_path):
+                                            pictures_reparse = subprocess.run(['getfattr', '-h', '-n', 'system.ntfs_reparse_data', '-e', 'hex', pictures_path], capture_output=True, text=True, check=False)
+                                            if pictures_reparse.returncode == 1 and 'No such attribute' in pictures_reparse.stderr:
+                                                pictures_part_needed = False
+                                    for desktop_path in glob.glob(os.path.join(mount_point, 'Users/*/Desktop')):
+                                        if os.path.dirname(desktop_path) not in windows_users_extra_dirs and os.path.exists(desktop_path):
+                                            desktop_reparse = subprocess.run(['getfattr', '-h', '-n', 'system.ntfs_reparse_data', '-e', 'hex', desktop_path], capture_output=True, text=True, check=False)
+                                            if desktop_reparse.returncode == 1 and 'No such attribute' in desktop_reparse.stderr:
+                                                desktop_part_needed = False
+                                    for videos_path in glob.glob(os.path.join(mount_point, 'Users/*/Videos')):
+                                        if os.path.dirname(videos_path) not in windows_users_extra_dirs and os.path.exists(videos_path):
+                                            videos_reparse = subprocess.run(['getfattr', '-h', '-n', 'system.ntfs_reparse_data', '-e', 'hex', videos_path], capture_output=True, text=True, check=False)
+                                            if videos_reparse.returncode == 1 and 'No such attribute' in videos_reparse.stderr:
+                                                videos_part_needed = False
+                                    for music_path in glob.glob(os.path.join(mount_point, 'Users/*/Music')):
+                                        if os.path.dirname(music_path) not in windows_users_extra_dirs and os.path.exists(music_path):
+                                            music_reparse = subprocess.run(['getfattr', '-h', '-n', 'system.ntfs_reparse_data', '-e', 'hex', music_path], capture_output=True, text=True, check=False)
+                                            if music_reparse.returncode == 1 and 'No such attribute' in music_reparse.stderr:
+                                                music_part_needed = False
+                                    for downloads_path in glob.glob(os.path.join(mount_point, 'Users/*/Downloads')):
+                                        if os.path.dirname(downloads_path) not in windows_users_extra_dirs and os.path.exists(downloads_path):
+                                            downloads_reparse = subprocess.run(['getfattr', '-h', '-n', 'system.ntfs_reparse_data', '-e', 'hex', downloads_path], capture_output=True, text=True, check=False)
+                                            if downloads_reparse.returncode == 1 and 'No such attribute' in downloads_reparse.stderr:
+                                                downloads_part_needed = False
+                            except subprocess.CalledProcessError as e:
+                                parts_needed_accurate = False
+                                syslog.syslog(syslog.LOG_ERR, f"JACKJUMP: getfattr failed: {e}")
+                            if parts_needed_accurate and not users_part_needed and not documents_part_needed and not pictures_part_needed and not desktop_part_needed and not videos_part_needed and not music_part_needed and not downloads_part_needed:
+                                syslog.syslog(f"JACKJUMP: No other parts needed: breaking out of for loop with these install partitions {install_parts}.")
+                                break
+                        elif install_has_users: 
+                            are_parts_accurate = True
+                            is_documents_part = False
+                            is_pictures_part = False
+                            is_desktop_part = False
+                            is_videos_part = False
+                            is_music_part = False
+                            is_downloads_part = False
+                            users_has_documents = False
+                            users_has_pictures = False
+                            users_has_desktop = False
+                            users_has_videos = False
+                            users_has_music = False
+                            users_has_downloads = False
+                            try:
+                                import glob
+                                for documents_path in glob.glob(os.path.join(mount_point, 'Users/*/Documents')):
+                                    if os.path.dirname(documents_path) not in windows_users_extra_dirs and os.path.exists(documents_path):
+                                        users_has_documents = True
+                                        documents_reparse = subprocess.run(['getfattr', '-h', '-n', 'system.ntfs_reparse_data', '-e', 'hex', documents_path], capture_output=True, text=True, check=False)
+                                        if documents_reparse.returncode == 1 and 'No such attribute' in documents_reparse.stderr:
+                                            is_documents_part = True
+                                for pictures_path in glob.glob(os.path.join(mount_point, 'Users/*/Pictures')):
+                                    if os.path.dirname(pictures_path) not in windows_users_extra_dirs and os.path.exists(pictures_path):
+                                        users_has_pictures = True
+                                        pictures_reparse = subprocess.run(['getfattr', '-h', '-n', 'system.ntfs_reparse_data', '-e', 'hex', pictures_path], capture_output=True, text=True, check=False)
+                                        if pictures_reparse.returncode == 1 and 'No such attribute' in pictures_reparse.stderr:
+                                            is_pictures_part = True
+                                for desktop_path in glob.glob(os.path.join(mount_point, 'Users/*/Desktop')):
+                                    if os.path.dirname(desktop_path) not in windows_users_extra_dirs and os.path.exists(desktop_path):
+                                        users_has_desktop = True
+                                        desktop_reparse = subprocess.run(['getfattr', '-h', '-n', 'system.ntfs_reparse_data', '-e', 'hex', desktop_path], capture_output=True, text=True, check=False)
+                                        if desktop_reparse.returncode == 1 and 'No such attribute' in desktop_reparse.stderr:
+                                            is_desktop_part = True
+                                for videos_path in glob.glob(os.path.join(mount_point, 'Users/*/Videos')):
+                                    if os.path.dirname(videos_path) not in windows_users_extra_dirs and os.path.exists(videos_path):
+                                        users_has_videos = True
+                                        videos_reparse = subprocess.run(['getfattr', '-h', '-n', 'system.ntfs_reparse_data', '-e', 'hex', videos_path], capture_output=True, text=True, check=False)
+                                        if videos_reparse.returncode == 1 and 'No such attribute' in videos_reparse.stderr:
+                                            is_videos_part = True
+                                for music_path in glob.glob(os.path.join(mount_point, 'Users/*/Music')):
+                                    if os.path.dirname(music_path) not in windows_users_extra_dirs and os.path.exists(music_path):
+                                        users_has_music = True
+                                        music_reparse = subprocess.run(['getfattr', '-h', '-n', 'system.ntfs_reparse_data', '-e', 'hex', music_path], capture_output=True, text=True, check=False)
+                                        if music_reparse.returncode == 1 and 'No such attribute' in music_reparse.stderr:
+                                            is_music_part = True
+                                for downloads_path in glob.glob(os.path.join(mount_point, 'Users/*/Downloads')):
+                                    if os.path.dirname(downloads_path) not in windows_users_extra_dirs and os.path.exists(downloads_path):
+                                        users_has_downloads = True
+                                        downloads_reparse = subprocess.run(['getfattr', '-h', '-n', 'system.ntfs_reparse_data', '-e', 'hex', downloads_path], capture_output=True, text=True, check=False)
+                                        if downloads_reparse.returncode == 1 and 'No such attribute' in downloads_reparse.stderr:
+                                            is_downloads_part = True
+                            except subprocess.CalledProcessError as e:
+                                are_parts_accurate = False
+                                syslog.syslog(syslog.LOG_ERR, f"JACKJUMP: getfattr failed: {e}")
+                            if users_has_documents and users_has_pictures and users_has_desktop and users_has_videos and users_has_music and users_has_downloads:
+                                users_part = partition[0]
+                                if users_part not in install_parts:
+                                    install_parts.append(partition[0])
+                                    # Check used space of partition
+                                    source_size = misc.get_used(source_dir)
+                                    if source_size:
+                                        install_used.append(source_size)
+                                syslog.syslog(f"JACKJUMP: Install drive has separate Users partition {partition[0]}.")
+                                users_part_needed = False
+                                if are_parts_accurate:
+                                    if not is_documents_part:
+                                        documents_part_needed = True
+                                    if not is_pictures_part:
+                                        pictures_part_needed = True
+                                    if not is_desktop_part:
+                                        desktop_part_needed = True
+                                    if not is_videos_part:
+                                        videos_part_needed = True
+                                    if not is_music_part:
+                                        music_part_needed = True
+                                    if not is_downloads_part:
+                                        downloads_part_needed = True
+                            elif are_parts_accurate:
+                                if is_documents_part:
+                                    documents_part = partition[0]
+                                    if documents_part not in install_parts:
+                                        install_parts.append(partition[0])
+                                        # Check used space of partition
+                                        source_size = misc.get_used(source_dir)
+                                        if source_size:
+                                            install_used.append(source_size)
+                                    syslog.syslog(f"JACKJUMP: Install drive has separate Documents partition {partition[0]}.")
+                                    documents_part_needed = False
+                                if is_pictures_part:
+                                    pictures_part = partition[0]
+                                    if pictures_part not in install_parts:
+                                        install_parts.append(partition[0])
+                                        # Check used space of partition
+                                        source_size = misc.get_used(source_dir)
+                                        if source_size:
+                                            install_used.append(source_size)
+                                    syslog.syslog(f"JACKJUMP: Install drive has separate Pictures partition {partition[0]}.")
+                                    pictures_part_needed = False
+                                if is_desktop_part:
+                                    desktop_part = partition[0]
+                                    if desktop_part not in install_parts:
+                                        install_parts.append(partition[0])
+                                        # Check used space of partition
+                                        source_size = misc.get_used(source_dir)
+                                        if source_size:
+                                            install_used.append(source_size)
+                                    syslog.syslog(f"JACKJUMP: Install drive has separate Desktop partition {partition[0]}.")
+                                    desktop_part_needed = False
+                                if is_videos_part:
+                                    videos_part = partition[0]
+                                    if videos_part not in install_parts:
+                                        install_parts.append(partition[0])
+                                        # Check used space of partition
+                                        source_size = misc.get_used(source_dir)
+                                        if source_size:
+                                            install_used.append(source_size)
+                                    syslog.syslog(f"JACKJUMP: Install drive has separate Videos partition {partition[0]}.")
+                                    videos_part_needed = False
+                                if is_music_part:
+                                    music_part = partition[0]
+                                    if music_part not in install_parts:
+                                        install_parts.append(partition[0])
+                                        # Check used space of partition
+                                        source_size = misc.get_used(source_dir)
+                                        if source_size:
+                                            install_used.append(source_size)
+                                    syslog.syslog(f"JACKJUMP: Install drive has separate Music partition {partition[0]}.")
+                                    music_part_needed = False
+                                if is_downloads_part:
+                                    downloads_part = partition[0]
+                                    if downloads_part not in install_parts:
+                                        install_parts.append(partition[0])
+                                        # Check used space of partition
+                                        source_size = misc.get_used(source_dir)
+                                        if source_size:
+                                            install_used.append(source_size)
+                                    syslog.syslog(f"JACKJUMP: Install drive has separate Downloads partition {partition[0]}.")
+                                    downloads_part_needed = False
+                    misc.execute_root('umount', mount_point)
+            misc.execute_root('umount', mount_point)
+            misc.execute_root('rmdir', '--ignore-fail-on-non-empty', mount_point)
+            if install_has_bitlocker:
+                syslog.syslog(f"JACKJUMP: An error occurred because BitLocker encryption was not disabled on install drive {install_device} beforehand. Please decrypt it before proceeding.")
+                #title = ('Install drive is BitLocker encrypted.')
+                install_drive_encrypted = 'ubiquity/text/install_drive_encrypted'
+                msg = self.controller.get_string(install_drive_encrypted)
+                from gi.repository import Gtk
+                dialog = Gtk.MessageDialog(
+                    self.current_page.get_toplevel(), Gtk.DialogFlags.MODAL,
+                    Gtk.MessageType.ERROR, Gtk.ButtonsType.CLOSE, None)
+                dialog.set_markup(msg)
+                dialog.run()
+                import sys
+                sys.exit(1)
+                dialog.destroy()
+                return
+            if not install_has_windows:
                 self.extra_options['install_has_windows'] = False
-            misc.execute('umount', mount_point)
-            osextras.unlink_force(mount_point)
+                syslog.syslog(f"JACKJUMP: Install drive {install_device} does not have Windows.")
         else:
-            self.controller.frontend.error_dialog(
-                "Error",
-                "There is no install drive. Please select an install drive."
-            )
+            syslog.syslog("JACKJUMP: A valid install drive must be selected in order to proceed (which is weird since one is selected by default).")
             return
 
         # Part 2: Check if copy drive has Windows and is not BitLocker encrypted
+        syslog.syslog("JACKJUMP: Part 2.")
+        if 'copy_device' not in self.extra_options:
+            syslog.syslog("JACKJUMP: Copy device string not in extra options!")
         copy_device = self.extra_options.get('copy_device')
         if copy_device:
-            if misc.is_bitlocker_device_encrypted(copy_device):
-                self.controller.frontend.error_dialog(
-                    "Error",
-                    "Copy drive is BitLocker encrypted. Please decrypt it or select a different drive."
-                )
+            copy_disk = misc.get_disk(copy_device)
+            if not copy_disk:
+                syslog.syslog(f"JACKJUMP: a valid copy disk entry must exist for selected copy drive {copy_device} in order to proceed (which is weird since a copy drive is selected).")
                 return
+            space_part = []
+            filesystems = ['exfat', 'vfat', 'ext4', 'xfs', 'btrfs']
             mount_point = '/mnt/copy_windows'
             if not os.path.exists(mount_point):
-                os.makedirs(mount_point)
-            if misc.execute('mount', '-t', 'ntfs', copy_device, mount_point):
-                self.extra_options['copy_has_windows'] = os.path.exists(os.path.join(mount_point, 'Windows'))
-            else:
+                misc.execute_root('mkdir', '-p', mount_point)
+            copy_mounted = False
+            # PartedServer 2: size 4: fs 5: dev
+            # layout       1: size 3: fs 0: dev
+            for partition in self.disk_layout[copy_disk]:
+                syslog.syslog(f"JACKJUMP: Copy disk partition {partition[0]}.")
+                if partition[3] == 'BitLocker':  # fs
+                    copy_has_bitlocker = True
+                    break
+                elif (partition[3] == 'ntfs' or partition[3] == 'unknown') and partition[1] > 19777216:
+                    if misc.execute_root('mount', '-t', 'ntfs-3g', '-o', 'ro', partition[0], mount_point):
+                        copy_has_windows = os.path.exists(os.path.join(mount_point, 'Windows'))
+                        copy_has_users = os.path.exists(os.path.join(mount_point, 'Users'))
+                        if copy_has_windows and copy_has_users:
+                            if not install_part:
+                                self.extra_options['copy_has_windows'] = copy_has_windows
+                                copy_part = partition[0]
+                                syslog.syslog(f"JACKJUMP: Copy drive {partition[0]} has Windows.")
+                                copy_mounted = True
+                                break
+                            else:
+                                syslog.syslog(f"JACKJUMP: The install drive {install_part} and copy drive {partition[0]} both have Windows installed. That is not ok. Something could go horribly wrong. If you're ready to lose everything on one then format it and start over. Otherwise, select another drive.")
+                                #may as well share issue with copy drive message
+                                return
+                        else:
+                            space = misc.get_free(mount_point)
+                            if space:
+                                space_part.append([space, partition[0]]) 
+                                if space > copy_free:
+                                    copy_free = space
+                                copy_mounted = True
+                                syslog.syslog(f"JACKJUMP: Copy space: {space}, partition: {partition[0]}.")
+                    misc.execute_root('umount', mount_point)
+                elif partition[3] in filesystems and partition[1] > 33774433:
+                    if misc.execute_root('mount', '-t', partition[3], '-o', 'ro', partition[0], mount_point):
+                        syslog.syslog(f"JACKJUMP: Copy disk partition {partition[0]} before space check.")
+                        space = misc.get_free(mount_point)
+                        syslog.syslog(f"JACKJUMP: Copy disk partition {partition[0]} after space check.")
+                        if space:
+                            space_part.append([space, partition[0]]) 
+                            if space > copy_free:
+                                copy_free = space
+                            copy_mounted = True
+                            syslog.syslog(f"JACKJUMP: Copy space: {space}, partition: {partition[0]}.")
+                    misc.execute_root('umount', mount_point)
+                elif partition[3] == 'unknown' and partition[1] > 33774433:
+                    for fs in filesystems:
+                        if misc.execute_root('mount', '-t', fs, '-o', 'ro', partition[0], mount_point):
+                            space = misc.get_free(mount_point)
+                            if space:
+                                space_part.append([space, partition[0]]) 
+                                if space > copy_free:
+                                    copy_free = space
+                                copy_mounted = True
+                                syslog.syslog(f"JACKJUMP: Copy space: {space}, partition: {partition[0]}.")
+                                break
+                        misc.execute_root('umount', mount_point)
+                    misc.execute_root('umount', mount_point)
+            misc.execute_root('umount', mount_point)
+            misc.execute_root('rmdir', '--ignore-fail-on-non-empty', mount_point)
+            if copy_has_bitlocker:
+                syslog.syslog(f"JACKJUMP: An error occurred because BitLocker encryption was not disabled on copy drive {copy_device} beforehand. Please decrypt it before proceeding.")
+                #title = ('Copy drive is BitLocker encrypted.')
+                copy_drive_encrypted = 'ubiquity/text/copy_drive_encrypted'
+                msg = self.controller.get_string(copy_drive_encrypted)
+                from gi.repository import Gtk
+                dialog = Gtk.MessageDialog(
+                    self.current_page.get_toplevel(), Gtk.DialogFlags.MODAL,
+                    Gtk.MessageType.ERROR, Gtk.ButtonsType.CLOSE, None)
+                dialog.set_markup(msg)
+                dialog.run()
+                import sys
+                sys.exit(1)
+                dialog.destroy()
+                return
+            if not copy_part:
+                if space_part:
+                    syslog.syslog(f"JACKJUMP: Space_part {space_part} before max comparison.")
+                    copy_part = max(space_part, key=lambda x: x) 
+                    if not copy_part:
+                        syslog.syslog(f"JACKJUMP: Is this drive formatted? The copy partition was not determined successfully from partition options on copy drive {copy_device}.")
+                    syslog.syslog(f"JACKJUMP: Copy partition {copy_part} has the most available space {copy_free}.")
+                else:
+                    syslog.syslog(f"JACKJUMP: Is this drive formatted? The partition list meant to determine which partition on copy drive {copy_device} has the most available space is empty.")
+            self.extra_options['copy_part'] = copy_part
+            syslog.syslog(f"JACKJUMP: Copy part: {copy_part}.")
+            if not copy_mounted:
+                syslog.syslog(f"JACKJUMP: The copy drive {copy_device} has an issue: its filesystem is not supported or something else is making it unable to mount.")
+                #title = ('Copy drive did not mount.')
+                copy_drive_not_mounted = 'ubiquity/text/copy_drive_not_mounted'
+                msg = self.controller.get_string(copy_drive_not_mounted)
+                from gi.repository import Gtk
+                dialog = Gtk.MessageDialog(
+                    self.current_page.get_toplevel(), Gtk.DialogFlags.MODAL,
+                    Gtk.MessageType.ERROR, Gtk.ButtonsType.CLOSE, None)
+                dialog.set_markup(msg)
+                dialog.run()
+                import sys
+                sys.exit(1)
+                dialog.destroy()
+                return
+            if not copy_has_windows:
                 self.extra_options['copy_has_windows'] = False
-            misc.execute('umount', mount_point)
-            osextras.unlink_force(mount_point)
+                syslog.syslog(f"JACKJUMP: Copy drive {copy_device} does not have Windows.")
         else:
-            self.controller.frontend.error_dialog(
-                "Error",
-                "There is no copy drive. Please select a copy drive."
-            )
+            syslog.syslog("JACKJUMP: A valid copy drive with a supported filesystem must be selected in order to proceed. Otherwise, you're just installing - not migrating anything. Which will take extra overhead time and leave a broken shell script on your desktop that would be best to delete without running. If it even succeeds.")
+            #title = ('Please select a valid copy drive.')
+            no_copy_drive = 'ubiquity/text/no_copy_drive'
+            msg = self.controller.get_string(no_copy_drive)
+            from gi.repository import Gtk
+            dialog = Gtk.MessageDialog(
+                self.current_page.get_toplevel(), Gtk.DialogFlags.MODAL,
+                Gtk.MessageType.ERROR, Gtk.ButtonsType.CLOSE, None)
+            dialog.set_markup(msg)
+            dialog.run()
+            dialog.destroy()
             return
 
         # Part 1 & 2 ultimatum: Ensure install drive or copy drive has Windows
-        if not self.extra_options.get('install_has_windows', False) and not self.extra_options.get('copy_has_windows', False):
-            self.controller.frontend.error_dialog(
-                "Error",
-                "Neither install drive nor copy drive has Windows. Please select a different drive."
-            )
+        syslog.syslog("JACKJUMP: Part 1 & 2.")
+        if not install_has_windows and not copy_has_windows:
+            syslog.syslog("JACKJUMP: A valid install drive or copy drive with Windows must be selected in order to proceed. This is a Windows to Linux migration tool.")
+            #title = ('Please select a drive with Windows.')
+            bitlocker_install_drive = 'ubiquity/text/no_windows'
+            msg = self.controller.get_string(bitlocker_install_drive)
+            from gi.repository import Gtk
+            dialog = Gtk.MessageDialog(
+                self.current_page.get_toplevel(), Gtk.DialogFlags.MODAL,
+                Gtk.MessageType.ERROR, Gtk.ButtonsType.CLOSE, None)
+            dialog.set_markup(msg)
+            dialog.run()
+            import sys
+            sys.exit(1)
+            dialog.destroy()
             return
 
+        syslog.syslog(f"JACKJUMP: Users part needed {users_part_needed}.")
+        syslog.syslog(f"JACKJUMP: Documents part needed {documents_part_needed}. Default is True.")
+        self.update_title('ubiquity/text/oem_user_config_title')
+        syslog.syslog(f"JACKJUMP: OEM User config boolean is {self.controller.oem_user_config}.")
         # Part 3: Copy user files and Windows data if install drive has Windows
-        if copy_device and self.extra_options.get('install_has_windows', False):
+        syslog.syslog("JACKJUMP: Part 3.")
+        if copy_device and install_part and install_parts and copy_part and install_has_windows:
+            syslog.syslog("JACKJUMP: Part 3: inside if.")
+            use_compression = False
+            if install_used and copy_free > 0:
+                # Check space to determine compression
+                source_size = sum(install_used) 
+                dest_free = copy_free 
+                if source_size > (dest_free * 1.1):
+                    syslog.syslog(f"JACKJUMP: The user files on install drive take up {source_size} K, which is more than the amount of K {dest_free} available on copy partition with most available space.")
+                    #title = ('Not enough space on copy drive.')
+                    copy_drive_small = 'ubiquity/text/copy_drive_small'
+                    msg = self.controller.get_string(copy_drive_small)
+                    from gi.repository import Gtk
+                    dialog = Gtk.MessageDialog(
+                        self.current_page.get_toplevel(), Gtk.DialogFlags.MODAL,
+                        Gtk.MessageType.ERROR, Gtk.ButtonsType.CLOSE, None)
+                    dialog.set_markup(msg)
+                    dialog.run()
+                    import sys
+                    sys.exit(1)
+                    dialog.destroy()
+                    return
+                elif source_size > (dest_free * 0.7):
+                    use_compression = True
             mount_point = '/mnt/install_windows'
             if not os.path.exists(mount_point):
-                os.makedirs(mount_point)
-            if not misc.execute('mount', '-t', 'ntfs', install_device, mount_point):
-                self.controller.frontend.error_dialog(
-                    "Error",
-                    "Failed to mount install drive for copying files. Installation cannot proceed."
-                )
-                return
-
-            # Subpart 3.1: Copy user files to jackjump/users
-            source_dir = os.path.join(mount_point, 'Users')
-            use_compression = False
-            if os.path.exists(source_dir):
-                # Check space to determine compression
-                source_size = int(subprocess.run(['du', '-s', source_dir], capture_output=True, text=True, check=True).stdout.split()[0])
-                dest_free = misc.get_dest_free(self.db, copy_device, self.controller.frontend)
-                if dest_free is not None and source_size > dest_free:
-                    self.controller.frontend.error_dialog(
-                        "Error",
-                        "Not enough space available on copy drive. Please select a different copy drive."
-                    )
+                misc.execute_root('mkdir', '-p', mount_point)
+            for part in install_parts:
+                if not misc.execute_root('mount', '-t', 'ntfs', '-o', 'ro', part, mount_point):
+                    syslog.syslog(f"JACKJUMP: The partition {part} on install drive with Windows has an issue or something is making it unable to mount.")
+                    #title = ('Windows install drive not mounted.')
+                    install_drive_not_mounted = 'ubiquity/text/install_drive_not_mounted'
+                    msg = self.controller.get_string(install_drive_not_mounted)
+                    from gi.repository import Gtk
+                    dialog = Gtk.MessageDialog(
+                        self.current_page.get_toplevel(), Gtk.DialogFlags.MODAL,
+                        Gtk.MessageType.ERROR, Gtk.ButtonsType.CLOSE, None)
+                    dialog.set_markup(msg)
+                    dialog.run()
+                    import sys
+                    sys.exit(1)
+                    dialog.destroy()
                     return
-                elif dest_free is not None and source_size > dest_free * 0.8:
-                    use_compression = True
-                if not misc.copy_to_drive(self.db, source_dir, copy_device, 'jackjump/users', self.controller.frontend, preinstall_copied=False, was_compressed=use_compression):
-                    misc.execute('umount', mount_point)
-                    osextras.unlink_force(mount_point)
-                    self.controller.frontend.error_dialog(
-                        "Error",
-                        "Failed to back up Windows user files before partitioning. Installation cannot proceed."
-                    )
-                    return
-                self.extra_options['preinstall_copied'] = True
-                self.extra_options['copy_compressed'] = use_compression
-            else:
-                self.controller.frontend.error_dialog(
-                    "Error",
-                    "Users directory not found on install drive. Installation cannot proceed."
-                )
-                return
 
-            # Subpart 3.2: Copy Windows data to jackjump/windows_data
-            windows_data_sources = [
-                os.path.join(mount_point, 'Windows/System32/config/SAM'),
-                os.path.join(mount_point, 'Windows/System32/config/SYSTEM'),
-                os.path.join(mount_point, 'Windows/System32/config/SOFTWARE'),
-                os.path.join(mount_point, 'Users/*/AppData/Roaming/Mozilla/Firefox/Profiles'),
-                os.path.join(mount_point, 'Users/*/AppData/Local/Google/Chrome/User Data/Default'),
-                os.path.join(mount_point, 'Users/*/AppData/Local/Microsoft/Edge/User Data/Default'),
-                os.path.join(mount_point, 'Users/*/AppData/Local/BraveSoftware/Brave-Browser/User Data/Default'),
-                os.path.join(mount_point, 'Users/*/AppData/Local/Vivaldi/User Data/Default'),
-                os.path.join(mount_point, 'Users/*/AppData/Roaming/Opera Software/Opera Stable'),
-                os.path.join(mount_point, 'Users/*/AppData/Local/Chromium/User Data/Default'),
-                os.path.join(mount_point, 'Users/*/AppData/Roaming/Microsoft/Outlook'),
-                os.path.join(mount_point, 'Users/*/Pictures/Wallpaper'),
-            ]
-            for src in windows_data_sources:
-                for path in glob.glob(src):
-                    if os.path.exists(path):
-                        if not misc.copy_to_drive(self.db, path, copy_device, 'jackjump/windows_data', self.controller.frontend, preinstall_copied=True, was_compressed=use_compression):
-                            syslog.syslog(syslog.LOG_WARNING, f"Failed to copy Windows data {path}, continuing")
+                # Subpart 3.1: Copy user files to jackjump/users
+                syslog.syslog("JACKJUMP: Part 3.1.")
+                source_dir = os.path.join(mount_point, 'Users')
+                if os.path.exists(source_dir):
+                    if not misc.copy_to_drive(source_dir, copy_part, 'jackjump/users', db=None, preinstall_copied=False, was_compressed=use_compression):
+                        misc.execute_root('umount', mount_point)
+                        syslog.syslog(f"JACKJUMP: Failed to copy Windows user files from install partition {part} to copy drive {copy_part}. Installation cannot proceed.")
+                        #title = ('Copying user files failed.')
+                        no_user_files = 'ubiquity/text/no_user_files'
+                        msg = self.controller.get_string(no_user_files)
+                        from gi.repository import Gtk
+                        dialog = Gtk.MessageDialog(
+                            self.current_page.get_toplevel(), Gtk.DialogFlags.MODAL,
+                            Gtk.MessageType.ERROR, Gtk.ButtonsType.CLOSE, None)
+                        dialog.set_markup(msg)
+                        dialog.run()
+                        import sys
+                        sys.exit(1)
+                        dialog.destroy()
+                        self.extra_options['preinstall_copied'] = False
+                        self.extra_options['copy_compressed'] = False
+                        return
+                    self.extra_options['preinstall_copied'] = True
+                    self.extra_options['copy_compressed'] = use_compression
+                else:
+                    syslog.syslog(f"JACKJUMP: Users directory {source_dir} not found on install drive. Installation cannot proceed.")
+                    #title = ('No Users directory on install drive.')
+                    no_users_dir = 'ubiquity/text/no_users_dir'
+                    msg = self.controller.get_string(no_users_dir)
+                    from gi.repository import Gtk
+                    dialog = Gtk.MessageDialog(
+                        self.current_page.get_toplevel(), Gtk.DialogFlags.MODAL,
+                        Gtk.MessageType.ERROR, Gtk.ButtonsType.CLOSE, None)
+                    dialog.set_markup(msg)
+                    dialog.run()
+                    import sys
+                    sys.exit(1)
+                    dialog.destroy()
+                    return
+
+                # Subpart 3.2: Copy Windows data to jackjump/windows_data
+                syslog.syslog("JACKJUMP: Part 3.2.")
+                windows_data_sources = [
+                    os.path.join(mount_point, 'Windows/System32/config/SAM'),
+                    os.path.join(mount_point, 'Windows/System32/config/SYSTEM'),
+                    os.path.join(mount_point, 'Windows/System32/config/SOFTWARE'),
+                    os.path.join(mount_point, 'Users/*/AppData/Roaming/Mozilla/Firefox/Profiles'),
+                    os.path.join(mount_point, 'Users/*/AppData/Local/Google/Chrome/User Data/Default'),
+                    os.path.join(mount_point, 'Users/*/AppData/Local/Microsoft/Edge/User Data/Default'),
+                    os.path.join(mount_point, 'Users/*/AppData/Local/BraveSoftware/Brave-Browser/User Data/Default'),
+                    os.path.join(mount_point, 'Users/*/AppData/Local/Vivaldi/User Data/Default'),
+                    os.path.join(mount_point, 'Users/*/AppData/Roaming/Opera Software/Opera Stable'),
+                    os.path.join(mount_point, 'Users/*/AppData/Local/Chromium/User Data/Default'),
+                    os.path.join(mount_point, 'Users/*/AppData/Roaming/Microsoft/Outlook'),
+                    os.path.join(mount_point, 'Users/*/Pictures/Wallpaper'),
+                ]
+                windows_users_extra_dirs = ['Public', 'Default',
+                    'Default User', 'All Users', 'Defaultuser0',
+                    'Defaultuser1', 'Defaultuser2', 'Defaultuser3',
+                    'Defaultuser4', 'Defaultuser5', 'Defaultuser6']
+                windows_data_copy_failed = False
+                windows_data_path_not_found = False
+                import glob
+                for src in windows_data_sources:
+                    for path in glob.glob(src):
+                        dirs = path.strip(os.sep).split(os.sep) 
+                        if ((len(dirs) >= 4) and dirs[3] not in windows_users_extra_dirs) and os.path.exists(path):
+                            syslog.syslog(f"JACKJUMP: Windows user {dirs[3]} config data to be copied now.")
+                            if not misc.copy_to_drive(path, copy_part, 'jackjump/windows_data', db=None, preinstall_copied=True, was_compressed=use_compression):
+                                windows_data_copy_failed = True
+                                syslog.syslog(syslog.LOG_WARNING, f"JACKJUMP: Failed to copy Windows data {path}, continuing")
                         else:
-                            syslog.syslog(f"Successfully copied Windows data {path} to jackjump/windows_data")
-                    else:
-                        syslog.syslog(f"Windows data path {path} not found, skipping")
+                            windows_data_path_not_found = True
+                            syslog.syslog(f"JACKJUMP: Windows data path {path} not found, skipping")
 
-            misc.execute('umount', mount_point)
-            osextras.unlink_force(mount_point)
+                misc.execute_root('umount', mount_point)
+            misc.execute_root('rmdir', '--ignore-fail-on-non-empty', mount_point)
+            if windows_data_copy_failed:
+                #title = ('Copying config files failed.')
+                no_config_files = 'ubiquity/text/no_config_files'
+                msg = self.controller.get_string(no_config_files)
+                from gi.repository import Gtk
+                dialog = Gtk.MessageDialog(
+                    self.current_page.get_toplevel(), Gtk.DialogFlags.MODAL,
+                    Gtk.MessageType.ERROR, Gtk.ButtonsType.CLOSE, None)
+                dialog.set_markup(msg)
+                dialog.run()
+                dialog.destroy()
+            if windows_data_path_not_found:
+                #title = ('Windows config path not found.')
+                no_windows_path = 'ubiquity/text/no_windows_path'
+                msg = self.controller.get_string(no_windows_path) 
+                from gi.repository import Gtk
+                dialog = Gtk.MessageDialog(
+                    self.current_page.get_toplevel(), Gtk.DialogFlags.MODAL,
+                    Gtk.MessageType.ERROR, Gtk.ButtonsType.CLOSE, None)
+                dialog.set_markup(msg)
+                dialog.run()
+                dialog.destroy()
+        else:
+            self.extra_options['preinstall_copied'] = False
+            self.extra_options['copy_compressed'] = False
 
         # Return control to partman, which will call
         # get_autopartition_choice and start partitioninging the device.
@@ -937,13 +1406,12 @@ class PageGtk(PageBase):
         """Handle changes to the copy drive selection."""
         i = self.part_auto_select_copy_drive.get_active_iter()
         if not i:
-            self.extra_options['copy_device'] = None
             return
         m = self.part_auto_select_copy_drive.get_model()
         val = misc.utf8(m.get_value(i, 0), errors='replace')
         self.extra_options['copy_device'] = val
         self.debug('Selected copy drive: %s', val)
-
+    
     def part_auto_hidden_label_activate_link(self, unused_widget, unused):
         self.custom_partitioning.set_active(True)
         self.controller.go_forward()
@@ -1054,9 +1522,9 @@ class PageGtk(PageBase):
         if self.replace_partition.get_active():
             return (self.extra_options['replace'][0], None,
                     'reinstall_partition')
-        # steve@jackjump.com/grok3 hid custom partitioning option
-        #elif self.custom_partitioning.get_active():
-        #    return self.extra_options['manual'], None, 'manual'
+
+        elif self.custom_partitioning.get_active():
+            return self.extra_options['manual'], None, 'manual'
 
         elif self.resize_use_free.get_active():
             if 'biggest_free' in self.extra_options:
@@ -1101,11 +1569,21 @@ class PageGtk(PageBase):
             disk = m.get_value(i, 0)
 
             # steve@jackjump.com/grok3 unique copy device check
-            if copy_device and disk == copy_device:
-                self.controller.frontend.error_dialog(
-                    "Error",
-                    "The install drive and copy drive cannot be the same."
-                )
+            if copy_device and (misc.utf8(disk, errors='replace') == copy_device):
+                import syslog
+                syslog.syslog(f"JACKJUMP: Copy drive {copy_device} may not be the same as install drive.")
+                #title = ('Install drive may not be copy drive.')
+                install_copy_same = 'ubiquity/text/install_copy_same'
+                msg = self.controller.get_string(install_copy_same)
+                from gi.repository import Gtk
+                dialog = Gtk.MessageDialog(
+                    self.current_page.get_toplevel(), Gtk.DialogFlags.MODAL,
+                    Gtk.MessageType.ERROR, Gtk.ButtonsType.CLOSE, None)
+                dialog.set_markup(msg)
+                dialog.run()
+                import sys
+                sys.exit(1)
+                dialog.destroy()
                 return None  # Prevent proceeding
 
             choice, method = choose_recipe()

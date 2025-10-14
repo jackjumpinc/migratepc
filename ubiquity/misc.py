@@ -1,5 +1,8 @@
 # -*- coding: utf-8; Mode: Python; indent-tabs-mode: nil; tab-width: 4 -*-
 
+# Copyright (C) 2025 Jackjump.com, Inc.
+# Changes by Steve Saunders <steve@jackjump.com>.
+
 from collections import namedtuple
 import contextlib
 import grp
@@ -656,38 +659,66 @@ def create_bool(text):
         return text
 
 
-# Copyright (C) 2025 Jackjump.com, Inc.
 # steve@jackjump.com/grok3 added rsync user and config files
-def copy_to_drive(db, source_dir, copy_device, dest_dir, frontend, preinstall_copied=False, was_compressed=False):
-    """Copy files from source_dir to dest_dir on the specified copy_device using rsync.
-    If copy_device is None, dest_dir is assumed to be on the target system (e.g., /target/home).
+@raise_privileges
+def get_used(source_dir):
+    """Get amount of used space on the specified source_dir.
+    """
+    # Check used space on source directory
+    try:
+        return shutil.disk_usage(source_dir).used
+    except subprocess.CalledProcessError as e:
+        syslog.syslog(syslog.LOG_ERR, f"JACKJUMP: Failed to check space on source directory {source_dir}: {e}")
+        return None
+    return None
+
+
+# steve@jackjump.com/grok3 added rsync user and config files
+@raise_privileges
+def get_free(dest_dir):
+    """Get amount of available space on the specified mount_point.
+    """
+    # Check available space on mount point
+    try:
+        return shutil.disk_usage(dest_dir).free
+    except subprocess.CalledProcessError as e:
+        syslog.syslog(syslog.LOG_ERR, f"JACKJUMP: Failed to check space on mount point {dest_dir}: {e}")
+        return None
+    return None
+
+
+# steve@jackjump.com/grok3 added rsync user and config files
+@raise_privileges
+def copy_to_drive(source_dir, part, dest_dir, db=None, preinstall_copied=False, was_compressed=False):
+    """Copy files from source_dir to dest_dir on the specified part using rsync.
+    If part is None, dest_dir is assumed to be on the target system (e.g., /target/home).
     preinstall_copied: If True, skip deletion of jackjump directory.
     was_compressed: If True, use rsync -z; if False, use space check to decide.
     """
     if not os.path.exists(source_dir):
-        syslog.syslog(f"Source directory {source_dir} does not exist, skipping rsync")
+        syslog.syslog(f"JACKJUMP: Source directory {source_dir} does not exist, skipping rsync")
         return True
 
-    # If copy_device is specified, mount it; otherwise, use dest_dir directly
+    # If part is specified, mount it; otherwise, use dest_dir directly
     mount_point = None
-    if copy_device:
+    if part:
         mount_point = "/mnt/copy_drive"
         if not os.path.exists(mount_point):
-            os.makedirs(mount_point)
+            execute('mkdir', '-p', mount_point)
 
         # Mount the copy drive
-        filesystems = ['exfat', 'ntfs', 'vfat', 'ext4', 'xfs', 'btrfs']
+        filesystems = ['ntfs', 'exfat', 'vfat', 'ext4', 'xfs', 'btrfs']
         mounted = False
         for fs in filesystems:
-            if execute('mount', '-t', fs, copy_device, mount_point):
+            if execute('mount', '-t', fs, part, mount_point):
                 mounted = True
                 break
         if not mounted:
-            frontend.error_dialog(
-                "Error",
-                f"Failed to mount copy drive {copy_device}. Ensure it is a valid drive with a supported filesystem."
-            )
-            osextras.unlink_force(mount_point)
+            syslog.syslog(f"JACKJUMP: Failed to mount copy drive {part}. Ensure it is a valid drive with a supported filesystem.")
+            if db is not None:
+                db.input('critical', 'ubiquity/install/mount_copy_drive')
+                db.go()
+            execute('rmdir', '--ignore-fail-on-non-empty', mount_point)
             return False
         dest_path = os.path.join(mount_point, dest_dir.lstrip('/'))
         
@@ -696,6 +727,7 @@ def copy_to_drive(db, source_dir, copy_device, dest_dir, frontend, preinstall_co
             jackjump_path = os.path.join(mount_point, 'jackjump')
             if os.path.exists(jackjump_path):
                 shutil.rmtree(jackjump_path, ignore_errors=True)
+                syslog.syslog(f"JACKJUMP: Deleted {jackjump_path} on copy drive {part} to free up space for copying (old data from previous useage of this migration tool).")
     else:
         dest_path = dest_dir
 
@@ -703,115 +735,58 @@ def copy_to_drive(db, source_dir, copy_device, dest_dir, frontend, preinstall_co
     use_compression = was_compressed
     if not use_compression:
         try:
-            source_size = int(subprocess.run(['du', '-s', source_dir], capture_output=True, text=True, check=True).stdout.split()[0])
-            dest_free = int(subprocess.run(['df', '-k', os.path.dirname(dest_path)], capture_output=True, text=True, check=True).stdout.splitlines()[-1].split()[3])
+            source_size = get_used(source_dir)
+            dest_free = get_free(os.path.dirname(dest_path))
             if source_size > dest_free:
-                frontend.error_dialog(
-                    "Error",
-                    f"Not enough space in {os.path.dirname(dest_path)} to store files."
-                )
-                if mount_point:
-                    execute('umount', mount_point)
-                    osextras.unlink_force(mount_point)
+                syslog.syslog(f"JACKJUMP: Not enough space in {os.path.dirname(dest_path)} to store files (only {dest_free} K whereas {source_size} K is needed).")
+                if db is not None:
+                    db.input('critical', 'ubiquity/install/space_for_files')
+                    db.go()
+                execute('umount', mount_point)
+                execute('rmdir', '--ignore-fail-on-non-empty', mount_point)
                 return False
         except subprocess.CalledProcessError as e:
-            syslog.syslog(syslog.LOG_ERR, f"Failed to check space: {e}")
-            frontend.error_dialog(
-                "Error",
-                f"Failed to check available space in {os.path.dirname(dest_path)}."
-            )
-            if mount_point:
-                execute('umount', mount_point)
-                osextras.unlink_force(mount_point)
+            syslog.syslog(syslog.LOG_ERR, f"JACKJUMP: Failed to check space: {e}")
+            if db is not None:
+                db.input('critical', 'ubiquity/install/space_check_failed')
+                db.go()
+            execute('umount', mount_point)
+            execute('rmdir', '--ignore-fail-on-non-empty', mount_point)
             return False
 
     # Perform rsync copy
     try:
         os.makedirs(dest_path, exist_ok=True)
-        rsync_cmd = ['rsync', '-aAXv', '--modify-window=1']
+        rsync_cmd = ['rsync', '-aAXv', '--modify-window=1', '--safe-links']
         if use_compression:
             rsync_cmd.append('-z')
         rsync_cmd.extend([source_dir + '/', dest_path])
         subprocess.run(rsync_cmd, check=True)
-        syslog.syslog(f"Successfully copied files {'with compression' if use_compression else ''} from {source_dir} to {dest_path}")
+        syslog.syslog(f"JACKJUMP: Successfully copied files {'with compression' if use_compression else ''} from {source_dir} to {dest_path}")
     except subprocess.CalledProcessError as e:
-        syslog.syslog(syslog.LOG_ERR, f"rsync failed: {e}")
-        frontend.error_dialog(
-            "Error",
-            f"Failed to copy files to {dest_path}: {e}"
-        )
-        if mount_point:
-            execute('umount', mount_point)
-            osextras.unlink_force(mount_point)
+        syslog.syslog(syslog.LOG_ERR, f"JACKJUMP: rsync failed: {e}")
+        execute('umount', mount_point)
+        execute('rmdir', '--ignore-fail-on-non-empty', mount_point)
         return False
 
     # Clean up
-    if mount_point:
-        execute('umount', mount_point)
-        osextras.unlink_force(mount_point)
+    execute('umount', mount_point)
+    execute('rmdir', '--ignore-fail-on-non-empty', mount_point)
     return True
 
 
 # steve@jackjump.com/grok3 added rsync user and config files
-def get_dest_free(db, copy_device, frontend):
-    """Get amount of available space on the specified copy_device.
-    """
-    mount_point = None
-    if copy_device:
-        mount_point = "/mnt/copy_drive"
-        if not os.path.exists(mount_point):
-            os.makedirs(mount_point)
-
-        # Mount the copy drive
-        filesystems = ['exfat', 'ntfs', 'vfat', 'ext4', 'xfs', 'btrfs']
-        mounted = False
-        for fs in filesystems:
-            if execute('mount', '-t', fs, copy_device, mount_point):
-                mounted = True
-                break
-        if not mounted:
-            frontend.error_dialog(
-                "Error",
-                f"Failed to mount copy drive {copy_device}. Ensure it is a valid drive with a supported filesystem."
-            )
-            osextras.unlink_force(mount_point)
-            return None
-
-    # Check available space on copy drive
+def get_disk(device):
+    """Check for drive entry of device, return disk notation."""
+    from ubiquity.parted_server import PartedServer
     try:
-        return int(subprocess.run(['df', '-k', mount_point], capture_output=True, text=True, check=True).stdout.splitlines()[-1].split()[3])
-    except subprocess.CalledProcessError as e:
-        syslog.syslog(syslog.LOG_ERR, f"Failed to check space: {e}")
-        frontend.error_dialog(
-            "Error",
-            f"Failed to check available space in {mount_point}."
-        )
-        if mount_point:
-            execute('umount', mount_point)
-            osextras.unlink_force(mount_point)
-        return None
-
-    # Clean up
-    if mount_point:
-        execute('umount', mount_point)
-        osextras.unlink_force(mount_point)
+        p = PartedServer()
+        for disk in p.disks():
+            if disk.removeprefix("=dev=") in device:
+                    return disk
+    except Exception as e:
+        syslog.syslog(syslog.LOG_ERR, f"JACKJUMP: Failed to check drive entry for {device}: {e}")
     return None
-
-
-# steve@jackjump.com/grok3 added rsync user and config files
-@raise_privileges
-def is_bitlocker_device_encrypted(device):
-    """Check if any partition on the device is BitLocker encrypted."""
-    import parted_server
-    p = parted_server.PartedServer()
-    try:
-        p.select_disk(device)
-        for part in p.partitions():
-            if is_bitlocker_partition_encrypted(part[5]):  # part[5] is path
-                return True
-    except Exception:
-        syslog.syslog(syslog.LOG_ERR, f"Failed to check BitLocker on {device}")
-    return False
 
 
 @raise_privileges
