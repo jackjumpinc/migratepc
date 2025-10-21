@@ -261,112 +261,175 @@ class Install(install_misc.InstallBase):
 
         self.install_restricted_extras()
 
+        try:
+            self.copy_network_config()
+        except Exception:
+            syslog.syslog(
+                syslog.LOG_WARNING,
+                'Could not copy the network configuration:')
+            for line in traceback.format_exc().split('\n'):
+                syslog.syslog(syslog.LOG_WARNING, line)
+            self.db.input('critical', 'ubiquity/install/broken_network_copy')
+            self.db.go()
+        try:
+            self.copy_bluetooth_config()
+        except Exception:
+            syslog.syslog(
+                syslog.LOG_WARNING,
+                'Could not copy the bluetooth configuration:')
+            for line in traceback.format_exc().split('\n'):
+                syslog.syslog(syslog.LOG_WARNING, line)
+            self.db.input('critical', 'ubiquity/install/broken_bluetooth_copy')
+            self.db.go()
+        try:
+            self.recache_apparmor()
+        except Exception:
+            syslog.syslog(
+                syslog.LOG_WARNING, 'Could not create an Apparmor cache:')
+            for line in traceback.format_exc().split('\n'):
+                syslog.syslog(syslog.LOG_WARNING, line)
+        try:
+            self.copy_wallpaper_cache()
+        except Exception:
+            syslog.syslog(
+                syslog.LOG_WARNING, 'Could not copy wallpaper cache:')
+            for line in traceback.format_exc().split('\n'):
+                syslog.syslog(syslog.LOG_WARNING, line)
+        self.copy_dcd()
+
         # steve@jackjump.com/grok3 added windows user data migration
         # Post-install copy: Handle Windows user files
+        syslog.syslog("JACKJUMP: Beginning post-install.")
         self.next_region()
         self.db.progress('INFO', 'ubiquity/install/migrate_user_files')
-        copy_part = self.controller.dbfilter.extra_options.get('copy_part')
-        install_has_windows = self.controller.dbfilter.extra_options.get('install_has_windows', False)
-        copy_has_windows = self.controller.dbfilter.extra_options.get('copy_has_windows', False)
-        preinstall_copied = self.controller.dbfilter.extra_options.get('preinstall_copied', False)
-        copy_compressed = self.controller.dbfilter.extra_options.get('copy_compressed', False)
+        copy_fs_dev = misc.get_copy_fs_dev(self.db)
+        copy_parts = misc.get_copy_parts(self.db)
+        install_has_windows = self.db.get('ubiquity/install_has_windows') == 'true'
+        copy_has_windows = self.db.get('ubiquity/copy_has_windows') == 'true'
+        copy_compressed = self.db.get('ubiquity/copy_compressed') == 'true'
+        syslog.syslog("JACKJUMP: Beginning post-install for real.")
 
-        if copy_part:
-            #if misc.is_bitlocker_device_encrypted(copy_disk):
-                #self.db.input('critical', 'ubiquity/install/bitlocker_copy_drive')
-                #self.db.go()
-                #raise install_misc.InstallStepError("Copy drive is BitLocker encrypted")
+        if copy_fs_dev or copy_parts:
             target_user = self.db.get('passwd/username')
-            home_dir = self.target_file('home')
-            exclude_dirs = {'public', 'default', 'default user',
-                            'all users', 'defaultuser0', 'defaultuser1',
-                            'defaultuser2', 'defaultuser3', 'defaultuser4',
-                            'defaultuser5', 'defaultuser6', 'defaultuser7',
-                            'defaultuser8', 'defaultuser9', 'defaultuser10'}
+            home_dir = os.path.join(self.target, 'home')
+            jackjump_dir = os.path.join(self.target, 'var/lib/jackjump')
 
-            # Create users for non-excluded directories
-            for user_dir in os.listdir(home_dir):
-                if user_dir.lower() in exclude_dirs:
-                    continue
-                user_path = os.path.join(home_dir, user_dir)
-                if os.path.isdir(user_path):
-                    try:
-                        subprocess.run(['chroot', self.target, 'useradd', '-m', '-d', f'/home/{user_dir.lower()}', '-s', '/bin/bash', user_dir.lower()], check=True)
-                        uid, gid = self._get_uid_gid_on_target(user_dir.lower())
-                    except subprocess.CalledProcessError as e:
-                        syslog.syslog(syslog.LOG_WARNING, f"JACKJUMP: Failed to create user {user_dir.lower()}: {e}")
-                        continue
-
-            if install_has_windows:
-                # Copy from copy drive's jackjump/users to /target/home
-                source_dir = '/mnt/copy_drive/jackjump/users'
-                if not misc.copy_to_drive(source_dir, copy_part, os.path.join(self.target, 'home'), db=self.db, preinstall_copied=preinstall_copied, was_compressed=copy_compressed):
-                    self.db.input('critical', 'ubiquity/install/copy_user_files_failed')
-                    self.db.go()
-                    raise install_misc.InstallStepError("Failed to copy backed-up Windows user files to /home")
-                # Copy Windows data to /target/var/lib/jackjump
-                source_dir = '/mnt/copy_drive/jackjump/windows_data'
-                if os.path.exists(source_dir):
-                    if not misc.copy_to_drive(source_dir, copy_part, self.target_file('var/lib/jackjump'), db=self.db, preinstall_copied=preinstall_copied, was_compressed=copy_compressed):
+            if install_has_windows and copy_fs_dev:
+                mount_point = "/mnt/copy_drive"
+                if not os.path.exists(mount_point):
+                    misc.execute('mkdir', '-p', mount_point)
+                if misc.execute('mount', '-t', copy_fs_dev[0], copy_fs_dev[1], mount_point):
+                    # Copy from copy drive's jackjump/users to /target/home
+                    source_dir = os.path.join(mount_point, 'jackjump/users')
+                    if not misc.copy_to_drive(source_dir, None, home_dir, db=self.db, was_compressed=copy_compressed):
+                        self.db.input('critical', 'ubiquity/install/copy_user_files_failed')
+                        self.db.go()
+                        raise install_misc.InstallStepError("Failed to copy backed-up Windows user files to /home")
+                    # Copy Windows data to /target/var/lib/jackjump
+                    source_dir = os.path.join(mount_point, 'jackjump/windows_data')
+                    if not misc.copy_to_drive(source_dir, None, jackjump_dir, db=self.db, was_compressed=copy_compressed):
                         self.db.input('critical', 'ubiquity/install/copy_config_files_failed')
                         self.db.go()
-            elif copy_has_windows:
+                    misc.execute('umount', mount_point)
+                    misc.execute('rmdir', '--ignore-fail-on-non-empty', mount_point)
+                else:
+                    syslog.syslog(f"JACKJUMP: Failed to mount copy drive {copy_fs_dev[1]}. Ensure it is a valid drive with a supported filesystem.")
+                    self.db.input('critical', 'ubiquity/install/mount_copy_drive')
+                    self.db.go()
+                    misc.execute('rmdir', '--ignore-fail-on-non-empty', mount_point)
+            elif copy_has_windows and copy_parts:
                 # Copy directly from copy drive's Windows to /target/home
+                windows_users_extra_dirs = ['Public', 'Default',
+                                    'Default User', 'All Users']
                 windows_mount = '/mnt/copy_windows'
                 if not os.path.exists(windows_mount):
-                    misc.execute_root('mkdir', '-p', windows_mount)
-                if misc.execute_root('mount', '-t', 'ntfs', '-o', 'ro', copy_part, windows_mount):
-                    source_dir = os.path.join(windows_mount, 'Users')
-                    if not misc.copy_to_drive(source_dir, None, os.path.join(self.target, 'home'), db=self.db, preinstall_copied=False, was_compressed=False):
-                        misc.execute_root('umount', windows_mount)
-                        self.db.input('critical', 'ubiquity/install/return_user_files_failed')
-                        self.db.go()
-                        raise install_misc.InstallStepError("Failed to return Windows user files from copy drive to /home")
-                    # Copy Windows data
-                    windows_data = [
-                        os.path.join(windows_mount, 'Windows/System32/config/SAM'),
-                        os.path.join(windows_mount, 'Windows/System32/config/SYSTEM'),
-                        os.path.join(windows_mount, 'Windows/System32/config/SOFTWARE'),
-                        os.path.join(windows_mount, 'Users/*/AppData/Roaming/Mozilla/Firefox/Profiles'),
-                        os.path.join(windows_mount, 'Users/*/AppData/Local/Google/Chrome/User Data/Default'),
-                        os.path.join(windows_mount, 'Users/*/AppData/Local/Microsoft/Edge/User Data/Default'),
-                        os.path.join(windows_mount, 'Users/*/AppData/Local/BraveSoftware/Brave-Browser/User Data/Default'),
-                        os.path.join(windows_mount, 'Users/*/AppData/Local/Vivaldi/User Data/Default'),
-                        os.path.join(windows_mount, 'Users/*/AppData/Roaming/Opera Software/Opera Stable'),
-                        os.path.join(windows_mount, 'Users/*/AppData/Local/Chromium/User Data/Default'),
-                        os.path.join(windows_mount, 'Users/*/AppData/Roaming/Microsoft/Outlook'),
-                        os.path.join(windows_mount, 'Users/*/Pictures/Wallpaper'),
-                    ]
-                    for src in windows_data:
-                        if glob.glob(src):
-                            if not misc.copy_to_drive(src, None, self.target_file('var/lib/jackjump'), db=self.db, preinstall_copied=False, was_compressed=False):
-                                self.db.input('critical', 'ubiquity/install/return_config_files_failed')
-                                self.db.go()
-                    misc.execute_root('umount', windows_mount)
-                misc.execute_root('rmdir', '--ignore-fail-on-non-empty', windows_mount)
+                    misc.execute('mkdir', '-p', windows_mount)
+                for part in copy_parts:
+                    if misc.execute('mount', '-t', 'ntfs', '-o', 'ro', part, windows_mount):
+                        source_dir = os.path.join(windows_mount, 'Users')
+                        if not misc.copy_to_drive(source_dir, None, home_dir, db=self.db, was_compressed=False):
+                            misc.execute('umount', windows_mount)
+                            self.db.input('critical', 'ubiquity/install/return_user_files_failed')
+                            self.db.go()
+                            raise install_misc.InstallStepError("Failed to return Windows user files from copy drive to /home")
+                        # Copy Windows data
+                        windows_data = [
+                            os.path.join(windows_mount, 'Users/*/AppData/Roaming/Mozilla/Firefox/Profiles'),
+                            os.path.join(windows_mount, 'Users/*/AppData/Local/Google/Chrome/User Data/Default'),
+                            os.path.join(windows_mount, 'Users/*/AppData/Local/Microsoft/Edge/User Data/Default'),
+                            os.path.join(windows_mount, 'Users/*/AppData/Local/BraveSoftware/Brave-Browser/User Data/Default'),
+                            os.path.join(windows_mount, 'Users/*/AppData/Local/Vivaldi/User Data/Default'),
+                            os.path.join(windows_mount, 'Users/*/AppData/Roaming/Opera Software/Opera Stable'),
+                            os.path.join(windows_mount, 'Users/*/AppData/Local/Chromium/User Data/Default'),
+                            os.path.join(windows_mount, 'Users/*/AppData/Roaming/Microsoft/Outlook'),
+                            os.path.join(windows_mount, 'Users/*/Pictures/Wallpaper'),
+                        ]
+                        for src in windows_data:
+                            for path in glob.glob(src):
+                                dirs = path.strip(os.sep).split(os.sep) 
+                                if (len(dirs) >= 4 and (dirs[3] not in windows_users_extra_dirs or not dirs[3].startswith('Defaultuser'))) and os.path.exists(path):
+                                    dirs_bottom = os.sep.join(dirs[2:])
+                                    if not misc.copy_to_drive(src, None, os.path.join(jackjump_dir, dirs_bottom), db=self.db, was_compressed=False):
+                                        self.db.input('critical', 'ubiquity/install/return_config_files_failed')
+                                        self.db.go()
+                        misc.execute('umount', windows_mount)
+                misc.execute('rmdir', '--ignore-fail-on-non-empty', windows_mount)
 
-            # Handle case differences and set permissions
+            # To avoid duplicates
+            import filecmp
+            skel_dir = os.path.join(self.target, 'etc/skel')
+            target_user_dir = os.path.join(home_dir, target_user)
+            skel_comparison = filecmp.dircmp(skel_dir, target_user_dir)
+            if not skel_comparison.right_only and os.path.exists(target_user_dir):
+                shutil.rmtree(target_user_dir, ignore_errors=True)
+            exclude_dirs = {'default', 'default user', 'all users'}
+            # Handle case differences and spaces
             for user_dir in os.listdir(home_dir):
                 lower_user_dir = user_dir.lower()
-                if user_dir.lower() in exclude_dirs:
+                if lower_user_dir in exclude_dirs or lower_user_dir.startswith('defaultuser'):
                     shutil.rmtree(os.path.join(home_dir, user_dir), ignore_errors=True)
                     continue
-                if user_dir != lower_user_dir and lower_user_dir in os.listdir(home_dir):
+                if user_dir != lower_user_dir and lower_user_dir not in os.listdir(home_dir):
                     # Rename capitalized to lowercase directories
                     capitalized_path = os.path.join(home_dir, user_dir)
                     lowercase_path = os.path.join(home_dir, lower_user_dir)
-                    os.rename(capitalized_path, lowercase_path)
+                    if ' ' in lowercase_path:
+                        underscore_path = lowercase_path.replace(' ', '_')
+                        if '__' in underscore_path:
+                            single_path = underscore_path.replace('__', '_')
+                            os.rename(capitalized_path, single_path)
+                        else:
+                            os.rename(capitalized_path, underscore_path)
+                    else:
+                        os.rename(capitalized_path, lowercase_path)
+            old_public_dir = os.path.join(home_dir, 'public')
+            public_dir = os.path.join(self.target, 'srv/public')
+            if os.path.exists(old_public_dir):
+                shutil.move(old_public_dir, public_dir)
+            if not os.path.exists(target_user_dir):
+                misc.execute('mkdir', '-p', target_user_dir)
+
+            # Create users for non-excluded directories
+            for user_dir in os.listdir(home_dir):
+                user_path = os.path.join(home_dir, user_dir)
+                if user_dir != target_user and os.path.isdir(user_path):
+                    try:
+                        subprocess.run(['chroot', self.target, 'useradd', '-d', f'/home/{user_dir}', '-s', '/bin/bash', user_dir], check=True)
+                    except subprocess.CalledProcessError as e:
+                        syslog.syslog(syslog.LOG_WARNING, f"JACKJUMP: Failed to create user {user_dir}: {e}")
+                        continue
 
             # Copy /etc/skel and set permissions for each user
-            skel_dir = self.target_file('etc/skel')
             for user_dir in os.listdir(home_dir):
-                if user_dir.lower() in exclude_dirs:
-                    continue
+                user_path = os.path.join(home_dir, user_dir)
+                if os.path.isdir(user_path):
+                    if not misc.copy_to_drive(skel_dir, None, user_path, db=self.db, was_compressed=False):
+                        syslog.syslog(syslog.LOG_WARNING, f"JACKJUMP: Failed to copy skel files for user {user_dir}.")
+            for user_dir in os.listdir(home_dir):
                 user_path = os.path.join(home_dir, user_dir)
                 if os.path.isdir(user_path):
                     try:
-                        uid, gid = self._get_uid_gid_on_target(user_dir.lower())
-                        self.copy_tree(skel_dir, user_path, uid, gid)
+                        uid, gid = misc.get_uid_gid(user_dir)
                         for root, dirs, files in os.walk(user_path):
                             os.lchown(root, uid, gid)
                             os.chmod(root, 0o755)
@@ -375,10 +438,9 @@ class Install(install_misc.InstallBase):
                                 os.lchown(file_path, uid, gid)
                                 os.chmod(file_path, 0o644)
                     except Exception as e:
-                        syslog.syslog(syslog.LOG_WARNING, f"JACKJUMP: Failed to set permissions for {user_dir}: {e}")
+                        syslog.syslog(syslog.LOG_WARNING, f"JACKJUMP: Failed to set permissions for user {user_dir}: {e}")
 
             # Handle Public directory permissions
-            public_dir = os.path.join(home_dir, 'Public')
             if os.path.exists(public_dir):
                 os.chmod(public_dir, 0o775)
                 os.lchown(public_dir, 0, grp.getgrnam('users').gr_gid)
@@ -390,18 +452,30 @@ class Install(install_misc.InstallBase):
                         os.lchown(file_path, 0, grp.getgrnam('users').gr_gid)
                         os.chmod(file_path, 0o664)
 
-        # Install post-install script
-        with open(self.target_file('home', target_user, 'Desktop/jackjump-config.desktop'), 'w') as f:
-            f.write("""[Desktop Entry]
+            # Handle Jackjump directory permissions
+            if os.path.exists(jackjump_dir):
+                os.chmod(jackjump_dir, 0o775)
+                os.lchown(jackjump_dir, 0, grp.getgrnam('users').gr_gid)
+                for root, dirs, files in os.walk(jackjump_dir):
+                    os.lchown(root, 0, grp.getgrnam('users').gr_gid)
+                    os.chmod(root, 0o775)
+                    for file in files:
+                        file_path = os.path.join(root, file)
+                        os.lchown(file_path, 0, grp.getgrnam('users').gr_gid)
+                        os.chmod(file_path, 0o664)
+
+            # Install post-install script
+            with open(self.target_file('home', target_user, 'Desktop/jackjump-config.desktop'), 'w') as f:
+                f.write("""[Desktop Entry]
 Type=Application
 Name=Jackjump Configuration
 Exec=/home/%s/jackjump-config.sh
 Icon=system-software-install
 Terminal=true
 """ % target_user)
-        os.chmod(self.target_file('home', target_user, 'Desktop/jackjump-config.desktop'), 0o755)
-        with open(self.target_file('home', target_user, 'jackjump-config.sh'), 'w') as f:
-            f.write("""#!/bin/bash
+            os.chmod(self.target_file('home', target_user, 'Desktop/jackjump-config.desktop'), 0o755)
+            with open(self.target_file('home', target_user, 'jackjump-config.sh'), 'w') as f:
+                f.write("""#!/bin/bash
 #!/bin/bash
 #
 # Copyright (C) 2025 Jackjump.com, Inc.
@@ -603,8 +677,8 @@ if [ "$ALL_CONFIGURED" = true ]; then
         sudo rm -f /usr/share/keyrings/opera-archive-keyring.gpg
     fi
 
-    # Clean up users directory
-    sudo rm -rf /var/lib/jackjump/users
+    # Clean up jackjump directory
+    sudo rm -rf /var/lib/jackjump
 fi
 
 # Prompt for additional users if any remain
@@ -621,43 +695,7 @@ fi
 
 exit 0
 """)
-        os.chmod(self.target_file('home', target_user, 'jackjump-config.sh'), 0o755)
-
-        try:
-            self.copy_network_config()
-        except Exception:
-            syslog.syslog(
-                syslog.LOG_WARNING,
-                'Could not copy the network configuration:')
-            for line in traceback.format_exc().split('\n'):
-                syslog.syslog(syslog.LOG_WARNING, line)
-            self.db.input('critical', 'ubiquity/install/broken_network_copy')
-            self.db.go()
-        try:
-            self.copy_bluetooth_config()
-        except Exception:
-            syslog.syslog(
-                syslog.LOG_WARNING,
-                'Could not copy the bluetooth configuration:')
-            for line in traceback.format_exc().split('\n'):
-                syslog.syslog(syslog.LOG_WARNING, line)
-            self.db.input('critical', 'ubiquity/install/broken_bluetooth_copy')
-            self.db.go()
-        try:
-            self.recache_apparmor()
-        except Exception:
-            syslog.syslog(
-                syslog.LOG_WARNING, 'Could not create an Apparmor cache:')
-            for line in traceback.format_exc().split('\n'):
-                syslog.syslog(syslog.LOG_WARNING, line)
-        try:
-            self.copy_wallpaper_cache()
-        except Exception:
-            syslog.syslog(
-                syslog.LOG_WARNING, 'Could not copy wallpaper cache:')
-            for line in traceback.format_exc().split('\n'):
-                syslog.syslog(syslog.LOG_WARNING, line)
-        self.copy_dcd()
+            os.chmod(self.target_file('home', target_user, 'jackjump-config.sh'), 0o755)
 
         # Fix /etc/crypttab
         crypttab_file = self.target_file("etc/crypttab")

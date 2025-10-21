@@ -1659,6 +1659,37 @@ Default: false
 Description: for internal use; can be preseeded
  This will set up ZFS and configure it for zsys.
 
+# steve@jackjump.com/grok3 added a copy drive
+Template: ubiquity/copy_fs_dev
+Type: string
+Description: for internal use; specify fs and dev of copy partition.
+
+# steve@jackjump.com/grok3 added a copy drive
+Template: ubiquity/copy_parts
+Type: string
+Description: for internal use; specify Windows partitions to copy to target.
+
+# steve@jackjump.com/grok3 added a copy drive
+Template: ubiquity/install_has_windows
+Type: boolean
+Default: false
+Description: for internal use; can be preseeded
+ This will set up copy drive return of Windows user files to target.
+
+# steve@jackjump.com/grok3 added a copy drive
+Template: ubiquity/copy_has_windows
+Type: boolean
+Default: false
+Description: for internal use; can be preseeded
+ This will set up copy drive migration of Windows user files to target.
+
+# steve@jackjump.com/grok3 added a copy drive
+Template: ubiquity/copy_compressed
+Type: boolean
+Default: false
+Description: for internal use; can be preseeded
+ This will set up compression when copy drive is tight on space.
+
 Template: ubiquity/text/advanced_features_dialog
 Type: text
 _Description: Advanced Features

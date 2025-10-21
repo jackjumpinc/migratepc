@@ -660,6 +660,104 @@ def create_bool(text):
 
 
 # steve@jackjump.com/grok3 added rsync user and config files
+def copy_to_drive(source_dir, fs_dev, dest_dir, db=None, was_compressed=False):
+    """Copy files from source_dir to dest_dir on the specified fs_dev using rsync.
+    If fs_dev is None, dest_dir is assumed to be on the target system (e.g., /target/home).
+    was_compressed: If True, use rsync -z; if False, use space check.
+    """
+    if not os.path.exists(source_dir):
+        syslog.syslog(f"JACKJUMP: Source directory {source_dir} does not exist, skipping rsync")
+        return True
+
+    # If fs_dev is specified, mount it; otherwise, use dest_dir directly
+    mount_point = None
+    if fs_dev:
+        mount_point = "/mnt/copy_drive"
+        if not os.path.exists(mount_point):
+            execute('mkdir', '-p', mount_point)
+
+        # Mount the copy drive
+        if not execute('mount', '-t', fs_dev[0], fs_dev[1], mount_point):
+            syslog.syslog(f"JACKJUMP: Failed to mount copy drive {fs_dev[1]}. Ensure it is a valid drive with a supported filesystem.")
+            execute('rmdir', '--ignore-fail-on-non-empty', mount_point)
+            return False
+        dest_path = os.path.join(mount_point, dest_dir.lstrip('/'))
+    else:
+        dest_path = dest_dir
+
+    if not os.path.exists(dest_path):
+        os.makedirs(dest_path, exist_ok=True)
+    if not os.path.exists(dest_path):
+        syslog.syslog(f"JACKJUMP: Destination path {dest_path} failed to be formed, skipping possible space checks and rsync")
+        return False
+    # Check available space unless compression is predetermined
+    use_compression = was_compressed
+    if not use_compression:
+        try:
+            source_size = shutil.disk_usage(source_dir).used
+            dest_free = shutil.disk_usage(os.path.dirname(dest_path)).free
+            if source_size > dest_free:
+                syslog.syslog(f"JACKJUMP: Not enough space in {os.path.dirname(dest_path)} to store files (only {dest_free} K whereas {source_size} K is needed).")
+                if db is not None:
+                    db.input('critical', 'ubiquity/install/space_for_files')
+                    db.go()
+                if mount_point:
+                    execute('umount', mount_point)
+                    execute('rmdir', '--ignore-fail-on-non-empty', mount_point)
+                return False
+        except subprocess.CalledProcessError as e:
+            syslog.syslog(syslog.LOG_ERR, f"JACKJUMP: Failed to check space: {e}")
+            if db is not None:
+                db.input('critical', 'ubiquity/install/space_check_failed')
+                db.go()
+            if mount_point:
+                execute('umount', mount_point)
+                execute('rmdir', '--ignore-fail-on-non-empty', mount_point)
+            return False
+
+    # Perform rsync copy
+    try:
+        rsync_cmd = ['rsync', '-aAXv', '--modify-window=1', '--safe-links']
+        if use_compression:
+            rsync_cmd.append('-z')
+        rsync_cmd.extend([source_dir + '/', dest_path])
+        subprocess.run(rsync_cmd, check=True)
+        syslog.syslog(f"JACKJUMP: Successfully copied files {'with compression' if use_compression else ''} from {source_dir} to {dest_path}")
+    except subprocess.CalledProcessError as e:
+        syslog.syslog(syslog.LOG_ERR, f"JACKJUMP: rsync failed: {e}")
+        if mount_point:
+            execute('umount', mount_point)
+            execute('rmdir', '--ignore-fail-on-non-empty', mount_point)
+        return False
+
+    # Clean up
+    if mount_point:
+        execute('umount', mount_point)
+        execute('rmdir', '--ignore-fail-on-non-empty', mount_point)
+    return True
+
+
+# steve@jackjump.com/grok3 added rsync user and config files
+@raise_privileges
+def copy_to_drive_root(source_dir, fs_dev, dest_dir, db=None, was_compressed=False):
+    return copy_to_drive(source_dir, fs_dev, dest_dir, db=None, was_compressed=False)
+
+
+# steve@jackjump.com/grok3 added rsync user and config files
+def get_disk(device):
+    """Check for drive entry of device, return disk notation."""
+    from ubiquity.parted_server import PartedServer
+    try:
+        p = PartedServer()
+        for disk in p.disks():
+            if disk.removeprefix("=dev=") in device:
+                    return disk
+    except Exception as e:
+        syslog.syslog(syslog.LOG_ERR, f"JACKJUMP: Failed to check drive entry for {device}: {e}")
+    return None
+
+
+# steve@jackjump.com/grok3 added rsync user and config files
 @raise_privileges
 def get_used(source_dir):
     """Get amount of used space on the specified source_dir.
@@ -678,115 +776,50 @@ def get_used(source_dir):
 def get_free(dest_dir):
     """Get amount of available space on the specified mount_point.
     """
-    # Check available space on mount point
+    # Check available space on destination directory
     try:
         return shutil.disk_usage(dest_dir).free
     except subprocess.CalledProcessError as e:
-        syslog.syslog(syslog.LOG_ERR, f"JACKJUMP: Failed to check space on mount point {dest_dir}: {e}")
+        syslog.syslog(syslog.LOG_ERR, f"JACKJUMP: Failed to check space on destination directory {dest_dir}: {e}")
         return None
     return None
 
 
 # steve@jackjump.com/grok3 added rsync user and config files
-@raise_privileges
-def copy_to_drive(source_dir, part, dest_dir, db=None, preinstall_copied=False, was_compressed=False):
-    """Copy files from source_dir to dest_dir on the specified part using rsync.
-    If part is None, dest_dir is assumed to be on the target system (e.g., /target/home).
-    preinstall_copied: If True, skip deletion of jackjump directory.
-    was_compressed: If True, use rsync -z; if False, use space check to decide.
+def get_copy_fs_dev(db):
+    """Get copy_fs_dev from debconf.
     """
-    if not os.path.exists(source_dir):
-        syslog.syslog(f"JACKJUMP: Source directory {source_dir} does not exist, skipping rsync")
-        return True
-
-    # If part is specified, mount it; otherwise, use dest_dir directly
-    mount_point = None
-    if part:
-        mount_point = "/mnt/copy_drive"
-        if not os.path.exists(mount_point):
-            execute('mkdir', '-p', mount_point)
-
-        # Mount the copy drive
-        filesystems = ['ntfs', 'exfat', 'vfat', 'ext4', 'xfs', 'btrfs']
-        mounted = False
-        for fs in filesystems:
-            if execute('mount', '-t', fs, part, mount_point):
-                mounted = True
-                break
-        if not mounted:
-            syslog.syslog(f"JACKJUMP: Failed to mount copy drive {part}. Ensure it is a valid drive with a supported filesystem.")
-            if db is not None:
-                db.input('critical', 'ubiquity/install/mount_copy_drive')
-                db.go()
-            execute('rmdir', '--ignore-fail-on-non-empty', mount_point)
-            return False
-        dest_path = os.path.join(mount_point, dest_dir.lstrip('/'))
-        
-        # Clean up jackjump directory only if not preinstall_copied
-        if not preinstall_copied:
-            jackjump_path = os.path.join(mount_point, 'jackjump')
-            if os.path.exists(jackjump_path):
-                shutil.rmtree(jackjump_path, ignore_errors=True)
-                syslog.syslog(f"JACKJUMP: Deleted {jackjump_path} on copy drive {part} to free up space for copying (old data from previous useage of this migration tool).")
-    else:
-        dest_path = dest_dir
-
-    # Check available space unless compression is predetermined
-    use_compression = was_compressed
-    if not use_compression:
-        try:
-            source_size = get_used(source_dir)
-            dest_free = get_free(os.path.dirname(dest_path))
-            if source_size > dest_free:
-                syslog.syslog(f"JACKJUMP: Not enough space in {os.path.dirname(dest_path)} to store files (only {dest_free} K whereas {source_size} K is needed).")
-                if db is not None:
-                    db.input('critical', 'ubiquity/install/space_for_files')
-                    db.go()
-                execute('umount', mount_point)
-                execute('rmdir', '--ignore-fail-on-non-empty', mount_point)
-                return False
-        except subprocess.CalledProcessError as e:
-            syslog.syslog(syslog.LOG_ERR, f"JACKJUMP: Failed to check space: {e}")
-            if db is not None:
-                db.input('critical', 'ubiquity/install/space_check_failed')
-                db.go()
-            execute('umount', mount_point)
-            execute('rmdir', '--ignore-fail-on-non-empty', mount_point)
-            return False
-
-    # Perform rsync copy
     try:
-        os.makedirs(dest_path, exist_ok=True)
-        rsync_cmd = ['rsync', '-aAXv', '--modify-window=1', '--safe-links']
-        if use_compression:
-            rsync_cmd.append('-z')
-        rsync_cmd.extend([source_dir + '/', dest_path])
-        subprocess.run(rsync_cmd, check=True)
-        syslog.syslog(f"JACKJUMP: Successfully copied files {'with compression' if use_compression else ''} from {source_dir} to {dest_path}")
-    except subprocess.CalledProcessError as e:
-        syslog.syslog(syslog.LOG_ERR, f"JACKJUMP: rsync failed: {e}")
-        execute('umount', mount_point)
-        execute('rmdir', '--ignore-fail-on-non-empty', mount_point)
-        return False
-
-    # Clean up
-    execute('umount', mount_point)
-    execute('rmdir', '--ignore-fail-on-non-empty', mount_point)
-    return True
+        return json.loads(db.get('ubiquity/copy_fs_dev')) if db.get('ubiquity/copy_fs_dev') else []
+    except json.JSONDecodeError:
+        syslog.syslog("JACKJUMP: Failed to decode copy_fs_dev, using empty list")
+        return []
+    return []
 
 
 # steve@jackjump.com/grok3 added rsync user and config files
-def get_disk(device):
-    """Check for drive entry of device, return disk notation."""
-    from ubiquity.parted_server import PartedServer
+def get_copy_parts(db):
+    """Get copy_parts from debconf.
+    """
     try:
-        p = PartedServer()
-        for disk in p.disks():
-            if disk.removeprefix("=dev=") in device:
-                    return disk
-    except Exception as e:
-        syslog.syslog(syslog.LOG_ERR, f"JACKJUMP: Failed to check drive entry for {device}: {e}")
-    return None
+        return json.loads(db.get('ubiquity/copy_parts')) if db.get('ubiquity/copy_parts') else []
+    except json.JSONDecodeError:
+        syslog.syslog("JACKJUMP: Failed to decode copy_parts, using empty list")
+        return []
+    return []
+
+
+# steve@jackjump.com/grok3 added rsync user and config files
+def get_uid_gid(username):
+    """Get uid and gid of username from pwd.
+    """
+    try:
+        user_info = pwd.getpwnam(username)
+        return user_info.pw_uid, user_info.pw_gid
+    except KeyError:
+        syslog.syslog("JACKJUMP: Failed to determine uid and gid for {username}, using those of default user")
+        return 1000, 1000
+    return 1000, 1000
 
 
 @raise_privileges
