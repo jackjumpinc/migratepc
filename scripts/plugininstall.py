@@ -452,20 +452,21 @@ class Install(install_misc.InstallBase):
             hide_file = ['ntuser.*', 'NTUSER.*']
             for user_dir in os.listdir(home_dir):
                 user_path = os.path.join(home_dir, user_dir)
-                for main_dir in os.listdir(user_path):
-                    main_path = os.path.join(user_path, main_dir)
-                    if os.path.isdir(main_path):
-                        if main_dir in hide_dir:
-                            hid_path = os.path.join(user_path, '.' + main_dir)
-                            os.rename(main_path, hid_path)
-                    else:
-                        import fnmatch
-                        if fnmatch.fnmatch(main_dir, hide_file[0]) or fnmatch.fnmatch(main_dir, hide_file[1]):
-                            hidden_dir = os.path.join(user_path, '.ntuser')
-                            if not os.path.exists(hidden_dir):
-                                misc.execute('mkdir', '-p', hidden_dir)
-                            hid_path = os.path.join(hidden_dir, main_dir)
-                            os.rename(main_path, hid_path)
+                if os.path.isdir(user_path):
+                    for main_dir in os.listdir(user_path):
+                        main_path = os.path.join(user_path, main_dir)
+                        if os.path.isdir(main_path):
+                            if main_dir in hide_dir:
+                                hid_path = os.path.join(user_path, '.' + main_dir)
+                                os.rename(main_path, hid_path)
+                        else:
+                            import fnmatch
+                            if fnmatch.fnmatch(main_dir, hide_file[0]) or fnmatch.fnmatch(main_dir, hide_file[1]):
+                                hidden_dir = os.path.join(user_path, '.ntuser')
+                                if not os.path.exists(hidden_dir):
+                                    misc.execute('mkdir', '-p', hidden_dir)
+                                hid_path = os.path.join(hidden_dir, main_dir)
+                                os.rename(main_path, hid_path)
 
             # Handle Public directory permissions
             if os.path.exists(public_dir):
