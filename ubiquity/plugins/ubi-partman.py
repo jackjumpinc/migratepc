@@ -613,6 +613,7 @@ class PageGtk(PageBase):
         copy_used = []
         other_parts = []
         other_used = []
+        user_dirs = []
         import syslog
         partserv = self.extra_options.get('partserv')
         if not partserv:
@@ -671,6 +672,7 @@ class PageGtk(PageBase):
                                 users_reparse = subprocess.run(['getfattr', '-h', '-n', 'system.ntfs_reparse_data', '-e', 'hex', os.path.join(mount_point, 'Users')], capture_output=True, text=True, check=False)
                                 if users_reparse.returncode == 1 and 'No such attribute' in users_reparse.stderr:
                                     users_part_needed = False
+                                    user_dirs = misc.set_user_dirs(source_dir)
                                 if not users_part_needed:
                                     import glob
                                     for documents_path in glob.glob(os.path.join(mount_point, 'Users/*/Documents')):
@@ -785,6 +787,8 @@ class PageGtk(PageBase):
                                     source_size = misc.get_used(source_dir)
                                     if source_size:
                                         install_used.append(source_size)
+                                if not user_dirs:
+                                    user_dirs = misc.set_user_dirs(source_dir)
                                 syslog.syslog(f"JACKJUMP: Install drive has separate Users partition {partition[0]}.")
                                 users_part_needed = False
                                 if are_parts_accurate:
@@ -809,6 +813,8 @@ class PageGtk(PageBase):
                                         source_size = misc.get_used(source_dir)
                                         if source_size:
                                             install_used.append(source_size)
+                                    if not user_dirs:
+                                        user_dirs = misc.set_user_dirs(source_dir)
                                     syslog.syslog(f"JACKJUMP: Install drive has separate Documents partition {partition[0]}.")
                                     documents_part_needed = False
                                 if is_pictures_part:
@@ -819,6 +825,8 @@ class PageGtk(PageBase):
                                         source_size = misc.get_used(source_dir)
                                         if source_size:
                                             install_used.append(source_size)
+                                    if not user_dirs:
+                                        user_dirs = misc.set_user_dirs(source_dir)
                                     syslog.syslog(f"JACKJUMP: Install drive has separate Pictures partition {partition[0]}.")
                                     pictures_part_needed = False
                                 if is_desktop_part:
@@ -829,6 +837,8 @@ class PageGtk(PageBase):
                                         source_size = misc.get_used(source_dir)
                                         if source_size:
                                             install_used.append(source_size)
+                                    if not user_dirs:
+                                        user_dirs = misc.set_user_dirs(source_dir)
                                     syslog.syslog(f"JACKJUMP: Install drive has separate Desktop partition {partition[0]}.")
                                     desktop_part_needed = False
                                 if is_videos_part:
@@ -839,6 +849,8 @@ class PageGtk(PageBase):
                                         source_size = misc.get_used(source_dir)
                                         if source_size:
                                             install_used.append(source_size)
+                                    if not user_dirs:
+                                        user_dirs = misc.set_user_dirs(source_dir)
                                     syslog.syslog(f"JACKJUMP: Install drive has separate Videos partition {partition[0]}.")
                                     videos_part_needed = False
                                 if is_music_part:
@@ -849,6 +861,8 @@ class PageGtk(PageBase):
                                         source_size = misc.get_used(source_dir)
                                         if source_size:
                                             install_used.append(source_size)
+                                    if not user_dirs:
+                                        user_dirs = misc.set_user_dirs(source_dir)
                                     syslog.syslog(f"JACKJUMP: Install drive has separate Music partition {partition[0]}.")
                                     music_part_needed = False
                                 if is_downloads_part:
@@ -859,6 +873,8 @@ class PageGtk(PageBase):
                                         source_size = misc.get_used(source_dir)
                                         if source_size:
                                             install_used.append(source_size)
+                                    if not user_dirs:
+                                        user_dirs = misc.set_user_dirs(source_dir)
                                     syslog.syslog(f"JACKJUMP: Install drive has separate Downloads partition {partition[0]}.")
                                     downloads_part_needed = False
                     misc.execute_root('umount', mount_point)
@@ -934,6 +950,8 @@ class PageGtk(PageBase):
                                     Gtk.MessageType.ERROR, Gtk.ButtonsType.CLOSE, None)
                                 dialog.set_markup(msg)
                                 dialog.run()
+                                misc.execute_root('umount', mount_point)
+                                misc.execute_root('rmdir', '--ignore-fail-on-non-empty', mount_point)
                                 import sys
                                 sys.exit(1)
                                 dialog.destroy()
@@ -1016,10 +1034,12 @@ class PageGtk(PageBase):
                     copy_fs_dev = max(space_part)[1]  # [space, dev] 
                     if not copy_fs_dev:
                         syslog.syslog(f"JACKJUMP: Is this drive formatted? The copy partition was not determined successfully from partition options on copy drive {copy_device}.")
-                    syslog.syslog(f"JACKJUMP: Copy partition {copy_fs_dev[1]} has the most available space {copy_free}.")
+                    else:
+                        syslog.syslog(f"JACKJUMP: Copy partition {copy_fs_dev[1]} has the most available space {copy_free}.")
                 else:
                     syslog.syslog(f"JACKJUMP: Is this drive formatted? The partition list meant to determine which partition on copy drive {copy_device} has the most available space is empty.")
-            syslog.syslog(f"JACKJUMP: Copy partition is {copy_fs_dev[1]} with {copy_fs_dev[0]} filesystem.")
+            else:
+                syslog.syslog(f"JACKJUMP: Copy partition is {copy_fs_dev[1]} with {copy_fs_dev[0]} filesystem.")
             if not copy_mounted:
                 syslog.syslog(f"JACKJUMP: The copy drive {copy_device} has an issue: its filesystem is not supported or something else is making it unable to mount.")
                 #title = ('Copy drive did not mount.')
@@ -1058,6 +1078,7 @@ class PageGtk(PageBase):
         if not copy_parts:
             copy_parts.append('/not/there')
         self.extra_options['copy_parts'] = copy_parts
+        self.extra_options['user_dirs'] = user_dirs
         syslog.syslog(f"JACKJUMP: Copy_fs_dev {copy_fs_dev}.")
         syslog.syslog(f"JACKJUMP: Copy_parts {copy_parts}.")
 
@@ -1081,7 +1102,7 @@ class PageGtk(PageBase):
         syslog.syslog(f"JACKJUMP: Users part needed {users_part_needed}.")
         syslog.syslog(f"JACKJUMP: Documents part needed {documents_part_needed}. Default is True.")
         # Part 3: Copy user files and Windows data if install drive has Windows
-        if copy_device and install_part and install_parts and copy_fs_dev and install_has_windows:
+        if copy_device and install_part and install_parts and copy_fs_dev and user_dirs and install_has_windows:
             use_compression = False
             if install_used and copy_free > 0:
                 # Check space to determine compression
@@ -1119,6 +1140,21 @@ class PageGtk(PageBase):
             dialog.set_markup(msg)
             dialog.run()
             dialog.destroy()
+            if not misc.make_xdg_dirs_root(user_dirs, copy_fs_dev, 'jackjump/users'):
+                syslog.syslog(f"JACKJUMP: At least one user directory {user_dirs} failed to be created on copy drive {copy_fs_dev[1]}.")
+                #title = ('Please select a valid copy drive.')
+                no_copy_drive = 'ubiquity/text/no_copy_drive'
+                msg = self.controller.get_string(no_copy_drive)
+                from gi.repository import Gtk
+                dialog = Gtk.MessageDialog(
+                    self.current_page.get_toplevel(), Gtk.DialogFlags.MODAL,
+                    Gtk.MessageType.ERROR, Gtk.ButtonsType.CLOSE, None)
+                dialog.set_markup(msg)
+                dialog.run()
+                import sys
+                sys.exit(1)
+                dialog.destroy()
+                return
             for part in install_parts:
                 if not misc.execute_root('mount', '-t', 'ntfs', '-o', 'ro', part, mount_point):
                     syslog.syslog(f"JACKJUMP: The partition {part} on install drive with Windows has an issue or something is making it unable to mount.")
@@ -1131,6 +1167,8 @@ class PageGtk(PageBase):
                         Gtk.MessageType.ERROR, Gtk.ButtonsType.CLOSE, None)
                     dialog.set_markup(msg)
                     dialog.run()
+                    misc.execute_root('umount', mount_point)
+                    misc.execute_root('rmdir', '--ignore-fail-on-non-empty', mount_point)
                     import sys
                     sys.exit(1)
                     dialog.destroy()
@@ -1151,6 +1189,8 @@ class PageGtk(PageBase):
                             Gtk.MessageType.ERROR, Gtk.ButtonsType.CLOSE, None)
                         dialog.set_markup(msg)
                         dialog.run()
+                        misc.execute_root('umount', mount_point)
+                        misc.execute_root('rmdir', '--ignore-fail-on-non-empty', mount_point)
                         import sys
                         sys.exit(1)
                         dialog.destroy()
@@ -1167,6 +1207,8 @@ class PageGtk(PageBase):
                         Gtk.MessageType.ERROR, Gtk.ButtonsType.CLOSE, None)
                     dialog.set_markup(msg)
                     dialog.run()
+                    misc.execute_root('umount', mount_point)
+                    misc.execute_root('rmdir', '--ignore-fail-on-non-empty', mount_point)
                     import sys
                     sys.exit(1)
                     dialog.destroy()
@@ -4279,6 +4321,10 @@ class Page(plugin.Plugin):
                 copy_parts = self.extra_options.get('copy_parts')
                 import json
                 self.db.set('ubiquity/copy_parts', json.dumps(copy_parts))
+            if 'user_dirs' in self.extra_options:
+                user_dirs = self.extra_options.get('user_dirs')
+                import json
+                self.db.set('ubiquity/user_dirs', json.dumps(user_dirs))
             if 'install_has_windows' in self.extra_options:
                 install_has_windows = self.extra_options.get('install_has_windows', False)
                 self.db.set('ubiquity/install_has_windows', 'true' if install_has_windows else 'false')

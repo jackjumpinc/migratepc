@@ -744,6 +744,74 @@ def copy_to_drive_root(source_dir, fs_dev, dest_dir, db=None, was_compressed=Fal
 
 
 # steve@jackjump.com/grok3 added rsync user and config files
+def make_xdg_dirs(user_dirs, fs_dev, dest_dir):
+    """Create user directories in dest_dir with xdg subdirectories.
+    If fs_dev is None, dest_dir is assumed to be on the target system (e.g., /target/home).
+    """
+    if not user_dirs:
+        syslog.syslog(f"JACKJUMP: User directory names {user_dirs} were not provided, skipping directory creation")
+        return False
+
+    # If fs_dev is specified, mount it; otherwise, use dest_dir directly
+    mount_point = None
+    if fs_dev:
+        mount_point = "/mnt/copy_drive"
+        if not os.path.exists(mount_point):
+            execute('mkdir', '-p', mount_point)
+
+        # Mount the copy drive
+        if not execute('mount', '-t', fs_dev[0], fs_dev[1], mount_point):
+            syslog.syslog(f"JACKJUMP: Failed to mount copy drive {fs_dev[1]}. Ensure it is a valid drive with a supported filesystem.")
+            execute('rmdir', '--ignore-fail-on-non-empty', mount_point)
+            return False
+        dest_path = os.path.join(mount_point, dest_dir.lstrip('/'))
+    else:
+        dest_path = dest_dir
+
+    xdg_dirs = ['Documents', 'Pictures', 'Desktop', 'Videos',
+                'Music', 'Downloads', 'Templates', 'Public']
+
+    for user_dir in user_dirs:
+        new_user_path = os.path.join(dest_path, user_dir)
+        for xdg_dir in xdg_dirs:
+            new_xdg_path = os.path.join(new_user_path, xdg_dir)
+            if not os.path.exists(new_xdg_path):
+                os.makedirs(new_xdg_path, exist_ok=True)
+            if not os.path.exists(new_xdg_path):
+                syslog.syslog(f"JACKJUMP: Destination path {new_xdg_path} failed to be formed, skipping copy to drive")
+                return False
+
+    # Clean up
+    if mount_point:
+        execute('umount', mount_point)
+        execute('rmdir', '--ignore-fail-on-non-empty', mount_point)
+    return True
+
+
+# steve@jackjump.com/grok3 added rsync user and config files
+@raise_privileges
+def make_xdg_dirs_root(user_dirs, fs_dev, dest_dir):
+    return make_xdg_dirs(user_dirs, fs_dev, dest_dir)
+
+
+# steve@jackjump.com/grok3 added rsync user and config files
+def set_user_dirs(source_dir):
+    """Determine source_dir user directories."""
+    if not os.path.exists(source_dir):
+        syslog.syslog(f"JACKJUMP: Source directory {source_dir} does not exist, skipping retrieval of user directories.")
+        return None
+
+    ret = []
+    win_dirs = ['Public', 'Default', 'Default User', 'All Users']
+
+    for user_dir in os.listdir(source_dir):
+        old_user_path = os.path.join(source_dir, user_dir)
+        if user_dir not in win_dirs and not user_dir.startswith('Defaultuser') and os.path.isdir(old_user_path):
+            ret.append(user_dir)
+    return ret
+
+
+# steve@jackjump.com/grok3 added rsync user and config files
 def get_disk(device):
     """Check for drive entry of device, return disk notation."""
     from ubiquity.parted_server import PartedServer
@@ -810,16 +878,36 @@ def get_copy_parts(db):
 
 
 # steve@jackjump.com/grok3 added rsync user and config files
-def get_uid_gid(username):
-    """Get uid and gid of username from pwd.
+def get_user_dirs(db):
+    """Get user_dirs from debconf.
     """
     try:
-        user_info = pwd.getpwnam(username)
-        return user_info.pw_uid, user_info.pw_gid
-    except KeyError:
-        syslog.syslog("JACKJUMP: Failed to determine uid and gid for {username}, using those of default user")
+        return json.loads(db.get('ubiquity/user_dirs')) if db.get('ubiquity/user_dirs') else []
+    except json.JSONDecodeError:
+        syslog.syslog("JACKJUMP: Failed to decode user_dirs, using empty list")
+        return []
+    return []
+
+
+# steve@jackjump.com/grok3 added rsync user and config files
+def get_uid_gid(username):
+    """Get uid and gid of username from target passwd file.
+    """
+    try:
+        with open('/target/etc/passwd', 'r') as fp:
+            for line in fp:
+                fields = line.strip().split(":")
+                if fields[0] == username:
+                    uid = int(fields[2])
+                    gid = int(fields[3])
+                    return uid, gid
+    except FileNotFoundError:
+        syslog.syslog(syslog.LOG_ERR, f"JACKJUMP: File not found! Failed to determine uid and gid for {username}, using those of default user")
         return 1000, 1000
-    return 1000, 1000
+    except (ValueError, IndexError):
+        syslog.syslog(syslog.LOG_ERR, f"JACKJUMP: Malformed line! Failed to determine uid and gid for {username}, using those of default user")
+        return 1000, 1000
+    return 1000, 1000  # User not found
 
 
 @raise_privileges

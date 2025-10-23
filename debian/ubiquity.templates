@@ -1670,6 +1670,11 @@ Type: string
 Description: for internal use; specify Windows partitions to copy to target.
 
 # steve@jackjump.com/grok3 added a copy drive
+Template: ubiquity/user_dirs
+Type: string
+Description: for internal use; specify Windows users to migrate.
+
+# steve@jackjump.com/grok3 added a copy drive
 Template: ubiquity/install_has_windows
 Type: boolean
 Default: false

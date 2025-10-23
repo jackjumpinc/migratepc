@@ -304,6 +304,7 @@ class Install(install_misc.InstallBase):
         self.db.progress('INFO', 'ubiquity/install/migrate_user_files')
         copy_fs_dev = misc.get_copy_fs_dev(self.db)
         copy_parts = misc.get_copy_parts(self.db)
+        user_dirs = misc.get_user_dirs(self.db)
         install_has_windows = self.db.get('ubiquity/install_has_windows') == 'true'
         copy_has_windows = self.db.get('ubiquity/copy_has_windows') == 'true'
         copy_compressed = self.db.get('ubiquity/copy_compressed') == 'true'
@@ -337,10 +338,14 @@ class Install(install_misc.InstallBase):
                     self.db.input('critical', 'ubiquity/install/mount_copy_drive')
                     self.db.go()
                     misc.execute('rmdir', '--ignore-fail-on-non-empty', mount_point)
-            elif copy_has_windows and copy_parts:
+            elif copy_has_windows and user_dirs and copy_parts:
                 # Copy directly from copy drive's Windows to /target/home
                 windows_users_extra_dirs = ['Public', 'Default',
                                     'Default User', 'All Users']
+                if not misc.make_xdg_dirs(user_dirs, None, home_dir):
+                    self.db.input('critical', 'ubiquity/install/return_user_files_failed')
+                    self.db.go()
+                    raise install_misc.InstallStepError("Failed to return Windows user files from copy drive to /home")
                 windows_mount = '/mnt/copy_windows'
                 if not os.path.exists(windows_mount):
                     misc.execute('mkdir', '-p', windows_mount)
@@ -435,10 +440,32 @@ class Install(install_misc.InstallBase):
                             os.chmod(root, 0o755)
                             for file in files:
                                 file_path = os.path.join(root, file)
+                                if os.path.islink(file_path) and not os.path.exists(file_path):
+                                    continue
                                 os.lchown(file_path, uid, gid)
                                 os.chmod(file_path, 0o644)
                     except Exception as e:
                         syslog.syslog(syslog.LOG_WARNING, f"JACKJUMP: Failed to set permissions for user {user_dir}: {e}")
+
+            # Hide some Windows remnants 
+            hide_dir = ['AppData', 'IntelGraphicsProfiles']
+            hide_file = ['ntuser.*', 'NTUSER.*']
+            for user_dir in os.listdir(home_dir):
+                user_path = os.path.join(home_dir, user_dir)
+                for main_dir in os.listdir(user_path):
+                    main_path = os.path.join(user_path, main_dir)
+                    if os.path.isdir(main_path):
+                        if main_dir in hide_dir:
+                            hid_path = os.path.join(user_path, '.' + main_dir)
+                            os.rename(main_path, hid_path)
+                    else:
+                        import fnmatch
+                        if fnmatch.fnmatch(main_dir, hide_file[0]) or fnmatch.fnmatch(main_dir, hide_file[1]):
+                            hidden_dir = os.path.join(user_path, '.ntuser')
+                            if not os.path.exists(hidden_dir):
+                                misc.execute('mkdir', '-p', hidden_dir)
+                            hid_path = os.path.join(hidden_dir, main_dir)
+                            os.rename(main_path, hid_path)
 
             # Handle Public directory permissions
             if os.path.exists(public_dir):
@@ -449,6 +476,8 @@ class Install(install_misc.InstallBase):
                     os.chmod(root, 0o775)
                     for file in files:
                         file_path = os.path.join(root, file)
+                        if os.path.islink(file_path) and not os.path.exists(file_path):
+                            continue
                         os.lchown(file_path, 0, grp.getgrnam('users').gr_gid)
                         os.chmod(file_path, 0o664)
 
@@ -461,6 +490,8 @@ class Install(install_misc.InstallBase):
                     os.chmod(root, 0o775)
                     for file in files:
                         file_path = os.path.join(root, file)
+                        if os.path.islink(file_path) and not os.path.exists(file_path):
+                            continue
                         os.lchown(file_path, 0, grp.getgrnam('users').gr_gid)
                         os.chmod(file_path, 0o664)
 
@@ -541,6 +572,24 @@ fi
 if [ "$TARGET_USER" != "$MAIN_USER" ]; then
     echo "Setting password for $TARGET_USER"
     sudo passwd "$TARGET_USER"
+    # Prompt for locale
+    su - "$TARGET_USER" -c '
+    read -p "Select locale (e.g. en_US, de_DE, fr_FR): " LOCALE
+    if locale -a | grep -qi "^${LOCALE//_/\\.}"; then
+        echo "export LANG=$LOCALE.UTF-8" >> ~/.profile
+        # Recreate locale file
+        if [[ ! "$LOCALE" =~ ^(en_US|en_GB|en_AU|en_CA)$ ]]; then
+           xdg-user-dirs-update --force
+        fi   
+    else
+        echo "Invalid or unsupported locale."
+    fi
+    '
+else
+    # Recreate locale file
+    if [[ ! "${LANG%%.*}" =~ ^(en_US|en_GB|en_AU|en_CA)$ ]]; then
+        xdg-user-dirs-update --force
+    fi   
 fi
 
 # Add third-party repositories (removed later if not needed)
