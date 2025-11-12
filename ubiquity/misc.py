@@ -743,62 +743,12 @@ def copy_to_drive_root(source_dir, fs_dev, dest_dir, db=None, was_compressed=Fal
     return copy_to_drive(source_dir, fs_dev, dest_dir, db=None, was_compressed=False)
 
 
-# steve@jackjump.com/grok3 added rsync user and config files
-def make_xdg_dirs(user_dirs, fs_dev, dest_dir):
-    """Create user directories in dest_dir with xdg subdirectories.
-    If fs_dev is None, dest_dir is assumed to be on the target system (e.g., /target/home).
-    """
-    if not user_dirs:
-        syslog.syslog(f"JACKJUMP: User directory names {user_dirs} were not provided, skipping directory creation")
-        return False
-
-    # If fs_dev is specified, mount it; otherwise, use dest_dir directly
-    mount_point = None
-    if fs_dev:
-        mount_point = "/mnt/copy_drive"
-        if not os.path.exists(mount_point):
-            execute('mkdir', '-p', mount_point)
-
-        # Mount the copy drive
-        if not execute('mount', '-t', fs_dev[0], fs_dev[1], mount_point):
-            syslog.syslog(f"JACKJUMP: Failed to mount copy drive {fs_dev[1]}. Ensure it is a valid drive with a supported filesystem.")
-            execute('rmdir', '--ignore-fail-on-non-empty', mount_point)
-            return False
-        dest_path = os.path.join(mount_point, dest_dir.lstrip('/'))
-    else:
-        dest_path = dest_dir
-
-    xdg_dirs = ['Documents', 'Pictures', 'Desktop', 'Videos',
-                'Music', 'Downloads', 'Templates', 'Public']
-
-    for user_dir in user_dirs:
-        new_user_path = os.path.join(dest_path, user_dir)
-        for xdg_dir in xdg_dirs:
-            new_xdg_path = os.path.join(new_user_path, xdg_dir)
-            if not os.path.exists(new_xdg_path):
-                os.makedirs(new_xdg_path, exist_ok=True)
-            if not os.path.exists(new_xdg_path):
-                syslog.syslog(f"JACKJUMP: Destination path {new_xdg_path} failed to be formed, skipping copy to drive")
-                return False
-
-    # Clean up
-    if mount_point:
-        execute('umount', mount_point)
-        execute('rmdir', '--ignore-fail-on-non-empty', mount_point)
-    return True
-
-
-# steve@jackjump.com/grok3 added rsync user and config files
+# steve@jackjump.com/search.brave.com added set_user_dirs
 @raise_privileges
-def make_xdg_dirs_root(user_dirs, fs_dev, dest_dir):
-    return make_xdg_dirs(user_dirs, fs_dev, dest_dir)
-
-
-# steve@jackjump.com/grok3 added rsync user and config files
 def set_user_dirs(source_dir):
     """Determine source_dir user directories."""
-    if not os.path.exists(source_dir):
-        syslog.syslog(f"JACKJUMP: Source directory {source_dir} does not exist, skipping retrieval of user directories.")
+    if os.path.exists(source_dir) and not os.path.isdir(source_dir):
+        syslog.syslog(f"JACKJUMP: Source {source_dir} exists but is not a directory, skipping retrieval of user directories.")
         return None
 
     ret = []
@@ -806,12 +756,77 @@ def set_user_dirs(source_dir):
 
     for user_dir in os.listdir(source_dir):
         old_user_path = os.path.join(source_dir, user_dir)
-        if user_dir not in win_dirs and not user_dir.startswith('Defaultuser') and os.path.isdir(old_user_path):
+        if user_dir not in win_dirs and not user_dir.startswith('defaultuser') and os.path.exists(old_user_path) and os.path.isdir(old_user_path):
             ret.append(user_dir)
     return ret
 
 
-# steve@jackjump.com/grok3 added rsync user and config files
+# steve@jackjump.com/search.brave.com added set_main_dirs
+@raise_privileges
+def set_main_dirs(source_dir, user_dirs):
+    """Determine main directories for each user."""
+    if os.path.exists(source_dir) and not os.path.isdir(source_dir):
+        syslog.syslog(f"JACKJUMP: Source {source_dir} exists but is not a directory, skipping retrieval of main directories.")
+        return None
+    if not user_dirs:
+        syslog.syslog(f"JACKJUMP: Somehow {user_dirs} is lacking, skipping retrieval of main directories.")
+        return None
+
+    ret = []
+
+    for user_dir in user_dirs:
+        user_path = os.path.join(source_dir, user_dir)
+        if os.path.exists(user_path) and os.path.isdir(user_path) and os.listdir(user_path):
+            for main_dir in os.listdir(user_path):
+                main_path = os.path.join(user_path, main_dir)
+                if os.path.exists(main_path) and os.path.isdir(main_path) and os.listdir(main_path):
+                    dirs = main_path.strip(os.sep).split(os.sep)
+                    if len(dirs) >= 4:
+                        dirs_bottom = os.sep.join(dirs[3:])
+                        ret.append(dirs_bottom)
+    return ret
+
+
+# steve@jackjump.com/search.brave.com added get_junction_target
+@raise_privileges
+def get_junction_target(path):
+    """Return DriveLetter and source path to undo reparse point."""
+    if not os.path.exists(path):
+        syslog.syslog(f"JACKJUMP: Source path {path} does not exist, skipping analysis.")
+        return None, None   
+
+    if os.path.islink(path):
+        target = os.readlink(path)
+        # Remove \\?\ or \\?\UNC\ prefix if present
+        if target.startswith('\\\\?\\UNC\\'):
+            # Handle UNC paths: \\?\UNC\server\share -> \\server\share
+            target = '\\' + target[7:]
+        elif target.startswith('\\\\?\\'):
+            # Handle local paths: \\?\C:\ -> C:\
+            target = target[4:]
+        # Extract drive letter and path
+        drive = os.path.splitdrive(target)[0]
+        path_only = target[len(drive):].lstrip('\\')
+        return drive, path_only
+    return None, None   
+
+
+# steve@jackjump.com/search.brave.com added set_dest_path
+@raise_privileges
+def set_dest_path(source_path):
+    """Return bottom of source_path to complete dest_path."""
+    if not os.path.exists(source_path):
+        syslog.syslog(f"JACKJUMP: Source path {source_path} does not exist, skipping separation of path.")
+        return None
+
+    dirs_bottom = None
+    dirs = source_path.strip(os.sep).split(os.sep)
+    if len(dirs) >= 4:
+        dirs_bottom = os.sep.join(dirs[3:])
+    return dirs_bottom
+
+
+# steve@jackjump.com/search.brave.com added get_disk
 def get_disk(device):
     """Check for drive entry of device, return disk notation."""
     from ubiquity.parted_server import PartedServer
@@ -825,7 +840,7 @@ def get_disk(device):
     return None
 
 
-# steve@jackjump.com/grok3 added rsync user and config files
+# steve@jackjump.com/search.brave.com added get_used
 @raise_privileges
 def get_used(source_dir):
     """Get amount of used space on the specified source_dir.
@@ -839,7 +854,7 @@ def get_used(source_dir):
     return None
 
 
-# steve@jackjump.com/grok3 added rsync user and config files
+# steve@jackjump.com/search.brave.com added get_free
 @raise_privileges
 def get_free(dest_dir):
     """Get amount of available space on the specified mount_point.
@@ -877,19 +892,7 @@ def get_copy_parts(db):
     return []
 
 
-# steve@jackjump.com/grok3 added rsync user and config files
-def get_user_dirs(db):
-    """Get user_dirs from debconf.
-    """
-    try:
-        return json.loads(db.get('ubiquity/user_dirs')) if db.get('ubiquity/user_dirs') else []
-    except json.JSONDecodeError:
-        syslog.syslog("JACKJUMP: Failed to decode user_dirs, using empty list")
-        return []
-    return []
-
-
-# steve@jackjump.com/grok3 added rsync user and config files
+# steve@jackjump.com/search.brave.com added get_uid_gid
 def get_uid_gid(username):
     """Get uid and gid of username from target passwd file.
     """

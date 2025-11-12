@@ -299,16 +299,13 @@ class Install(install_misc.InstallBase):
 
         # steve@jackjump.com/grok3 added windows user data migration
         # Post-install copy: Handle Windows user files
-        syslog.syslog("JACKJUMP: Beginning post-install.")
         self.next_region()
         self.db.progress('INFO', 'ubiquity/install/migrate_user_files')
         copy_fs_dev = misc.get_copy_fs_dev(self.db)
         copy_parts = misc.get_copy_parts(self.db)
-        user_dirs = misc.get_user_dirs(self.db)
         install_has_windows = self.db.get('ubiquity/install_has_windows') == 'true'
         copy_has_windows = self.db.get('ubiquity/copy_has_windows') == 'true'
         copy_compressed = self.db.get('ubiquity/copy_compressed') == 'true'
-        syslog.syslog("JACKJUMP: Beginning post-install for real.")
 
         if copy_fs_dev or copy_parts:
             target_user = self.db.get('passwd/username')
@@ -319,71 +316,44 @@ class Install(install_misc.InstallBase):
                 mount_point = "/mnt/copy_drive"
                 if not os.path.exists(mount_point):
                     misc.execute('mkdir', '-p', mount_point)
-                if misc.execute('mount', '-t', copy_fs_dev[0], copy_fs_dev[1], mount_point):
+                if misc.execute('mount', '-t', copy_fs_dev[0], '-o', 'ro', copy_fs_dev[1], mount_point):
                     # Copy from copy drive's jackjump/users to /target/home
                     source_dir = os.path.join(mount_point, 'jackjump/users')
                     if not misc.copy_to_drive(source_dir, None, home_dir, db=self.db, was_compressed=copy_compressed):
                         self.db.input('critical', 'ubiquity/install/copy_user_files_failed')
                         self.db.go()
                         raise install_misc.InstallStepError("Failed to copy backed-up Windows user files to /home")
-                    # Copy Windows data to /target/var/lib/jackjump
-                    source_dir = os.path.join(mount_point, 'jackjump/windows_data')
-                    if not misc.copy_to_drive(source_dir, None, jackjump_dir, db=self.db, was_compressed=copy_compressed):
-                        self.db.input('critical', 'ubiquity/install/copy_config_files_failed')
-                        self.db.go()
-                    misc.execute('umount', mount_point)
-                    misc.execute('rmdir', '--ignore-fail-on-non-empty', mount_point)
                 else:
                     syslog.syslog(f"JACKJUMP: Failed to mount copy drive {copy_fs_dev[1]}. Ensure it is a valid drive with a supported filesystem.")
                     self.db.input('critical', 'ubiquity/install/mount_copy_drive')
                     self.db.go()
                     misc.execute('rmdir', '--ignore-fail-on-non-empty', mount_point)
-            elif copy_has_windows and user_dirs and copy_parts:
+            elif copy_has_windows and copy_parts:
                 # Copy directly from copy drive's Windows to /target/home
-                windows_users_extra_dirs = ['Public', 'Default',
-                                    'Default User', 'All Users']
-                if not misc.make_xdg_dirs(user_dirs, None, home_dir):
-                    self.db.input('critical', 'ubiquity/install/return_user_files_failed')
-                    self.db.go()
-                    raise install_misc.InstallStepError("Failed to return Windows user files from copy drive to /home")
                 windows_mount = '/mnt/copy_windows'
                 if not os.path.exists(windows_mount):
                     misc.execute('mkdir', '-p', windows_mount)
                 for part in copy_parts:
-                    if misc.execute('mount', '-t', 'ntfs', '-o', 'ro', part, windows_mount):
+                    if misc.execute('mount', '-t', 'ntfs', '-o', 'ro', part[0], windows_mount):
                         source_dir = os.path.join(windows_mount, 'Users')
-                        if not misc.copy_to_drive(source_dir, None, home_dir, db=self.db, was_compressed=False):
-                            misc.execute('umount', windows_mount)
-                            self.db.input('critical', 'ubiquity/install/return_user_files_failed')
-                            self.db.go()
-                            raise install_misc.InstallStepError("Failed to return Windows user files from copy drive to /home")
-                        # Copy Windows data
-                        windows_data = [
-                            os.path.join(windows_mount, 'Users/*/AppData/Roaming/Mozilla/Firefox/Profiles'),
-                            os.path.join(windows_mount, 'Users/*/AppData/Local/Google/Chrome/User Data/Default'),
-                            os.path.join(windows_mount, 'Users/*/AppData/Local/Microsoft/Edge/User Data/Default'),
-                            os.path.join(windows_mount, 'Users/*/AppData/Local/BraveSoftware/Brave-Browser/User Data/Default'),
-                            os.path.join(windows_mount, 'Users/*/AppData/Local/Vivaldi/User Data/Default'),
-                            os.path.join(windows_mount, 'Users/*/AppData/Roaming/Opera Software/Opera Stable'),
-                            os.path.join(windows_mount, 'Users/*/AppData/Local/Chromium/User Data/Default'),
-                            os.path.join(windows_mount, 'Users/*/AppData/Roaming/Microsoft/Outlook'),
-                            os.path.join(windows_mount, 'Users/*/Pictures/Wallpaper'),
-                        ]
-                        for src in windows_data:
-                            for path in glob.glob(src):
-                                dirs = path.strip(os.sep).split(os.sep) 
-                                if (len(dirs) >= 4 and (dirs[3] not in windows_users_extra_dirs or not dirs[3].startswith('Defaultuser'))) and os.path.exists(path):
-                                    dirs_bottom = os.sep.join(dirs[2:])
-                                    if not misc.copy_to_drive(src, None, os.path.join(jackjump_dir, dirs_bottom), db=self.db, was_compressed=False):
-                                        self.db.input('critical', 'ubiquity/install/return_config_files_failed')
+                        if os.path.exists(source_dir):
+                            for main_path in part[1]:
+                                source_path = os.path.join(source_dir, main_path) 
+                                if os.path.exists(source_path):
+                                    dest_path = os.path.join(home_dir, main_path)
+                                    if not misc.copy_to_drive(source_path, None, dest_path, db=self.db, was_compressed=False):
+                                        misc.execute('umount', windows_mount)
+                                        self.db.input('critical', 'ubiquity/install/return_user_files_failed')
                                         self.db.go()
-                        misc.execute('umount', windows_mount)
+                                        raise install_misc.InstallStepError("Failed to return Windows user files from copy drive to /home")
+                    misc.execute('umount', windows_mount)
                 misc.execute('rmdir', '--ignore-fail-on-non-empty', windows_mount)
 
             # To avoid duplicates
             import filecmp
             skel_dir = os.path.join(self.target, 'etc/skel')
             target_user_dir = os.path.join(home_dir, target_user)
+            target_desktop = os.path.join(target_user_dir, 'Desktop')
             skel_comparison = filecmp.dircmp(skel_dir, target_user_dir)
             if not skel_comparison.right_only and os.path.exists(target_user_dir):
                 shutil.rmtree(target_user_dir, ignore_errors=True)
@@ -412,12 +382,12 @@ class Install(install_misc.InstallBase):
             if os.path.exists(old_public_dir):
                 shutil.move(old_public_dir, public_dir)
             if not os.path.exists(target_user_dir):
-                misc.execute('mkdir', '-p', target_user_dir)
+                misc.execute('mkdir', '-p', target_desktop)
 
             # Create users for non-excluded directories
             for user_dir in os.listdir(home_dir):
                 user_path = os.path.join(home_dir, user_dir)
-                if user_dir != target_user and os.path.isdir(user_path):
+                if user_dir != target_user and os.path.exists(user_path) and os.path.isdir(user_path):
                     try:
                         subprocess.run(['chroot', self.target, 'useradd', '-d', f'/home/{user_dir}', '-s', '/bin/bash', user_dir], check=True)
                     except subprocess.CalledProcessError as e:
@@ -427,12 +397,12 @@ class Install(install_misc.InstallBase):
             # Copy /etc/skel and set permissions for each user
             for user_dir in os.listdir(home_dir):
                 user_path = os.path.join(home_dir, user_dir)
-                if os.path.isdir(user_path):
+                if os.path.exists(user_path) and os.path.isdir(user_path):
                     if not misc.copy_to_drive(skel_dir, None, user_path, db=self.db, was_compressed=False):
                         syslog.syslog(syslog.LOG_WARNING, f"JACKJUMP: Failed to copy skel files for user {user_dir}.")
             for user_dir in os.listdir(home_dir):
                 user_path = os.path.join(home_dir, user_dir)
-                if os.path.isdir(user_path):
+                if os.path.exists(user_path) and os.path.isdir(user_path):
                     try:
                         uid, gid = misc.get_uid_gid(user_dir)
                         for root, dirs, files in os.walk(user_path):
@@ -440,6 +410,7 @@ class Install(install_misc.InstallBase):
                             os.chmod(root, 0o755)
                             for file in files:
                                 file_path = os.path.join(root, file)
+                                # skip broken links (they don't exist)
                                 if os.path.islink(file_path) and not os.path.exists(file_path):
                                     continue
                                 os.lchown(file_path, uid, gid)
@@ -449,24 +420,21 @@ class Install(install_misc.InstallBase):
 
             # Hide some Windows remnants 
             hide_dir = ['AppData', 'IntelGraphicsProfiles']
-            hide_file = ['ntuser.*', 'NTUSER.*']
+            hide_ini = 'desktop.ini'
             for user_dir in os.listdir(home_dir):
                 user_path = os.path.join(home_dir, user_dir)
-                if os.path.isdir(user_path):
+                if os.path.exists(user_path) and os.path.isdir(user_path) and os.listdir(user_path):
                     for main_dir in os.listdir(user_path):
                         main_path = os.path.join(user_path, main_dir)
-                        if os.path.isdir(main_path):
+                        if os.path.exists(main_path) and os.path.isdir(main_path):
                             if main_dir in hide_dir:
                                 hid_path = os.path.join(user_path, '.' + main_dir)
                                 os.rename(main_path, hid_path)
-                        else:
-                            import fnmatch
-                            if fnmatch.fnmatch(main_dir, hide_file[0]) or fnmatch.fnmatch(main_dir, hide_file[1]):
-                                hidden_dir = os.path.join(user_path, '.ntuser')
-                                if not os.path.exists(hidden_dir):
-                                    misc.execute('mkdir', '-p', hidden_dir)
-                                hid_path = os.path.join(hidden_dir, main_dir)
-                                os.rename(main_path, hid_path)
+                            else:
+                                xdg_path = os.path.join(main_path, hide_ini)
+                                if os.path.exists(xdg_path):
+                                    hid_path = os.path.join(main_path, '.' +hide_ini)
+                                    os.rename(xdg_path, hid_path)
 
             # Handle Public directory permissions
             if os.path.exists(public_dir):
@@ -497,35 +465,38 @@ class Install(install_misc.InstallBase):
                         os.chmod(file_path, 0o664)
 
             # Install post-install script
-            with open(self.target_file('home', target_user, 'Desktop/jackjump-config.desktop'), 'w') as f:
-                f.write("""[Desktop Entry]
+            jackjump_config = self.target_file('home', target_user, 'jackjump-config.sh')
+            jackjump_desktop = self.target_file('home', target_user, 'Desktop/jackjump-config.desktop')
+            if os.path.exists(target_desktop):
+                with open(jackjump_desktop, 'w') as f:
+                    f.write("""[Desktop Entry]
 Type=Application
 Name=Jackjump Configuration
 Exec=/home/%s/jackjump-config.sh
 Icon=system-software-install
 Terminal=true
 """ % target_user)
-            os.chmod(self.target_file('home', target_user, 'Desktop/jackjump-config.desktop'), 0o755)
-            with open(self.target_file('home', target_user, 'jackjump-config.sh'), 'w') as f:
+                os.lchown(jackjump_desktop, 1000, 1000)
+                os.chmod(jackjump_desktop, 0o755)
+            with open(jackjump_config, 'w') as f:
                 f.write("""#!/bin/bash
 #!/bin/bash
 #
 # Copyright (C) 2025 Jackjump.com, Inc.
+# Written by grok3 on direct requests of Steve Saunders <steve@jackjump.com>.
+# Also written by search.brave.com via requests of Steve. And a single pass
+# of grok4 at request of Steve. Changes by Steve.
 #
 # Jackjump configuration script for post-install user setup
 # Run as MAIN_USER: ./jackjump-config.sh [username]
 
 set -e
 
-# Directories to exclude
-EXCLUDE_DIRS="defaultuser0 public defaultuser1 defaultuser2 defaultuser3 defaultuser4 defaultuser5 defaultuser6 defaultuser7 defaultuser8 defaultuser9"
-
 # Get MAIN_USER (uid 1000)
-MAIN_USER=$(grep '^[^:]*:.*:1000:' /etc/passwd | cut -d: -f1)
-if [ -z "$MAIN_USER" ]; then
-    echo "Error: No main user (uid 1000) found."
+MAIN_USER=$(id -nu 1000) || {
+    echo "Error: No user with UID 1000" >&2
     exit 1
-fi
+}
 
 # Check if run as MAIN_USER
 if [ "$(whoami)" != "$MAIN_USER" ]; then
@@ -538,7 +509,7 @@ HOME_DIR="/home"
 VALID_USERS=()
 for user_dir in "$HOME_DIR"/*; do
     user=$(basename "$user_dir")
-    if [ -d "$user_dir" ] && ! echo "$EXCLUDE_DIRS" | grep -qw "$user"; then
+    if [ -d "$user_dir" ]; then
         VALID_USERS+=("$user")
     fi
 done
@@ -549,7 +520,11 @@ if [ -z "$1" ]; then
         TARGET_USER="$MAIN_USER"
     else
         echo "Available users to configure: ${VALID_USERS[*]}"
-        read -p "Enter username to configure: " TARGET_USER
+        while true; do
+            read -r -p "Enter username to configure: " TARGET_USER
+            [[ -n "$TARGET_USER" ]] && break
+            echo "Username cannot be empty."
+        done
     fi
 else
     TARGET_USER="$1"
@@ -561,6 +536,10 @@ if ! echo "${VALID_USERS[*]}" | grep -qw "$TARGET_USER"; then
     echo "Error: Username '$TARGET_USER' not found. Valid users: ${VALID_USERS[*]:-none}"
     exit 1
 fi
+if ! id "$TARGET_USER" &>/dev/null; then
+    echo "Error: User '$TARGET_USER' does not exist." >&2
+    exit 1
+fi
 
 # Check if already configured
 CONFIG_FLAG="/home/$TARGET_USER/.jackjump_config_done"
@@ -569,123 +548,261 @@ if [ -f "$CONFIG_FLAG" ]; then
     exit 0
 fi
 
+# Check if main user already configured
+if [ "$TARGET_USER" != "$MAIN_USER" ]; then
+    MAIN_FLAG="/home/$MAIN_USER/.jackjump_config_done"
+    if [ ! -f "$MAIN_FLAG" ]; then
+        echo "You have to configure '$MAIN_USER' first."
+        exit 0
+    fi
+fi
+
+sudo -v  # Prompts for password and sets timestamp
+
 # Set password if not MAIN_USER
 if [ "$TARGET_USER" != "$MAIN_USER" ]; then
-    echo "Setting password for $TARGET_USER"
-    sudo passwd "$TARGET_USER"
-    # Prompt for locale
-    su - "$TARGET_USER" -c '
-    read -p "Select locale (e.g. en_US, de_DE, fr_FR): " LOCALE
-    if locale -a | grep -qi "^${LOCALE//_/\\.}"; then
+    echo "Setting password for $TARGET_USER..."
+    max_retries=3
+    retries=0
+
+    while ! sudo passwd "$TARGET_USER"; do
+        retries=$((retries + 1))
+        if [ $retries -ge $max_retries ]; then
+            echo "Warning: Failed to set password for $TARGET_USER, after $max_retries attempts. Moving on..." >&2
+            break
+        fi
+        echo "Retrying... ($retries/$max_retries)"
+        sleep 1
+    done
+fi
+
+# Desktop icons
+echo "Configuring desktop icons for $TARGET_USER..."
+DESKTOP_SRC="/home/$TARGET_USER/Desktop"
+if [ -d "$DESKTOP_SRC" ]; then
+    sudo mkdir -p -m 755 "/home/$TARGET_USER/.jackjump/desktop_backup" || { echo "Warning: Failed to create desktop backup directory for $TARGET_USER, continuing..."; }
+    sudo cp -r "$DESKTOP_SRC"/* "/home/$TARGET_USER/.jackjump/desktop_backup/" || { echo "Warning: Failed to back up desktop for $TARGET_USER, continuing..."; }
+    sudo chown -R "$TARGET_USER:$TARGET_USER" "/home/$TARGET_USER/.jackjump" || { echo "Warning: Failed to chown desktop backup for $TARGET_USER, continuing..."; }
+    for file in "$DESKTOP_SRC"/*.url; do
+        if [ -f "$file" ]; then
+            URL=$(grep -i '^URL=' "$file" | cut -d= -f2- | tr -d '\r')
+            if [ -n "$URL" ]; then
+                BASE_NAME=$(basename "$file" .url)
+                DESKTOP_FILE="$DESKTOP_SRC/$BASE_NAME.desktop"
+                CONTENT=$(cat << EOF
+[Desktop Entry]
+Type=Link
+Name=$BASE_NAME
+URL=$URL
+Icon=firefox
+EOF
+)
+                echo "$CONTENT" | sudo -u "$TARGET_USER" -g "$TARGET_USER" -H tee "$DESKTOP_FILE" >/dev/null || { echo "Warning: Failed to write $DESKTOP_FILE as $TARGET_USER." >&2; }
+                if [ -f "$DESKTOP_FILE" ]; then
+                    sudo chmod 0644 "$DESKTOP_FILE" || { echo "Warning: chmod failed for $DESKTOP_FILE." >&2; }
+                    sudo -u "$TARGET_USER" -g "$TARGET_USER" -H mv "$file" "$DESKTOP_SRC/.$BASE_NAME.url" || { echo "Warning: Failed to rename $file for $TARGET_USER, continuing..."; }
+                fi
+            fi
+        fi
+    done
+    sudo -u "$TARGET_USER" -g "$TARGET_USER" -H find "$DESKTOP_SRC" -type f -name "*.exe" -delete || { echo "Warning: Failed to delete .exe files for $TARGET_USER, continuing..."; }
+    sudo -u "$TARGET_USER" -g "$TARGET_USER" -H find "$DESKTOP_SRC" -type f -name "*.lnk" -delete || { echo "Warning: Failed to delete .lnk files for $TARGET_USER, continuing..."; }
+fi
+
+# Desktop background
+echo "Configuring desktop background for $TARGET_USER..."
+WALLPAPER_SRC=("/home/$TARGET_USER/Pictures/Wallpaper" "/home/$TARGET_USER/Pictures/Wallpapers" "/home/$TARGET_USER/Pictures/Background" "/home/$TARGET_USER/Pictures/Backgrounds" "/home/$TARGET_USER/.AppData/Microsoft/Windows/Themes" "/home/$TARGET_USER/.AppData/Local/Packages/Microsoft.Windows.ContentDeliveryManager_*/LocalState/Assets" "/home/$TARGET_USER/.AppData/Roaming/Microsoft/Windows/Themes" "/home/$TARGET_USER/.AppData/Roaming/Microsoft/Windows/Themes/TranscodedWallpaper.jpg")
+WALLPAPER_DST="/home/$TARGET_USER/.local/share/backgrounds"
+sudo -u "$TARGET_USER" -g "$TARGET_USER" -H mkdir -p -m 755 "$WALLPAPER_DST" || { echo "Warning: Failed to create wallpaper directory for $TARGET_USER, continuing..."; }
+for src in "${WALLPAPER_SRC[@]}"; do
+    if [ -d "$src" ] || [ -f "$src" ]; then
+        sudo -u "$TARGET_USER" -g "$TARGET_USER" -H find "$src" -maxdepth 1 -type f \( -iname "*.jpg" -o -iname "*.jpeg" -o -iname "*.png" -o -iname "*.bmp" -o -iname "*.gif" \) -exec cp {} "$WALLPAPER_DST/" \; || { echo "Warning: Failed to copy image from $src for $TARGET_USER, continuing..."; }
+    fi
+done
+IMG=$(sudo -u "$TARGET_USER" -g "$TARGET_USER" -H find "$WALLPAPER_DST" -maxdepth 1 -type f 2>/dev/null | shuf -n1)
+if [ -f "$IMG" ]; then
+    if [ "$TARGET_USER" != "$MAIN_USER" ]; then
+        sudo -u "$TARGET_USER" -g "$TARGET_USER" -H dbus-run-session -- gsettings set org.cinnamon.desktop.background picture-uri "file://$IMG" || { echo "Warning: Failed to set wallpaper for $TARGET_USER, continuing..."; }
+    else
+        gsettings set org.cinnamon.desktop.background picture-uri "file://$IMG" || { echo "Warning: Failed to set wallpaper for $TARGET_USER, continuing..."; }
+    fi
+fi
+
+# Set locale
+if [ "$TARGET_USER" != "$MAIN_USER" ]; then
+    echo "Setting locale for $TARGET_USER..."
+    sudo -u "$TARGET_USER" -g "$TARGET_USER" -H bash -c '
+    read -r -p "Select locale (e.g. en_US, de_DE, fr_FR): " LOCALE
+    if locale -a | grep -qi "^${LOCALE//_/\\.}\\.UTF-8$"; then
         echo "export LANG=$LOCALE.UTF-8" >> ~/.profile
-        # Recreate locale file
         if [[ ! "$LOCALE" =~ ^(en_US|en_GB|en_AU|en_CA)$ ]]; then
            xdg-user-dirs-update --force
-        fi   
+        fi
     else
         echo "Invalid or unsupported locale."
     fi
-    '
-else
-    # Recreate locale file
-    if [[ ! "${LANG%%.*}" =~ ^(en_US|en_GB|en_AU|en_CA)$ ]]; then
-        xdg-user-dirs-update --force
-    fi   
+    ' || { echo "Warning: Failed to set locale for $TARGET_USER, continuing..."; }
 fi
 
-# Add third-party repositories (removed later if not needed)
-if ! command -v brave-browser >/dev/null 2>&1; then
-    echo "Adding Brave repository..."
-    sudo apt install -y curl
-    sudo curl -fsSLo /usr/share/keyrings/brave-browser-archive-keyring.gpg https://brave-browser-apt-release.s3.brave.com/brave-browser-archive-keyring.gpg
-    echo "deb [signed-by=/usr/share/keyrings/brave-browser-archive-keyring.gpg] https://brave-browser-apt-release.s3.brave.com/ stable main" | sudo tee /etc/apt/sources.list.d/brave-browser-release.list
+if [ "$TARGET_USER" = "$MAIN_USER" ]; then
+    # Add third-party repositories (removed later if not needed)
+    if ! command -v brave-browser >/dev/null 2>&1; then
+        echo "Adding Brave repository..."
+        sudo curl -fsSLo /usr/share/keyrings/brave-browser-archive-keyring.gpg https://brave-browser-apt-release.s3.brave.com/brave-browser-archive-keyring.gpg || { echo "Warning: Failed to set up Brave keyring, continuing..."; }
+        echo "deb [arch=amd64 signed-by=/usr/share/keyrings/brave-browser-archive-keyring.gpg] https://brave-browser-apt-release.s3.brave.com/ stable main" | sudo tee /etc/apt/sources.list.d/brave-browser-release.list >/dev/null || { echo "Warning: Failed to add brave-browser-release.list to apt sources." >&2; }
+    fi
+    if ! command -v vivaldi >/dev/null 2>&1; then
+        echo "Adding Vivaldi repository..."
+        sudo curl -fsSL https://repo.vivaldi.com/archive/linux_signing_key.pub | gpg --dearmor | sudo tee /usr/share/keyrings/vivaldi.gpg >/dev/null || { echo "Warning: Failed to set up Vivaldi keyring, continuing..."; }
+        echo deb [arch=amd64 signed-by=/usr/share/keyrings/vivaldi.gpg] https://repo.vivaldi.com/archive/deb/ stable main | sudo tee /etc/apt/sources.list.d/vivaldi.list >/dev/null || { echo "Warning: Failed to add vivaldi.list to apt sources." >&2; }
+    fi
+    if ! command -v opera >/dev/null 2>&1; then
+        echo "Adding Opera repository..."
+        sudo curl -fsSLo /usr/share/keyrings/opera-browser.gpg https://deb.opera.com/archive.key || { echo "Warning: Failed to set up Opera keyring, continuing..."; }
+        echo "deb [signed-by=/usr/share/keyrings/opera-browser.gpg] https://deb.opera.com/opera-stable/ stable non-free" | sudo tee /etc/apt/sources.list.d/opera-stable.list >/dev/null || { echo "Warning: Failed to add opera-stable.list to apt sources." >&2; }
+    fi
+    if ! command -v google-chrome >/dev/null 2>&1; then
+        echo "Adding Chrome repository..."
+        sudo curl -fsSL https://dl.google.com/linux/linux_signing_key.pub | sudo gpg --dearmor -o /usr/share/keyrings/google-chrome.gpg || { echo "Warning: Failed to set up Chrome keyring, continuing..."; }
+        echo "deb [arch=amd64 signed-by=/usr/share/keyrings/google-chrome.gpg] http://dl.google.com/linux/chrome/deb/ stable main" | sudo tee /etc/apt/sources.list.d/google-chrome.list || { echo "Warning: Failed to add google-chrome.list to apt sources." >&2; }
+    fi
+    if ! command -v microsoft-edge >/dev/null 2>&1; then
+        echo "Adding Edge repository..."
+        sudo curl -fsSL https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor | sudo tee /usr/share/keyrings/microsoft-edge.gpg >/dev/null || { echo "Warning: Failed to set up Edge keyring, continuing..."; }
+        echo "deb [arch=amd64 signed-by=/usr/share/keyrings/microsoft-edge.gpg] https://packages.microsoft.com/repos/edge stable main" | sudo tee /etc/apt/sources.list.d/microsoft-edge.list >/dev/null || { echo "Warning: Failed to add microsoft-edge.list to apt sources." >&2; }
+    fi
+    sudo apt update || { echo "Warning: Failed to update apt, continuing..."; }
 fi
-if ! command -v vivaldi >/dev/null 2>&1; then
-    echo "Adding Vivaldi repository..."
-    sudo add-apt-repository -y ppa:vivaldi/stable
-fi
-if ! command -v opera >/dev/null 2>&1; then
-    echo "Adding Opera repository..."
-    sudo curl -fsSLo /usr/share/keyrings/opera-archive-keyring.gpg https://deb.opera.com/archive.key
-    echo "deb [signed-by=/usr/share/keyrings/opera-archive-keyring.gpg] https://deb.opera.com/opera-stable/ stable non-free" | sudo tee /etc/apt/sources.list.d/opera-stable.list
+
+if [ "$TARGET_USER" != "$MAIN_USER" ]; then
+    # Initialize X display for browser initialization
+    echo "Initializing X display for $TARGET_USER..."
+    export DISPLAY=:0
+    if ! sudo xhost +SI:localuser:"$TARGET_USER"; then
+        echo "Warning: Failed to initialize X display for $TARGET_USER, continuing..." >&2
+    fi
 fi
 
 # Browser configurations
 BROWSERS=(
-    "firefox:Firefox:/home/$TARGET_USER/.mozilla/firefox:/var/lib/jackjump/*/Firefox/Profiles"
-    "chromium:Chromium:/home/$TARGET_USER/.config/chromium:/var/lib/jackjump/*/Chrome/User Data/Default"
-    "microsoft-edge:Edge:/home/$TARGET_USER/.config/microsoft-edge:/var/lib/jackjump/*/Edge/User Data/Default"
-    "brave-browser:Brave:/home/$TARGET_USER/.config/BraveSoftware/Brave-Browser:/var/lib/jackjump/*/Brave-Browser/User Data/Default"
-    "vivaldi:Vivaldi:/home/$TARGET_USER/.config/vivaldi:/var/lib/jackjump/*/Vivaldi/User Data/Default"
-    "opera:Opera:/home/$TARGET_USER/.config/opera:/var/lib/jackjump/*/Opera Software/Opera Stable"
-    "chromium:Chromium:/home/$TARGET_USER/.config/chromium:/var/lib/jackjump/*/Chromium/User Data/Default"
+    "firefox:Firefox:/home/$TARGET_USER/.mozilla/firefox:/home/$TARGET_USER/.AppData/Roaming/Mozilla/Firefox"
+    "chromium:Chromium:/home/$TARGET_USER/.config/chromium:/home/$TARGET_USER/.AppData/Local/Chromium/User Data/Default"
+    "google-chrome-stable:Chrome:/home/$TARGET_USER/.config/google-chrome:/home/$TARGET_USER/.AppData/Local/Google/Chrome/User Data/Default"
+    "microsoft-edge-stable:Edge:/home/$TARGET_USER/.config/microsoft-edge:/home/$TARGET_USER/.AppData/Local/Microsoft/Edge/User Data/Default"
+    "brave-browser:Brave:/home/$TARGET_USER/.config/BraveSoftware/Brave-Browser:/home/$TARGET_USER/.AppData/Local/BraveSoftware/Brave-Browser/User Data/Default"
+    "vivaldi-stable:Vivaldi:/home/$TARGET_USER/.config/vivaldi:/home/$TARGET_USER/.AppData/Local/Vivaldi/User Data/Default"
+    "opera-stable:Opera:/home/$TARGET_USER/.config/opera:/home/$TARGET_USER/.AppData/Roaming/Opera Software/Opera Stable"
 )
 
-# Initialize X display for browser initialization
-export DISPLAY=:0
-xhost +SI:localuser:$TARGET_USER
-
 for browser in "${BROWSERS[@]}"; do
-    IFS=':' read -r pkg name dest src <<< "$browser"
-    src_path=$(find /var/lib/jackjump -type d -path "$src" -maxdepth 3 | head -n 1)
+    IFS=':' read -r pkg name dest src <<<"$browser"
+    src_path=$(sudo -u "$TARGET_USER" -g "$TARGET_USER" -H find /home/"$TARGET_USER" -maxdepth 5 -type d -path "$src" | head -n 1)
     if [ -n "$src_path" ]; then
+        echo "$name profile found."
         if ! command -v "$pkg" >/dev/null 2>&1; then
             echo "Installing $name..."
-            sudo apt update
-            sudo apt install -y "$pkg" || { echo "Warning: Failed to install $name, skipping"; continue; }
+            sudo apt update || { echo "Warning: Failed to update apt for $name, continuing..."; }
+            sudo apt install -y "$pkg" || {
+                echo "Warning: Failed to install $name, skipping"
+                continue
+            }
         fi
+        pkg="${pkg%\-stable}"
         echo "Initializing $name profile for $TARGET_USER..."
-        su - "$TARGET_USER" -c "$pkg --no-remote >/dev/null 2>&1" || { echo "Warning: Failed to initialize $name profile"; continue; }
-        mkdir -p "$dest"
-        cp -r "$src_path"/* "$dest/"
-        chown -R "$TARGET_USER:$TARGET_USER" "$dest"
-        chmod -R u+rwX,go-rwx "$dest"
+        sudo -u "$TARGET_USER" -g "$TARGET_USER" -H "$pkg" --no-remote >/dev/null 2>&1 &
+        sleep 5
+        kill $! || {
+            echo "Warning: Failed to initialize $name profile for $TARGET_USER, continuing..."
+            continue
+        }
+        if [[ "$pkg" != "firefox" && "$pkg" != "opera" ]]; then
+            DEST_DEFAULT="$dest/Default"
+            if [ -d "$DEST_DEFAULT" ]; then
+                sudo -u "$TARGET_USER" -g "$TARGET_USER" -H rm -rf "$DEST_DEFAULT" || { echo "Warning: Failed to remove $DEST_DEFAULT, continuing..."; }
+            fi
+            sudo -u "$TARGET_USER" -g "$TARGET_USER" -H mkdir -p -m 755 "$DEST_DEFAULT" || { echo "Warning: Failed to create $DEST_DEFAULT, continuing..."; }
+            sudo -u "$TARGET_USER" -g "$TARGET_USER" -H cp -r "$src_path"/* "$DEST_DEFAULT/" || { echo "Warning: Failed to copy $name profile for $TARGET_USER, continuing..."; }
+        fi
+        if [[ "$pkg" == "opera" ]]; then
+            if [ -d "$dest" ]; then
+                sudo -u "$TARGET_USER" -g "$TARGET_USER" -H rm -rf "$dest" || { echo "Warning: Failed to remove $dest, continuing..."; }
+            fi
+            sudo -u "$TARGET_USER" -g "$TARGET_USER" -H mkdir -p -m 755 "$dest" || { echo "Warning: Failed to create $dest, continuing..."; }
+            sudo -u "$TARGET_USER" -g "$TARGET_USER" -H cp -r "$src_path"/* "$dest/" || { echo "Warning: Failed to copy $name profile for $TARGET_USER, continuing..."; }
+        fi
+        if [[ "$pkg" == "firefox" ]]; then
+            PROFILEINI="/home/$TARGET_USER/.AppData/Roaming/Mozilla/Firefox/profiles.ini"
+            DEFAULT_PROFILE=$(awk 'BEGIN{RS="\r\n|\n"} /Default=1/{getline; print $2; nextfile}' "$PROFILEINI")   
+            WINDOWS_PROFILE="$src_path/$DEFAULT_PROFILE"
+            NEW_PROFILE_NAME="win-profile"
+            LINUX_PROFILE="$dest/$NEW_PROFILE_NAME"
+            sudo -u "$TARGET_USER" -g "$TARGET_USER" -H mkdir -p -m 755 "$LINUX_PROFILE" || { echo "Warning: Failed to create $LINUX_PROFILE, continuing..."; }
+            sudo -u "$TARGET_USER" -g "$TARGET_USER" -H cp -r "$WINDOWS_PROFILE"/* "$LINUX_PROFILE/" || { echo "Warning: Failed to copy $name profile for $TARGET_USER, continuing..."; }
+            sudo -u "$TARGET_USER" -g "$TARGET_USER" -H find "$LINUX_PROFILE" -iname "PKCS11.txt" -o -iname "Pkcs11.txt" -exec sh -c 'mv "$0" "$(dirname "$0")/pkcs11.txt"' {} \; 2>/dev/null || true
+            profiles_ini="$dest/profiles.ini"
+            if [ -f "$profiles_ini" ]; then
+                if ! sudo -u "$TARGET_USER" -g "$TARGET_USER" -H grep -q "Path=$NEW_PROFILE_NAME" "$profiles_ini"; then
+                    CONTENT=$(cat << EOF
+
+[Profile$(sudo -u "$TARGET_USER" -g "$TARGET_USER" -H grep -c '^\[Profile' "$profiles_ini" 2>/dev/null || echo 0)]
+Name=$NEW_PROFILE_NAME
+IsRelative=1
+Path=$NEW_PROFILE_NAME
+EOF
+)
+                    echo "$CONTENT" | sudo -u "$TARGET_USER" -g "$TARGET_USER" -H tee -a "$profiles_ini" >/dev/null || { echo "Warning: Failed to update $profiles_ini as $TARGET_USER." >&2; }
+                fi
+            else
+                CONTENT=$(cat << EOF
+[General]
+StartWithLastProfile=1
+
+[Profile0]
+Name=$NEW_PROFILE_NAME
+IsRelative=1
+Path=$NEW_PROFILE_NAME
+Default=1
+EOF
+)
+                echo "$CONTENT" | sudo -u "$TARGET_USER" -g "$TARGET_USER" -H tee "$profiles_ini" >/dev/null || { echo "Warning: Failed to write $profiles_ini as $TARGET_USER." >&2; }
+            fi
+            sudo chmod 644 "$profiles_ini" || { echo "Warning: Failed to chmod $profiles_ini for $TARGET_USER, continuing..."; }
+            echo "Firefox profile $NEW_PROFILE_NAME added to profiles.ini"
+        fi
     fi
+    echo "$name configuration complete."
 done
 
-# Disable X access
-xhost -SI:localuser:$TARGET_USER
-
-# Desktop background
-WALLPAPER_SRC=$(find /var/lib/jackjump -type f -path "*/Wallpaper/*" -maxdepth 3 | head -n 1)
-if [ -n "$WALLPAPER_SRC" ]; then
-    mkdir -p "/home/$TARGET_USER/.local/share/backgrounds"
-    cp "$WALLPAPER_SRC" "/home/$TARGET_USER/.local/share/backgrounds/jackjump_wallpaper.jpg"
-    chown "$TARGET_USER:$TARGET_USER" "/home/$TARGET_USER/.local/share/backgrounds/jackjump_wallpaper.jpg"
-    chmod 0644 "/home/$TARGET_USER/.local/share/backgrounds/jackjump_wallpaper.jpg"
-    su - "$TARGET_USER" -c "gsettings set org.cinnamon.desktop.background picture-uri 'file:///home/$TARGET_USER/.local/share/backgrounds/jackjump_wallpaper.jpg'"
+if [ "$TARGET_USER" != "$MAIN_USER" ]; then
+    # Disable X access
+    if ! sudo xhost -SI:localuser:"$TARGET_USER"; then
+        echo "Warning: Failed to disable X display for $TARGET_USER, continuing..." >&2
+    fi
 fi
 
-# Desktop icons
-DESKTOP_SRC="/home/$TARGET_USER/Desktop"
-if [ -d "$DESKTOP_SRC" ]; then
-    mkdir -p "/home/$TARGET_USER/.jackjump/desktop_backup"
-    cp -r "$DESKTOP_SRC"/* "/home/$TARGET_USER/.jackjump/desktop_backup/"
-    chown -R "$TARGET_USER:$TARGET_USER" "/home/$TARGET_USER/.jackjump"
-    chmod -R u+rwX,go-rwx "/home/$TARGET_USER/.jackjump"
-    for file in "$DESKTOP_SRC"/*.url; do
-        if [ -f "$file" ]; then
-            URL=$(grep -i '^URL=' "$file" | cut -d= -f2-)
-            if [ -n "$URL" ]; then
-                cat > "$DESKTOP_SRC/$(basename "$file" .url).desktop" << EOF
-[Desktop Entry]
-Type=Link
-Name=$(basename "$file" .url)
-URL=$URL
-Icon=firefox
-EOF
-                chown "$TARGET_USER:$TARGET_USER" "$DESKTOP_SRC/$(basename "$file" .url).desktop"
-                chmod 0644 "$DESKTOP_SRC/$(basename "$file" .url).desktop"
-            fi
-        fi
-    done
-    find "$DESKTOP_SRC" -type f -name "*.exe" -delete
+# You can install vivaldi, opera, google-chrome or microsoft-edge as well:
+# sudo apt install -y vivaldi-stable
+#
+# But only when its third-party repository is installed.
+# You can reinstall a third-party repository with above commands.
+#
+# Why Brave? (when some sites don't work in Brave)
+# Brave is the most secure browser. Sites that don't work are insecure.
+# The developers of those sites are at fault for those errors, not Brave.
+# If you want to visit an insecure site, use chromium for that site.
+# Otherwise, use Brave (which is based on chromium).
+# This goes for Windows or Mac browsing as well.
+if ! command -v brave-browser >/dev/null 2>&1; then
+    read -r -p "Install Brave Browser while third-party repository available? (y/n): " INSTALL_BRAVE
+    case $INSTALL_BRAVE in
+        [Yy]* ) sudo apt install -y brave-browser || { echo "Warning: Failed to install Brave Browser, continuing..."; };;   
+    esac
 fi
 
 # Mark as configured
-touch "$CONFIG_FLAG"
+sudo touch "$CONFIG_FLAG" || { echo "Warning: Failed to mark $TARGET_USER as configured, continuing..."; }
 
-# Clean up /var/lib/jackjump/users if all users are configured
+# Clean up third-party repositories if all users are configured
 ALL_CONFIGURED=true
 for user in "${VALID_USERS[@]}"; do
     if [ ! -f "/home/$user/.jackjump_config_done" ]; then
@@ -698,37 +815,52 @@ if [ "$ALL_CONFIGURED" = true ]; then
     BRAVE_USED=false
     VIVALDI_USED=false
     OPERA_USED=false
+    CHROME_USED=false
+    EDGE_USED=false
 
-    for user in "${VALID_USERS[@]}"; do
-        if [ -d "/home/$user/.config/BraveSoftware/Brave-Browser" ]; then
-            BRAVE_USED=true
-        fi
-        if [ -d "/home/$user/.config/vivaldi" ]; then
-            VIVALDI_USED=true
-        fi
-        if [ -d "/home/$user/.config/opera" ]; then
-            OPERA_USED=true
-        fi
-    done
+    if command -v brave-browser >/dev/null 2>&1; then
+        BRAVE_USED=true
+    fi
+    if command -v vivaldi >/dev/null 2>&1; then
+        VIVALDI_USED=true
+    fi
+    if command -v opera >/dev/null 2>&1; then
+        OPERA_USED=true
+    fi
+    if command -v google-chrome >/dev/null 2>&1; then
+        CHROME_USED=true
+    fi
+    if command -v microsoft-edge >/dev/null 2>&1; then
+        EDGE_USED=true
+    fi
 
     # Remove unused repositories
     if [ "$BRAVE_USED" = false ]; then
         echo "Removing Brave repository..."
-        sudo rm -f /etc/apt/sources.list.d/brave-browser-release.list
-        sudo rm -f /usr/share/keyrings/brave-browser-archive-keyring.gpg
+        sudo rm -f /etc/apt/sources.list.d/brave-browser-release.list || { echo "Warning: Failed to remove Brave Browser from apt sources, continuing..."; }
+        sudo rm -f /usr/share/keyrings/brave-browser-archive-keyring.gpg || { echo "Warning: Failed to remove Brave keyring, continuing..."; }
     fi
     if [ "$VIVALDI_USED" = false ]; then
         echo "Removing Vivaldi repository..."
-        sudo add-apt-repository -y --remove ppa:vivaldi/stable
+        sudo rm -f /etc/apt/sources.list.d/vivaldi.list || { echo "Warning: Failed to remove Vivaldi from apt sources, continuing..."; }
+        sudo rm -f /usr/share/keyrings/vivaldi.gpg || { echo "Warning: Failed to remove Vivaldi keyring, continuing..."; }
     fi
     if [ "$OPERA_USED" = false ]; then
         echo "Removing Opera repository..."
-        sudo rm -f /etc/apt/sources.list.d/opera-stable.list
-        sudo rm -f /usr/share/keyrings/opera-archive-keyring.gpg
+        sudo rm -f /etc/apt/sources.list.d/opera-stable.list || { echo "Warning: Failed to remove Opera from apt sources, continuing..."; }
+        sudo rm -f /usr/share/keyrings/opera-browser.gpg || { echo "Warning: Failed to remove Opera keyring, continuing..."; }
     fi
-
-    # Clean up jackjump directory
-    sudo rm -rf /var/lib/jackjump
+    if [ "$CHROME_USED" = false ]; then
+        echo "Removing Chrome repository..."
+        sudo rm -f /etc/apt/sources.list.d/google-chrome.list || { echo "Warning: Failed to remove Chrome from apt sources, continuing..."; }
+        sudo rm -f /usr/share/keyrings/google-chrome.gpg || { echo "Warning: Failed to remove Chrome keyring, continuing..."; }
+    fi
+    if [ "$EDGE_USED" = false ]; then
+        echo "Removing Edge repository..."
+        sudo rm -f /etc/apt/sources.list.d/microsoft-edge.list || { echo "Warning: Failed to remove Edge from apt sources, continuing..."; }
+        sudo rm -f /usr/share/keyrings/microsoft-edge.gpg || { echo "Warning: Failed to remove Edge keyring, continuing..."; }
+    fi
+    sudo apt update || { echo "Warning: Failed to update apt, continuing..."; }
 fi
 
 # Prompt for additional users if any remain
@@ -745,7 +877,8 @@ fi
 
 exit 0
 """)
-            os.chmod(self.target_file('home', target_user, 'jackjump-config.sh'), 0o755)
+            os.lchown(jackjump_config, 1000, 1000)
+            os.chmod(jackjump_config, 0o755)
 
         # Fix /etc/crypttab
         crypttab_file = self.target_file("etc/crypttab")

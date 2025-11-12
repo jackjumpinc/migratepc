@@ -793,13 +793,6 @@ Type: text
 _Description: Migrating user files...
 
 # steve@jackjump.com/grok3 added a copy drive
-Template: ubiquity/install/bitlocker_copy_drive
-Type: error
-_Description: Error encrypted copy drive
- An error occurred because BitLocker encryption was not disabled on copy drive
- beforehand. User files cannot be copied.
-
-# steve@jackjump.com/grok3 added a copy drive
 Template: ubiquity/install/mount_copy_drive
 Type: error
 _Description: Failed to mount copy drive
@@ -1668,11 +1661,6 @@ Description: for internal use; specify fs and dev of copy partition.
 Template: ubiquity/copy_parts
 Type: string
 Description: for internal use; specify Windows partitions to copy to target.
-
-# steve@jackjump.com/grok3 added a copy drive
-Template: ubiquity/user_dirs
-Type: string
-Description: for internal use; specify Windows users to migrate.
 
 # steve@jackjump.com/grok3 added a copy drive
 Template: ubiquity/install_has_windows
