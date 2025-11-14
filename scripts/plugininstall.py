@@ -515,8 +515,9 @@ for user_dir in "$HOME_DIR"/*; do
 done
 
 # Prompt for username if not provided
+MAIN_FLAG="/home/$MAIN_USER/.jackjump_config_done"
 if [ -z "$1" ]; then
-    if [ ${#VALID_USERS[@]} -eq 1 ] && [ "${VALID_USERS[0]}" = "$MAIN_USER" ]; then
+    if [ ! -f "$MAIN_FLAG" ]; then
         TARGET_USER="$MAIN_USER"
     else
         echo "Available users to configure: ${VALID_USERS[*]}"
@@ -550,14 +551,13 @@ fi
 
 # Check if main user already configured
 if [ "$TARGET_USER" != "$MAIN_USER" ]; then
-    MAIN_FLAG="/home/$MAIN_USER/.jackjump_config_done"
     if [ ! -f "$MAIN_FLAG" ]; then
         echo "You have to configure '$MAIN_USER' first."
         exit 0
     fi
 fi
 
-sudo -v  # Prompts for password and sets timestamp
+sudo -v # Prompts for password and sets timestamp
 
 # Set password if not MAIN_USER
 if [ "$TARGET_USER" != "$MAIN_USER" ]; then
@@ -589,7 +589,7 @@ if [ -d "$DESKTOP_SRC" ]; then
             if [ -n "$URL" ]; then
                 BASE_NAME=$(basename "$file" .url)
                 DESKTOP_FILE="$DESKTOP_SRC/$BASE_NAME.desktop"
-                CONTENT=$(cat << EOF
+                CONTENT=$(cat <<EOF
 [Desktop Entry]
 Type=Link
 Name=$BASE_NAME
@@ -622,9 +622,9 @@ done
 IMG=$(sudo -u "$TARGET_USER" -g "$TARGET_USER" -H find "$WALLPAPER_DST" -maxdepth 1 -type f 2>/dev/null | shuf -n1)
 if [ -f "$IMG" ]; then
     if [ "$TARGET_USER" != "$MAIN_USER" ]; then
-        sudo -u "$TARGET_USER" -g "$TARGET_USER" -H dbus-run-session -- gsettings set org.cinnamon.desktop.background picture-uri "file://$IMG" || { echo "Warning: Failed to set wallpaper for $TARGET_USER, continuing..."; }
+        sudo -u "$TARGET_USER" -g "$TARGET_USER" -H dbus-run-session -- gsettings set org.cinnamon.desktop.background picture-uri "file://$IMG" >/dev/null || { echo "Warning: Failed to set wallpaper for $TARGET_USER, continuing..."; }
     else
-        gsettings set org.cinnamon.desktop.background picture-uri "file://$IMG" || { echo "Warning: Failed to set wallpaper for $TARGET_USER, continuing..."; }
+        gsettings set org.cinnamon.desktop.background picture-uri "file://$IMG" >/dev/null || { echo "Warning: Failed to set wallpaper for $TARGET_USER, continuing..."; }
     fi
 fi
 
@@ -633,10 +633,15 @@ if [ "$TARGET_USER" != "$MAIN_USER" ]; then
     echo "Setting locale for $TARGET_USER..."
     sudo -u "$TARGET_USER" -g "$TARGET_USER" -H bash -c '
     read -r -p "Select locale (e.g. en_US, de_DE, fr_FR): " LOCALE
-    if locale -a | grep -qi "^${LOCALE//_/\\.}\\.UTF-8$"; then
-        echo "export LANG=$LOCALE.UTF-8" >> ~/.profile
+    if [[ "$LOCALE" =~ ^[[:lower:]]{2}_[[:upper:]]{2}$ ]]; then
+        if ! locale -a | grep -qi "^${LOCALE}\."; then
+            sudo locale-gen "$LOCALE.UTF-8" || sudo localectl set-locale "$LOCALE.UTF-8" || { echo "Warning: Failed to generate locale requested, continuing..."; }
+        fi
+        echo "export LANG=${LOCALE}.UTF-8" >> /home/"$TARGET_USER"/.profile
         if [[ ! "$LOCALE" =~ ^(en_US|en_GB|en_AU|en_CA)$ ]]; then
-           xdg-user-dirs-update --force
+            export LANG="$LOCALE.UTF-8"
+            echo "$LOCALE" > /home/"$TARGET_USER"/.config/user-dirs.locale
+            xdg-user-dirs-update --force
         fi
     else
         echo "Invalid or unsupported locale."
@@ -658,7 +663,7 @@ if [ "$TARGET_USER" = "$MAIN_USER" ]; then
     fi
     if ! command -v opera >/dev/null 2>&1; then
         echo "Adding Opera repository..."
-        sudo curl -fsSLo /usr/share/keyrings/opera-browser.gpg https://deb.opera.com/archive.key || { echo "Warning: Failed to set up Opera keyring, continuing..."; }
+        sudo wget -qO- https://deb.opera.com/archive.key | gpg --dearmor | sudo tee /usr/share/keyrings/opera-browser.gpg || { echo "Warning: Failed to set up Opera keyring, continuing..."; }
         echo "deb [signed-by=/usr/share/keyrings/opera-browser.gpg] https://deb.opera.com/opera-stable/ stable non-free" | sudo tee /etc/apt/sources.list.d/opera-stable.list >/dev/null || { echo "Warning: Failed to add opera-stable.list to apt sources." >&2; }
     fi
     if ! command -v google-chrome >/dev/null 2>&1; then
@@ -671,7 +676,7 @@ if [ "$TARGET_USER" = "$MAIN_USER" ]; then
         sudo curl -fsSL https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor | sudo tee /usr/share/keyrings/microsoft-edge.gpg >/dev/null || { echo "Warning: Failed to set up Edge keyring, continuing..."; }
         echo "deb [arch=amd64 signed-by=/usr/share/keyrings/microsoft-edge.gpg] https://packages.microsoft.com/repos/edge stable main" | sudo tee /etc/apt/sources.list.d/microsoft-edge.list >/dev/null || { echo "Warning: Failed to add microsoft-edge.list to apt sources." >&2; }
     fi
-    sudo apt update || { echo "Warning: Failed to update apt, continuing..."; }
+    sudo apt-get update >/dev/null || { echo "Warning: Failed to update apt, continuing..."; }
 fi
 
 if [ "$TARGET_USER" != "$MAIN_USER" ]; then
@@ -701,8 +706,8 @@ for browser in "${BROWSERS[@]}"; do
         echo "$name profile found."
         if ! command -v "$pkg" >/dev/null 2>&1; then
             echo "Installing $name..."
-            sudo apt update || { echo "Warning: Failed to update apt for $name, continuing..."; }
-            sudo apt install -y "$pkg" || {
+            sudo apt-get update >/dev/null || { echo "Warning: Failed to update apt for $name, continuing..."; }
+            sudo apt-get install -y "$pkg" || {
                 echo "Warning: Failed to install $name, skipping"
                 continue
             }
@@ -715,45 +720,83 @@ for browser in "${BROWSERS[@]}"; do
             echo "Warning: Failed to initialize $name profile for $TARGET_USER, continuing..."
             continue
         }
-        if [[ "$pkg" != "firefox" && "$pkg" != "opera" ]]; then
+        sudo pkill -f "$pkg"
+        sleep 2
+        if [[ "$pkg" != "firefox" ]] && [[ "$pkg" != "vivaldi" ]] && [[ "$pkg" != "opera" ]]; then
             DEST_DEFAULT="$dest/Default"
-            if [ -d "$DEST_DEFAULT" ]; then
-                sudo -u "$TARGET_USER" -g "$TARGET_USER" -H rm -rf "$DEST_DEFAULT" || { echo "Warning: Failed to remove $DEST_DEFAULT, continuing..."; }
+            BACKUP_DIR="/home/$TARGET_USER/.jackjump/$pkg-backup"
+            sudo -u "$TARGET_USER" -g "$TARGET_USER" -H mkdir -p -m 700 "$BACKUP_DIR" || { echo "Warning: Failed to create $BACKUP_DIR, continuing..."; }
+            if [ -d "$DEST_DEFAULT" ] && [ -d "$BACKUP_DIR" ]; then
+                sudo -u "$TARGET_USER" -g "$TARGET_USER" -H cp "$DEST_DEFAULT/History" "$BACKUP_DIR/History.bak" 2>/dev/null || { echo "Warning: No existing History file, continuing..."; }
+                sudo -u "$TARGET_USER" -g "$TARGET_USER" -H cp "$DEST_DEFAULT/Bookmarks" "$BACKUP_DIR/Bookmarks.bak" 2>/dev/null || { echo "Warning: No existing Bookmarks file, continuing..."; }
             fi
-            sudo -u "$TARGET_USER" -g "$TARGET_USER" -H mkdir -p -m 755 "$DEST_DEFAULT" || { echo "Warning: Failed to create $DEST_DEFAULT, continuing..."; }
-            sudo -u "$TARGET_USER" -g "$TARGET_USER" -H cp -r "$src_path"/* "$DEST_DEFAULT/" || { echo "Warning: Failed to copy $name profile for $TARGET_USER, continuing..."; }
+            if [ -d "$DEST_DEFAULT" ] && [ -d "$src_path" ]; then
+                sudo -u "$TARGET_USER" -g "$TARGET_USER" -H cp "$src_path/Bookmarks" "$DEST_DEFAULT/Bookmarks" || { echo "Warning: Failed to copy $name Bookmarks for $TARGET_USER, continuing..."; }
+                sudo -u "$TARGET_USER" -g "$TARGET_USER" -H chmod 600 "$DEST_DEFAULT/Bookmarks" || { echo "Warning: Failed to chmod $name Bookmarks for $TARGET_USER, continuing..."; }
+                sudo -u "$TARGET_USER" -g "$TARGET_USER" -H cp "$src_path/History" "$DEST_DEFAULT/History" || { echo "Warning: Failed to copy $name History for $TARGET_USER, continuing..."; }
+                sudo -u "$TARGET_USER" -g "$TARGET_USER" -H chmod 600 "$DEST_DEFAULT/History" || { echo "Warning: Failed to chmod $name History for $TARGET_USER, continuing..."; }
+                sudo -u "$TARGET_USER" -g "$TARGET_USER" -H cp "$src_path/Cookies" "$DEST_DEFAULT/Cookies" 2>/dev/null || { echo "Warning: Failed to copy $name Cookies for $TARGET_USER, continuing..."; }
+                sudo -u "$TARGET_USER" -g "$TARGET_USER" -H chmod 600 "$DEST_DEFAULT/Cookies" || { echo "Warning: Failed to chmod $name Cookies for $TARGET_USER, continuing..."; }
+                sudo -u "$TARGET_USER" -g "$TARGET_USER" -H cp "$src_path/Web Data" "$DEST_DEFAULT/Web Data" 2>/dev/null || { echo "Warning: Failed to copy $name Autofill data for $TARGET_USER, continuing..."; }
+                sudo -u "$TARGET_USER" -g "$TARGET_USER" -H chmod 600 "$DEST_DEFAULT/Web Data" || { echo "Warning: Failed to chmod $name Autofill data for $TARGET_USER, continuing..."; }
+            fi
         fi
         if [[ "$pkg" == "opera" ]]; then
             if [ -d "$dest" ]; then
                 sudo -u "$TARGET_USER" -g "$TARGET_USER" -H rm -rf "$dest" || { echo "Warning: Failed to remove $dest, continuing..."; }
             fi
-            sudo -u "$TARGET_USER" -g "$TARGET_USER" -H mkdir -p -m 755 "$dest" || { echo "Warning: Failed to create $dest, continuing..."; }
-            sudo -u "$TARGET_USER" -g "$TARGET_USER" -H cp -r "$src_path"/* "$dest/" || { echo "Warning: Failed to copy $name profile for $TARGET_USER, continuing..."; }
+            sudo -u "$TARGET_USER" -g "$TARGET_USER" -H cp -r "$src_path" "$dest" || { echo "Warning: Failed to copy $name profile for $TARGET_USER, continuing..."; }
+            sudo -u "$TARGET_USER" -g "$TARGET_USER" -H chmod -R 700 "$dest" || { echo "Warning: Failed to chmod $name profile for $TARGET_USER, continuing..."; }
+        fi
+        if [[ "$pkg" == "vivaldi" ]]; then
+            DEST_DEFAULT="$dest/Default"
+            if [ -d "$DEST_DEFAULT" ]; then
+                sudo -u "$TARGET_USER" -g "$TARGET_USER" -H rm -rf "$DEST_DEFAULT" || { echo "Warning: Failed to remove $DEST_DEFAULT, continuing..."; }
+            fi
+            sudo -u "$TARGET_USER" -g "$TARGET_USER" -H mkdir -p -m 700 "$DEST_DEFAULT" || { echo "Warning: Failed to create $DEST_DEFAULT, continuing..."; }
+            sudo -u "$TARGET_USER" -g "$TARGET_USER" -H cp -r "$src_path"/* "$DEST_DEFAULT/" || { echo "Warning: Failed to copy $name profile for $TARGET_USER, continuing..."; }
+            sudo -u "$TARGET_USER" -g "$TARGET_USER" -H chmod -R 700 "$DEST_DEFAULT" || { echo "Warning: Failed to chmod $name profile for $TARGET_USER, continuing..."; }
         fi
         if [[ "$pkg" == "firefox" ]]; then
-            PROFILEINI="/home/$TARGET_USER/.AppData/Roaming/Mozilla/Firefox/profiles.ini"
-            DEFAULT_PROFILE=$(awk 'BEGIN{RS="\r\n|\n"} /Default=1/{getline; print $2; nextfile}' "$PROFILEINI")   
-            WINDOWS_PROFILE="$src_path/$DEFAULT_PROFILE"
-            NEW_PROFILE_NAME="win-profile"
-            LINUX_PROFILE="$dest/$NEW_PROFILE_NAME"
-            sudo -u "$TARGET_USER" -g "$TARGET_USER" -H mkdir -p -m 755 "$LINUX_PROFILE" || { echo "Warning: Failed to create $LINUX_PROFILE, continuing..."; }
-            sudo -u "$TARGET_USER" -g "$TARGET_USER" -H cp -r "$WINDOWS_PROFILE"/* "$LINUX_PROFILE/" || { echo "Warning: Failed to copy $name profile for $TARGET_USER, continuing..."; }
-            sudo -u "$TARGET_USER" -g "$TARGET_USER" -H find "$LINUX_PROFILE" -iname "PKCS11.txt" -o -iname "Pkcs11.txt" -exec sh -c 'mv "$0" "$(dirname "$0")/pkcs11.txt"' {} \; 2>/dev/null || true
+            WIN_INI="/home/$TARGET_USER/.AppData/Roaming/Mozilla/Firefox/profiles.ini"
+            if [ -f "$WIN_INI" ]; then
+                CLEAN_INI=$(tr -d '\r' <"$WIN_INI")
+                DEFAULT_PROFILE=$(printf '%s\n' "$CLEAN_INI" | awk '
+                    /^\[.*\]$/ { path = ""; is_default = 0 }
+                    /^Path=/ { sub(/^Path=/, ""); path = $0 }
+                    /^Default=1/ && path != "" { print path; exit }
+                ')
+            fi
+            if [ -z "$DEFAULT_PROFILE" ]; then
+                WINDOWS_PROFILE=$(sudo -u "$TARGET_USER" -g "$TARGET_USER" -H find "$src_path/Profiles" -maxdepth 2 -name "places.sqlite" -type f -exec du -h {} + | sort -hr | head -n 1 | awk '{print $2}' | xargs dirname)
+            else
+                WINDOWS_PROFILE="$src_path/$DEFAULT_PROFILE"
+            fi
+            if [ -d "$WINDOWS_PROFILE" ]; then
+                NEW_PROFILE_NAME="win-profile"
+                LINUX_PROFILE="$dest/$NEW_PROFILE_NAME"
+                sudo -u "$TARGET_USER" -g "$TARGET_USER" -H mkdir -p -m 700 "$LINUX_PROFILE" || { echo "Warning: Failed to create $LINUX_PROFILE, continuing..."; }
+                sudo -u "$TARGET_USER" -g "$TARGET_USER" -H cp -r "$WINDOWS_PROFILE"/* "$LINUX_PROFILE/" || { echo "Warning: Failed to copy $name profile for $TARGET_USER, continuing..."; }
+                sudo -u "$TARGET_USER" -g "$TARGET_USER" -H find "$LINUX_PROFILE" -iname "PKCS11.txt" -o -iname "Pkcs11.txt" -exec sh -c 'mv "$0" "$(dirname "$0")/pkcs11.txt"' {} \; 2>/dev/null || true
+                sudo -u "$TARGET_USER" -g "$TARGET_USER" -H chmod -R 700 "$LINUX_PROFILE" || { echo "Warning: Failed to chmod $name profile for $TARGET_USER, continuing..."; }
+            fi
             profiles_ini="$dest/profiles.ini"
-            if [ -f "$profiles_ini" ]; then
+            if [ -d "$LINUX_PROFILE" ] && [ -f "$profiles_ini" ]; then
                 if ! sudo -u "$TARGET_USER" -g "$TARGET_USER" -H grep -q "Path=$NEW_PROFILE_NAME" "$profiles_ini"; then
-                    CONTENT=$(cat << EOF
+                    sudo -u "$TARGET_USER" -g "$TARGET_USER" -H sed -i '/Default=1/d' "$profiles_ini" || { echo "Warning: Failed to remove Default=1 line from profiles.ini for $TARGET_USER, continuing..."; }
+                    CONTENT=$(cat <<EOF
 
 [Profile$(sudo -u "$TARGET_USER" -g "$TARGET_USER" -H grep -c '^\[Profile' "$profiles_ini" 2>/dev/null || echo 0)]
 Name=$NEW_PROFILE_NAME
 IsRelative=1
 Path=$NEW_PROFILE_NAME
+Default=1
 EOF
 )
                     echo "$CONTENT" | sudo -u "$TARGET_USER" -g "$TARGET_USER" -H tee -a "$profiles_ini" >/dev/null || { echo "Warning: Failed to update $profiles_ini as $TARGET_USER." >&2; }
                 fi
             else
-                CONTENT=$(cat << EOF
+                CONTENT=$(cat <<EOF
 [General]
 StartWithLastProfile=1
 
@@ -766,11 +809,11 @@ EOF
 )
                 echo "$CONTENT" | sudo -u "$TARGET_USER" -g "$TARGET_USER" -H tee "$profiles_ini" >/dev/null || { echo "Warning: Failed to write $profiles_ini as $TARGET_USER." >&2; }
             fi
-            sudo chmod 644 "$profiles_ini" || { echo "Warning: Failed to chmod $profiles_ini for $TARGET_USER, continuing..."; }
+            sudo chmod 600 "$profiles_ini" || { echo "Warning: Failed to chmod $profiles_ini for $TARGET_USER, continuing..."; }
             echo "Firefox profile $NEW_PROFILE_NAME added to profiles.ini"
         fi
+        echo "$name configuration complete."
     fi
-    echo "$name configuration complete."
 done
 
 if [ "$TARGET_USER" != "$MAIN_USER" ]; then
@@ -795,7 +838,7 @@ fi
 if ! command -v brave-browser >/dev/null 2>&1; then
     read -r -p "Install Brave Browser while third-party repository available? (y/n): " INSTALL_BRAVE
     case $INSTALL_BRAVE in
-        [Yy]* ) sudo apt install -y brave-browser || { echo "Warning: Failed to install Brave Browser, continuing..."; };;   
+    [Yy]*) sudo apt-get install -y brave-browser || { echo "Warning: Failed to install Brave Browser, continuing..."; } ;;
     esac
 fi
 
@@ -860,7 +903,7 @@ if [ "$ALL_CONFIGURED" = true ]; then
         sudo rm -f /etc/apt/sources.list.d/microsoft-edge.list || { echo "Warning: Failed to remove Edge from apt sources, continuing..."; }
         sudo rm -f /usr/share/keyrings/microsoft-edge.gpg || { echo "Warning: Failed to remove Edge keyring, continuing..."; }
     fi
-    sudo apt update || { echo "Warning: Failed to update apt, continuing..."; }
+    sudo apt-get update >/dev/null || { echo "Warning: Failed to update apt, continuing..."; }
 fi
 
 # Prompt for additional users if any remain

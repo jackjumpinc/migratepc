@@ -639,28 +639,339 @@ class PageGtk(PageBase):
                     install_has_bitlocker = True
                     break
                 elif (partition[3] == 'ntfs' or partition[3] == 'unknown') and partition[1] > 19777216:
-                    if misc.execute_root('mount', '-t', 'ntfs-3g', '-o', 'ro', partition[0], mount_point):
+                    if misc.execute_root('ntfsfix', partition[0]):
+                        if misc.execute_root('mount', '-t', 'ntfs-3g', '-o', 'ro', partition[0], mount_point):
 
-                        install_has_windows = os.path.exists(os.path.join(mount_point, 'Windows'))
-                        source_dir = os.path.join(mount_point, 'Users')
-                        install_has_users = os.path.exists(source_dir)
-                        public_path = os.path.join(source_dir, 'Public')
-                        if install_has_windows and install_has_users:
-                            docs_and_settings = os.path.join(mount_point, 'Documents and Settings')
-                            syslog.syslog(f"JACKJUMP: Letter, Path: {misc.get_junction_target(docs_and_settings)} of Documents and Settings link.")
-                            self.extra_options['install_has_windows'] = install_has_windows
-                            syslog.syslog(f"JACKJUMP: Install drive {partition[0]} has Windows.")
-                            windows_users_extra_dirs = [
-                                os.path.join(mount_point, 'Users/Public'),
-                                os.path.join(mount_point, 'Users/Default'),
-                                os.path.join(mount_point, 'Users/Default User'),
-                                os.path.join(mount_point, 'Users/All Users')
-                            ]
-                            import subprocess
-                            try:
-                                users_reparse = subprocess.run(['getfattr', '-h', '-n', 'system.ntfs_reparse_data', '-e', 'hex', os.path.join(mount_point, 'Users')], capture_output=True, text=True, check=False)
-                                if users_reparse.returncode == 1 and 'No such attribute' in users_reparse.stderr:
-                                    users_part_needed = False
+                            install_has_windows = os.path.exists(os.path.join(mount_point, 'Windows'))
+                            source_dir = os.path.join(mount_point, 'Users')
+                            install_has_users = os.path.exists(source_dir)
+                            public_path = os.path.join(source_dir, 'Public')
+                            if install_has_windows and install_has_users:
+                                self.extra_options['install_has_windows'] = install_has_windows
+                                syslog.syslog(f"JACKJUMP: Install drive {partition[0]} has Windows.")
+                                windows_users_extra_dirs = [
+                                    os.path.join(mount_point, 'Users/Public'),
+                                    os.path.join(mount_point, 'Users/Default'),
+                                    os.path.join(mount_point, 'Users/Default User'),
+                                    os.path.join(mount_point, 'Users/All Users')
+                                ]
+                                import subprocess
+                                try:
+                                    users_reparse = subprocess.run(['getfattr', '-h', '-n', 'system.ntfs_reparse_data', '-e', 'hex', os.path.join(mount_point, 'Users')], capture_output=True, text=True, check=False)
+                                    if users_reparse.returncode == 1 and 'No such attribute' in users_reparse.stderr:
+                                        users_part_needed = False
+                                        if partition[0] not in install_parts_list:
+                                            install_parts_list.append(partition[0])
+                                            if not user_dirs:
+                                                user_dirs = misc.set_user_dirs(source_dir)
+                                            main_dirs = misc.set_main_dirs(source_dir, user_dirs)
+                                            if main_dirs:
+                                                if os.path.exists(public_path) and os.path.isdir(public_path) and os.listdir(public_path):
+                                                    main_dirs.append('Public')
+                                                install_parts.append([partition[0], main_dirs]) 
+                                            # Check used space of partition
+                                            source_size = misc.get_used(source_dir)
+                                            if source_size:
+                                                install_used.append(source_size)
+                                    if not users_part_needed:
+                                        import glob
+                                        for documents_path in glob.glob(os.path.join(mount_point, 'Users/*/Documents')):
+                                            user_path = os.path.dirname(documents_path)
+                                            if user_path not in windows_users_extra_dirs and not os.path.basename(user_path).startswith('defaultuser') and os.path.exists(documents_path):
+                                                documents_reparse = subprocess.run(['getfattr', '-h', '-n', 'system.ntfs_reparse_data', '-e', 'hex', documents_path], capture_output=True, text=True, check=False)
+                                                if documents_reparse.returncode == 1 and 'No such attribute' in documents_reparse.stderr:
+                                                    documents_part_needed = False
+                                                else:
+                                                    dest_path = misc.set_dest_path(documents_path)
+                                                    if dest_path:
+                                                        letter_src_dest.append([misc.get_junction_target(documents_path), dest_path])
+                                        for pictures_path in glob.glob(os.path.join(mount_point, 'Users/*/Pictures')):
+                                            user_path = os.path.dirname(pictures_path)
+                                            if user_path not in windows_users_extra_dirs and not os.path.basename(user_path).startswith('defaultuser') and os.path.exists(pictures_path):
+                                                pictures_reparse = subprocess.run(['getfattr', '-h', '-n', 'system.ntfs_reparse_data', '-e', 'hex', pictures_path], capture_output=True, text=True, check=False)
+                                                if pictures_reparse.returncode == 1 and 'No such attribute' in pictures_reparse.stderr:
+                                                    pictures_part_needed = False
+                                                else:
+                                                    dest_path = misc.set_dest_path(pictures_path)
+                                                    if dest_path:
+                                                        letter_src_dest.append([misc.get_junction_target(pictures_path), dest_path])
+                                        for desktop_path in glob.glob(os.path.join(mount_point, 'Users/*/Desktop')):
+                                            user_path = os.path.dirname(desktop_path)
+                                            if user_path not in windows_users_extra_dirs and not os.path.basename(user_path).startswith('defaultuser') and os.path.exists(desktop_path):
+                                                desktop_reparse = subprocess.run(['getfattr', '-h', '-n', 'system.ntfs_reparse_data', '-e', 'hex', desktop_path], capture_output=True, text=True, check=False)
+                                                if desktop_reparse.returncode == 1 and 'No such attribute' in desktop_reparse.stderr:
+                                                    desktop_part_needed = False
+                                                else:
+                                                    dest_path = misc.set_dest_path(desktop_path)
+                                                    if dest_path:
+                                                        letter_src_dest.append([misc.get_junction_target(desktop_path), dest_path])
+                                        for videos_path in glob.glob(os.path.join(mount_point, 'Users/*/Videos')):
+                                            user_path = os.path.dirname(videos_path)
+                                            if user_path not in windows_users_extra_dirs and not os.path.basename(user_path).startswith('defaultuser') and os.path.exists(videos_path):
+                                                videos_reparse = subprocess.run(['getfattr', '-h', '-n', 'system.ntfs_reparse_data', '-e', 'hex', videos_path], capture_output=True, text=True, check=False)
+                                                if videos_reparse.returncode == 1 and 'No such attribute' in videos_reparse.stderr:
+                                                    videos_part_needed = False
+                                                else:
+                                                    dest_path = misc.set_dest_path(videos_path)
+                                                    if dest_path:
+                                                        letter_src_dest.append([misc.get_junction_target(videos_path), dest_path])
+                                        for music_path in glob.glob(os.path.join(mount_point, 'Users/*/Music')):
+                                            user_path = os.path.dirname(music_path)
+                                            if user_path not in windows_users_extra_dirs and not os.path.basename(user_path).startswith('defaultuser') and os.path.exists(music_path):
+                                                music_reparse = subprocess.run(['getfattr', '-h', '-n', 'system.ntfs_reparse_data', '-e', 'hex', music_path], capture_output=True, text=True, check=False)
+                                                if music_reparse.returncode == 1 and 'No such attribute' in music_reparse.stderr:
+                                                    music_part_needed = False
+                                                else:
+                                                    dest_path = misc.set_dest_path(music_path)
+                                                    if dest_path:
+                                                        letter_src_dest.append([misc.get_junction_target(music_path), dest_path])
+                                        for downloads_path in glob.glob(os.path.join(mount_point, 'Users/*/Downloads')):
+                                            user_path = os.path.dirname(downloads_path)
+                                            if user_path not in windows_users_extra_dirs and not os.path.basename(user_path).startswith('defaultuser') and os.path.exists(downloads_path):
+                                                downloads_reparse = subprocess.run(['getfattr', '-h', '-n', 'system.ntfs_reparse_data', '-e', 'hex', downloads_path], capture_output=True, text=True, check=False)
+                                                if downloads_reparse.returncode == 1 and 'No such attribute' in downloads_reparse.stderr:
+                                                    downloads_part_needed = False
+                                                else:
+                                                    dest_path = misc.set_dest_path(downloads_path)
+                                                    if dest_path:
+                                                        letter_src_dest.append([misc.get_junction_target(downloads_path), dest_path])
+                                        for appdata_path in glob.glob(os.path.join(mount_point, 'Users/*/AppData')):
+                                            user_path = os.path.dirname(appdata_path)
+                                            if user_path not in windows_users_extra_dirs and not os.path.basename(user_path).startswith('defaultuser') and os.path.exists(appdata_path):
+                                                appdata_reparse = subprocess.run(['getfattr', '-h', '-n', 'system.ntfs_reparse_data', '-e', 'hex', appdata_path], capture_output=True, text=True, check=False)
+                                                if appdata_reparse.returncode == 1 and 'No such attribute' in appdata_reparse.stderr:
+                                                   appdata_part_needed = False
+                                                else:
+                                                    dest_path = misc.set_dest_path(appdata_path)
+                                                    if dest_path:
+                                                        letter_src_dest.append([misc.get_junction_target(appdata_path), dest_path])
+                                        if os.path.exists(public_path):
+                                            public_reparse = subprocess.run(['getfattr', '-h', '-n', 'system.ntfs_reparse_data', '-e', 'hex', public_path], capture_output=True, text=True, check=False)
+                                            if public_reparse.returncode == 1 and 'No such attribute' in public_reparse.stderr:
+                                                public_part_needed = False
+                                            else:
+                                                dest_path = misc.set_dest_path(public_path)
+                                                if dest_path:
+                                                    letter_src_dest.append([misc.get_junction_target(public_path), dest_path])
+                                except subprocess.CalledProcessError as e:
+                                    parts_needed_accurate = False
+                                    syslog.syslog(syslog.LOG_ERR, f"JACKJUMP: getfattr failed: {e}")
+                                if parts_needed_accurate and not users_part_needed and not documents_part_needed and not pictures_part_needed and not desktop_part_needed and not videos_part_needed and not music_part_needed and not downloads_part_needed and not appdata_part_needed and not public_part_needed:
+                                    syslog.syslog(f"JACKJUMP: No other shared parts needed: {install_parts_list}.")
+                                if letter_src_dest:
+                                    total_size = 0 
+                                    link_list = []
+                                    for letter, src, dest in letter_src_dest:
+                                        if not letter and src and dest:
+                                            src_path = os.path.join(source_dir, src)
+                                            if os.path.exists(src_path) and os.path.isdir(src_path) and os.listdir(src_path):
+                                                dirs = src_path.strip(os.sep).split(os.sep) 
+                                                if len(dirs) >= 3:
+                                                    dirs_root = os.sep.join(dirs[2:])
+                                                    link_list.append([dirs_root, dest])
+                                                    exclude_dirs.append(dirs_root)
+                                                    source_size = misc.get_used(src_path)
+                                                    if source_size:
+                                                        total_size += source_size
+                                                        syslog.syslog(f"JACKJUMP: Source directory {src_path} on {partition[0]} has {source_size} used space.")
+                                    
+                                    if link_list:
+                                        install_links.append([partition[0], link_list])
+                                        if total_size > 0:
+                                            install_used.append(total_size)
+                                ntfs_dev_letter.append([partition[0], 'C:']) 
+                                syslog.syslog(f"JACKJUMP: Partition info {ntfs_dev_letter}.")
+                            elif install_has_users: 
+                                are_parts_accurate = True
+                                is_documents_part = False
+                                is_pictures_part = False
+                                is_desktop_part = False
+                                is_videos_part = False
+                                is_music_part = False
+                                is_downloads_part = False
+                                is_appdata_part = False
+                                is_public_part = False
+                                users_has_documents = False
+                                users_has_pictures = False
+                                users_has_desktop = False
+                                users_has_videos = False
+                                users_has_music = False
+                                users_has_downloads = False
+                                try:
+                                    import glob
+                                    for documents_path in glob.glob(os.path.join(mount_point, 'Users/*/Documents')):
+                                        user_path = os.path.dirname(documents_path)
+                                        if user_path not in windows_users_extra_dirs and not os.path.basename(user_path).startswith('defaultuser') and os.path.exists(documents_path):
+                                            users_has_documents = True
+                                            documents_reparse = subprocess.run(['getfattr', '-h', '-n', 'system.ntfs_reparse_data', '-e', 'hex', documents_path], capture_output=True, text=True, check=False)
+                                            if documents_reparse.returncode == 1 and 'No such attribute' in documents_reparse.stderr:
+                                                is_documents_part = True
+                                                if partition[0] not in install_parts_list:
+                                                    install_parts_list.append(partition[0])
+                                                    if not user_dirs:
+                                                        user_dirs = misc.set_user_dirs(source_dir)
+                                                    main_dirs = misc.set_main_dirs(source_dir, user_dirs)
+                                                    if main_dirs:
+                                                        install_parts.append([partition[0], main_dirs]) 
+                                                    # Check used space of partition
+                                                    source_size = misc.get_used(source_dir)
+                                                    if source_size:
+                                                        install_used.append(source_size)
+                                            else:
+                                                dest_path = misc.set_dest_path(documents_path)
+                                                if dest_path:
+                                                    letter_src_dest.append([misc.get_junction_target(documents_path), dest_path])
+                                    for pictures_path in glob.glob(os.path.join(mount_point, 'Users/*/Pictures')):
+                                        user_path = os.path.dirname(pictures_path)
+                                        if user_path not in windows_users_extra_dirs and not os.path.basename(user_path).startswith('defaultuser') and os.path.exists(pictures_path):
+                                            users_has_pictures = True
+                                            pictures_reparse = subprocess.run(['getfattr', '-h', '-n', 'system.ntfs_reparse_data', '-e', 'hex', pictures_path], capture_output=True, text=True, check=False)
+                                            if pictures_reparse.returncode == 1 and 'No such attribute' in pictures_reparse.stderr:
+                                                is_pictures_part = True
+                                                if partition[0] not in install_parts_list:
+                                                    install_parts_list.append(partition[0])
+                                                    if not user_dirs:
+                                                        user_dirs = misc.set_user_dirs(source_dir)
+                                                    main_dirs = misc.set_main_dirs(source_dir, user_dirs)
+                                                    if main_dirs:
+                                                        install_parts.append([partition[0], main_dirs]) 
+                                                    # Check used space of partition
+                                                    source_size = misc.get_used(source_dir)
+                                                    if source_size:
+                                                        install_used.append(source_size)
+                                            else:
+                                                dest_path = misc.set_dest_path(pictures_path)
+                                                if dest_path:
+                                                    letter_src_dest.append([misc.get_junction_target(pictures_path), dest_path])
+                                    for desktop_path in glob.glob(os.path.join(mount_point, 'Users/*/Desktop')):
+                                        user_path = os.path.dirname(desktop_path)
+                                        if user_path not in windows_users_extra_dirs and not os.path.basename(user_path).startswith('defaultuser') and os.path.exists(desktop_path):
+                                            users_has_desktop = True
+                                            desktop_reparse = subprocess.run(['getfattr', '-h', '-n', 'system.ntfs_reparse_data', '-e', 'hex', desktop_path], capture_output=True, text=True, check=False)
+                                            if desktop_reparse.returncode == 1 and 'No such attribute' in desktop_reparse.stderr:
+                                                is_desktop_part = True
+                                                if partition[0] not in install_parts_list:
+                                                    install_parts_list.append(partition[0])
+                                                    if not user_dirs:
+                                                        user_dirs = misc.set_user_dirs(source_dir)
+                                                    main_dirs = misc.set_main_dirs(source_dir, user_dirs)
+                                                    if main_dirs:
+                                                        install_parts.append([partition[0], main_dirs]) 
+                                                    # Check used space of partition
+                                                    source_size = misc.get_used(source_dir)
+                                                    if source_size:
+                                                        install_used.append(source_size)
+                                            else:
+                                                dest_path = misc.set_dest_path(desktop_path)
+                                                if dest_path:
+                                                    letter_src_dest.append([misc.get_junction_target(desktop_path), dest_path])
+                                    for videos_path in glob.glob(os.path.join(mount_point, 'Users/*/Videos')):
+                                        user_path = os.path.dirname(videos_path)
+                                        if user_path not in windows_users_extra_dirs and not os.path.basename(user_path).startswith('defaultuser') and os.path.exists(videos_path):
+                                            users_has_videos = True
+                                            videos_reparse = subprocess.run(['getfattr', '-h', '-n', 'system.ntfs_reparse_data', '-e', 'hex', videos_path], capture_output=True, text=True, check=False)
+                                            if videos_reparse.returncode == 1 and 'No such attribute' in videos_reparse.stderr:
+                                                is_videos_part = True
+                                                if partition[0] not in install_parts_list:
+                                                    install_parts_list.append(partition[0])
+                                                    if not user_dirs:
+                                                        user_dirs = misc.set_user_dirs(source_dir)
+                                                    main_dirs = misc.set_main_dirs(source_dir, user_dirs)
+                                                    if main_dirs:
+                                                        install_parts.append([partition[0], main_dirs]) 
+                                                    # Check used space of partition
+                                                    source_size = misc.get_used(source_dir)
+                                                    if source_size:
+                                                        install_used.append(source_size)
+                                            else:
+                                                dest_path = misc.set_dest_path(videos_path)
+                                                if dest_path:
+                                                    letter_src_dest.append([misc.get_junction_target(videos_path), dest_path])
+                                    for music_path in glob.glob(os.path.join(mount_point, 'Users/*/Music')):
+                                        user_path = os.path.dirname(music_path)
+                                        if user_path not in windows_users_extra_dirs and not os.path.basename(user_path).startswith('defaultuser') and os.path.exists(music_path):
+                                            users_has_music = True
+                                            music_reparse = subprocess.run(['getfattr', '-h', '-n', 'system.ntfs_reparse_data', '-e', 'hex', music_path], capture_output=True, text=True, check=False)
+                                            if music_reparse.returncode == 1 and 'No such attribute' in music_reparse.stderr:
+                                                is_music_part = True
+                                                if partition[0] not in install_parts_list:
+                                                    install_parts_list.append(partition[0])
+                                                    if not user_dirs:
+                                                        user_dirs = misc.set_user_dirs(source_dir)
+                                                    main_dirs = misc.set_main_dirs(source_dir, user_dirs)
+                                                    if main_dirs:
+                                                        install_parts.append([partition[0], main_dirs]) 
+                                                    # Check used space of partition
+                                                    source_size = misc.get_used(source_dir)
+                                                    if source_size:
+                                                        install_used.append(source_size)
+                                            else:
+                                                dest_path = misc.set_dest_path(music_path)
+                                                if dest_path:
+                                                    letter_src_dest.append([misc.get_junction_target(music_path), dest_path])
+                                    for downloads_path in glob.glob(os.path.join(mount_point, 'Users/*/Downloads')):
+                                        user_path = os.path.dirname(downloads_path)
+                                        if user_path not in windows_users_extra_dirs and not os.path.basename(user_path).startswith('defaultuser') and os.path.exists(downloads_path):
+                                            users_has_downloads = True
+                                            downloads_reparse = subprocess.run(['getfattr', '-h', '-n', 'system.ntfs_reparse_data', '-e', 'hex', downloads_path], capture_output=True, text=True, check=False)
+                                            if downloads_reparse.returncode == 1 and 'No such attribute' in downloads_reparse.stderr:
+                                                is_downloads_part = True
+                                                if partition[0] not in install_parts_list:
+                                                    install_parts_list.append(partition[0])
+                                                    if not user_dirs:
+                                                        user_dirs = misc.set_user_dirs(source_dir)
+                                                    main_dirs = misc.set_main_dirs(source_dir, user_dirs)
+                                                    if main_dirs:
+                                                        install_parts.append([partition[0], main_dirs]) 
+                                                    # Check used space of partition
+                                                    source_size = misc.get_used(source_dir)
+                                                    if source_size:
+                                                        install_used.append(source_size)
+                                            else:
+                                                dest_path = misc.set_dest_path(downloads_path)
+                                                if dest_path:
+                                                    letter_src_dest.append([misc.get_junction_target(downloads_path), dest_path])
+                                    for appdata_path in glob.glob(os.path.join(mount_point, 'Users/*/AppData')):
+                                        user_path = os.path.dirname(appdata_path)
+                                        if user_path not in windows_users_extra_dirs and not os.path.basename(user_path).startswith('defaultuser') and os.path.exists(appdata_path):
+                                            appdata_reparse = subprocess.run(['getfattr', '-h', '-n', 'system.ntfs_reparse_data', '-e', 'hex', appdata_path], capture_output=True, text=True, check=False)
+                                            if appdata_reparse.returncode == 1 and 'No such attribute' in appdata_reparse.stderr:
+                                                is_appdata_part = True
+                                                if partition[0] not in install_parts_list:
+                                                    install_parts_list.append(partition[0])
+                                                    if not user_dirs:
+                                                        user_dirs = misc.set_user_dirs(source_dir)
+                                                    main_dirs = misc.set_main_dirs(source_dir, user_dirs)
+                                                    if main_dirs:
+                                                        install_parts.append([partition[0], main_dirs]) 
+                                                    # Check used space of partition
+                                                    source_size = misc.get_used(source_dir)
+                                                    if source_size:
+                                                        install_used.append(source_size)
+                                            else:
+                                                dest_path = misc.set_dest_path(appdata_path)
+                                                if dest_path:
+                                                    letter_src_dest.append([misc.get_junction_target(appdata_path), dest_path])
+                                    if os.path.exists(public_path):
+                                        public_reparse = subprocess.run(['getfattr', '-h', '-n', 'system.ntfs_reparse_data', '-e', 'hex', public_path], capture_output=True, text=True, check=False)
+                                        if public_reparse.returncode == 1 and 'No such attribute' in public_reparse.stderr:
+                                            is_public_part = True
+                                            if partition[0] not in install_parts_list:
+                                                install_parts_list.append(partition[0])
+                                                if os.path.exists(public_path) and os.path.isdir(public_path) and os.listdir(public_path):
+                                                    install_parts.append([partition[0], ['Public']]) 
+                                                # Check used space of partition
+                                                source_size = misc.get_used(public_path)
+                                                if source_size:
+                                                    install_used.append(source_size)
+                                        else:
+                                            dest_path = misc.set_dest_path(public_path)
+                                            if dest_path:
+                                                letter_src_dest.append([misc.get_junction_target(public_path), dest_path])
+                                except subprocess.CalledProcessError as e:
+                                    are_parts_accurate = False
+                                    syslog.syslog(syslog.LOG_ERR, f"JACKJUMP: getfattr failed: {e}")
+                                if users_has_documents and users_has_pictures and users_has_desktop and users_has_videos and users_has_music and users_has_downloads:
                                     if partition[0] not in install_parts_list:
                                         install_parts_list.append(partition[0])
                                         if not user_dirs:
@@ -674,363 +985,79 @@ class PageGtk(PageBase):
                                         source_size = misc.get_used(source_dir)
                                         if source_size:
                                             install_used.append(source_size)
-                                if not users_part_needed:
-                                    import glob
-                                    for documents_path in glob.glob(os.path.join(mount_point, 'Users/*/Documents')):
-                                        user_path = os.path.dirname(documents_path)
-                                        if user_path not in windows_users_extra_dirs and not os.path.basename(user_path).startswith('defaultuser') and os.path.exists(documents_path):
-                                            documents_reparse = subprocess.run(['getfattr', '-h', '-n', 'system.ntfs_reparse_data', '-e', 'hex', documents_path], capture_output=True, text=True, check=False)
-                                            if documents_reparse.returncode == 1 and 'No such attribute' in documents_reparse.stderr:
-                                                documents_part_needed = False
-                                            else:
-                                                dest_path = misc.set_dest_path(documents_path)
-                                                if dest_path:
-                                                    letter_src_dest.append([misc.get_junction_target(documents_path), dest_path])
-                                    for pictures_path in glob.glob(os.path.join(mount_point, 'Users/*/Pictures')):
-                                        user_path = os.path.dirname(pictures_path)
-                                        if user_path not in windows_users_extra_dirs and not os.path.basename(user_path).startswith('defaultuser') and os.path.exists(pictures_path):
-                                            pictures_reparse = subprocess.run(['getfattr', '-h', '-n', 'system.ntfs_reparse_data', '-e', 'hex', pictures_path], capture_output=True, text=True, check=False)
-                                            if pictures_reparse.returncode == 1 and 'No such attribute' in pictures_reparse.stderr:
-                                                pictures_part_needed = False
-                                            else:
-                                                dest_path = misc.set_dest_path(pictures_path)
-                                                if dest_path:
-                                                    letter_src_dest.append([misc.get_junction_target(pictures_path), dest_path])
-                                    for desktop_path in glob.glob(os.path.join(mount_point, 'Users/*/Desktop')):
-                                        user_path = os.path.dirname(desktop_path)
-                                        if user_path not in windows_users_extra_dirs and not os.path.basename(user_path).startswith('defaultuser') and os.path.exists(desktop_path):
-                                            desktop_reparse = subprocess.run(['getfattr', '-h', '-n', 'system.ntfs_reparse_data', '-e', 'hex', desktop_path], capture_output=True, text=True, check=False)
-                                            if desktop_reparse.returncode == 1 and 'No such attribute' in desktop_reparse.stderr:
-                                                desktop_part_needed = False
-                                            else:
-                                                dest_path = misc.set_dest_path(desktop_path)
-                                                if dest_path:
-                                                    letter_src_dest.append([misc.get_junction_target(desktop_path), dest_path])
-                                    for videos_path in glob.glob(os.path.join(mount_point, 'Users/*/Videos')):
-                                        user_path = os.path.dirname(videos_path)
-                                        if user_path not in windows_users_extra_dirs and not os.path.basename(user_path).startswith('defaultuser') and os.path.exists(videos_path):
-                                            videos_reparse = subprocess.run(['getfattr', '-h', '-n', 'system.ntfs_reparse_data', '-e', 'hex', videos_path], capture_output=True, text=True, check=False)
-                                            if videos_reparse.returncode == 1 and 'No such attribute' in videos_reparse.stderr:
-                                                videos_part_needed = False
-                                            else:
-                                                dest_path = misc.set_dest_path(videos_path)
-                                                if dest_path:
-                                                    letter_src_dest.append([misc.get_junction_target(videos_path), dest_path])
-                                    for music_path in glob.glob(os.path.join(mount_point, 'Users/*/Music')):
-                                        user_path = os.path.dirname(music_path)
-                                        if user_path not in windows_users_extra_dirs and not os.path.basename(user_path).startswith('defaultuser') and os.path.exists(music_path):
-                                            music_reparse = subprocess.run(['getfattr', '-h', '-n', 'system.ntfs_reparse_data', '-e', 'hex', music_path], capture_output=True, text=True, check=False)
-                                            if music_reparse.returncode == 1 and 'No such attribute' in music_reparse.stderr:
-                                                music_part_needed = False
-                                            else:
-                                                dest_path = misc.set_dest_path(music_path)
-                                                if dest_path:
-                                                    letter_src_dest.append([misc.get_junction_target(music_path), dest_path])
-                                    for downloads_path in glob.glob(os.path.join(mount_point, 'Users/*/Downloads')):
-                                        user_path = os.path.dirname(downloads_path)
-                                        if user_path not in windows_users_extra_dirs and not os.path.basename(user_path).startswith('defaultuser') and os.path.exists(downloads_path):
-                                            downloads_reparse = subprocess.run(['getfattr', '-h', '-n', 'system.ntfs_reparse_data', '-e', 'hex', downloads_path], capture_output=True, text=True, check=False)
-                                            if downloads_reparse.returncode == 1 and 'No such attribute' in downloads_reparse.stderr:
-                                                downloads_part_needed = False
-                                            else:
-                                                dest_path = misc.set_dest_path(downloads_path)
-                                                if dest_path:
-                                                    letter_src_dest.append([misc.get_junction_target(downloads_path), dest_path])
-                                    for appdata_path in glob.glob(os.path.join(mount_point, 'Users/*/AppData')):
-                                        user_path = os.path.dirname(appdata_path)
-                                        if user_path not in windows_users_extra_dirs and not os.path.basename(user_path).startswith('defaultuser') and os.path.exists(appdata_path):
-                                            appdata_reparse = subprocess.run(['getfattr', '-h', '-n', 'system.ntfs_reparse_data', '-e', 'hex', appdata_path], capture_output=True, text=True, check=False)
-                                            if appdata_reparse.returncode == 1 and 'No such attribute' in appdata_reparse.stderr:
-                                               appdata_part_needed = False
-                                            else:
-                                                dest_path = misc.set_dest_path(appdata_path)
-                                                if dest_path:
-                                                    letter_src_dest.append([misc.get_junction_target(appdata_path), dest_path])
-                                    if os.path.exists(public_path):
-                                        public_reparse = subprocess.run(['getfattr', '-h', '-n', 'system.ntfs_reparse_data', '-e', 'hex', public_path], capture_output=True, text=True, check=False)
-                                        if public_reparse.returncode == 1 and 'No such attribute' in public_reparse.stderr:
-                                            public_part_needed = False
-                                        else:
-                                            dest_path = misc.set_dest_path(public_path)
-                                            if dest_path:
-                                                letter_src_dest.append([misc.get_junction_target(public_path), dest_path])
-                            except subprocess.CalledProcessError as e:
-                                parts_needed_accurate = False
-                                syslog.syslog(syslog.LOG_ERR, f"JACKJUMP: getfattr failed: {e}")
-                            if parts_needed_accurate and not users_part_needed and not documents_part_needed and not pictures_part_needed and not desktop_part_needed and not videos_part_needed and not music_part_needed and not downloads_part_needed and not appdata_part_needed and not public_part_needed:
-                                syslog.syslog(f"JACKJUMP: No other shared parts needed: {install_parts_list}.")
-                            if letter_src_dest:
-                                total_size = 0 
-                                link_list = []
-                                for letter, src, dest in letter_src_dest:
-                                    if not letter and src and dest:
-                                        src_path = os.path.join(source_dir, src)
-                                        if os.path.exists(src_path) and os.path.isdir(src_path) and os.listdir(src_path):
-                                            dirs = src_path.strip(os.sep).split(os.sep) 
-                                            if len(dirs) >= 3:
-                                                dirs_root = os.sep.join(dirs[2:])
-                                                link_list.append([dirs_root, dest])
-                                                exclude_dirs.append(dirs_root)
-                                                source_size = misc.get_used(src_path)
-                                                if source_size:
-                                                    total_size += source_size
-                                                    syslog.syslog(f"JACKJUMP: Source directory {src_path} on {partition[0]} has {source_size} used space.")
-                                
-                                if link_list:
-                                    install_links.append([partition[0], link_list])
-                                    if total_size > 0:
-                                        install_used.append(total_size)
-                            ntfs_dev_letter.append([partition[0], 'C:']) 
-                            syslog.syslog(f"JACKJUMP: Partition info {ntfs_dev_letter}.")
-                        elif install_has_users: 
-                            are_parts_accurate = True
-                            is_documents_part = False
-                            is_pictures_part = False
-                            is_desktop_part = False
-                            is_videos_part = False
-                            is_music_part = False
-                            is_downloads_part = False
-                            is_appdata_part = False
-                            is_public_part = False
-                            users_has_documents = False
-                            users_has_pictures = False
-                            users_has_desktop = False
-                            users_has_videos = False
-                            users_has_music = False
-                            users_has_downloads = False
-                            try:
-                                import glob
-                                for documents_path in glob.glob(os.path.join(mount_point, 'Users/*/Documents')):
-                                    user_path = os.path.dirname(documents_path)
-                                    if user_path not in windows_users_extra_dirs and not os.path.basename(user_path).startswith('defaultuser') and os.path.exists(documents_path):
-                                        users_has_documents = True
-                                        documents_reparse = subprocess.run(['getfattr', '-h', '-n', 'system.ntfs_reparse_data', '-e', 'hex', documents_path], capture_output=True, text=True, check=False)
-                                        if documents_reparse.returncode == 1 and 'No such attribute' in documents_reparse.stderr:
-                                            is_documents_part = True
-                                            if partition[0] not in install_parts_list:
-                                                install_parts_list.append(partition[0])
-                                                if not user_dirs:
-                                                    user_dirs = misc.set_user_dirs(source_dir)
-                                                main_dirs = misc.set_main_dirs(source_dir, user_dirs)
-                                                if main_dirs:
-                                                    install_parts.append([partition[0], main_dirs]) 
-                                                # Check used space of partition
-                                                source_size = misc.get_used(source_dir)
-                                                if source_size:
-                                                    install_used.append(source_size)
-                                        else:
-                                            dest_path = misc.set_dest_path(documents_path)
-                                            if dest_path:
-                                                letter_src_dest.append([misc.get_junction_target(documents_path), dest_path])
-                                for pictures_path in glob.glob(os.path.join(mount_point, 'Users/*/Pictures')):
-                                    user_path = os.path.dirname(pictures_path)
-                                    if user_path not in windows_users_extra_dirs and not os.path.basename(user_path).startswith('defaultuser') and os.path.exists(pictures_path):
-                                        users_has_pictures = True
-                                        pictures_reparse = subprocess.run(['getfattr', '-h', '-n', 'system.ntfs_reparse_data', '-e', 'hex', pictures_path], capture_output=True, text=True, check=False)
-                                        if pictures_reparse.returncode == 1 and 'No such attribute' in pictures_reparse.stderr:
-                                            is_pictures_part = True
-                                            if partition[0] not in install_parts_list:
-                                                install_parts_list.append(partition[0])
-                                                if not user_dirs:
-                                                    user_dirs = misc.set_user_dirs(source_dir)
-                                                main_dirs = misc.set_main_dirs(source_dir, user_dirs)
-                                                if main_dirs:
-                                                    install_parts.append([partition[0], main_dirs]) 
-                                                # Check used space of partition
-                                                source_size = misc.get_used(source_dir)
-                                                if source_size:
-                                                    install_used.append(source_size)
-                                        else:
-                                            dest_path = misc.set_dest_path(pictures_path)
-                                            if dest_path:
-                                                letter_src_dest.append([misc.get_junction_target(pictures_path), dest_path])
-                                for desktop_path in glob.glob(os.path.join(mount_point, 'Users/*/Desktop')):
-                                    user_path = os.path.dirname(desktop_path)
-                                    if user_path not in windows_users_extra_dirs and not os.path.basename(user_path).startswith('defaultuser') and os.path.exists(desktop_path):
-                                        users_has_desktop = True
-                                        desktop_reparse = subprocess.run(['getfattr', '-h', '-n', 'system.ntfs_reparse_data', '-e', 'hex', desktop_path], capture_output=True, text=True, check=False)
-                                        if desktop_reparse.returncode == 1 and 'No such attribute' in desktop_reparse.stderr:
-                                            is_desktop_part = True
-                                            if partition[0] not in install_parts_list:
-                                                install_parts_list.append(partition[0])
-                                                if not user_dirs:
-                                                    user_dirs = misc.set_user_dirs(source_dir)
-                                                main_dirs = misc.set_main_dirs(source_dir, user_dirs)
-                                                if main_dirs:
-                                                    install_parts.append([partition[0], main_dirs]) 
-                                                # Check used space of partition
-                                                source_size = misc.get_used(source_dir)
-                                                if source_size:
-                                                    install_used.append(source_size)
-                                        else:
-                                            dest_path = misc.set_dest_path(desktop_path)
-                                            if dest_path:
-                                                letter_src_dest.append([misc.get_junction_target(desktop_path), dest_path])
-                                for videos_path in glob.glob(os.path.join(mount_point, 'Users/*/Videos')):
-                                    user_path = os.path.dirname(videos_path)
-                                    if user_path not in windows_users_extra_dirs and not os.path.basename(user_path).startswith('defaultuser') and os.path.exists(videos_path):
-                                        users_has_videos = True
-                                        videos_reparse = subprocess.run(['getfattr', '-h', '-n', 'system.ntfs_reparse_data', '-e', 'hex', videos_path], capture_output=True, text=True, check=False)
-                                        if videos_reparse.returncode == 1 and 'No such attribute' in videos_reparse.stderr:
-                                            is_videos_part = True
-                                            if partition[0] not in install_parts_list:
-                                                install_parts_list.append(partition[0])
-                                                if not user_dirs:
-                                                    user_dirs = misc.set_user_dirs(source_dir)
-                                                main_dirs = misc.set_main_dirs(source_dir, user_dirs)
-                                                if main_dirs:
-                                                    install_parts.append([partition[0], main_dirs]) 
-                                                # Check used space of partition
-                                                source_size = misc.get_used(source_dir)
-                                                if source_size:
-                                                    install_used.append(source_size)
-                                        else:
-                                            dest_path = misc.set_dest_path(videos_path)
-                                            if dest_path:
-                                                letter_src_dest.append([misc.get_junction_target(videos_path), dest_path])
-                                for music_path in glob.glob(os.path.join(mount_point, 'Users/*/Music')):
-                                    user_path = os.path.dirname(music_path)
-                                    if user_path not in windows_users_extra_dirs and not os.path.basename(user_path).startswith('defaultuser') and os.path.exists(music_path):
-                                        users_has_music = True
-                                        music_reparse = subprocess.run(['getfattr', '-h', '-n', 'system.ntfs_reparse_data', '-e', 'hex', music_path], capture_output=True, text=True, check=False)
-                                        if music_reparse.returncode == 1 and 'No such attribute' in music_reparse.stderr:
-                                            is_music_part = True
-                                            if partition[0] not in install_parts_list:
-                                                install_parts_list.append(partition[0])
-                                                if not user_dirs:
-                                                    user_dirs = misc.set_user_dirs(source_dir)
-                                                main_dirs = misc.set_main_dirs(source_dir, user_dirs)
-                                                if main_dirs:
-                                                    install_parts.append([partition[0], main_dirs]) 
-                                                # Check used space of partition
-                                                source_size = misc.get_used(source_dir)
-                                                if source_size:
-                                                    install_used.append(source_size)
-                                        else:
-                                            dest_path = misc.set_dest_path(music_path)
-                                            if dest_path:
-                                                letter_src_dest.append([misc.get_junction_target(music_path), dest_path])
-                                for downloads_path in glob.glob(os.path.join(mount_point, 'Users/*/Downloads')):
-                                    user_path = os.path.dirname(downloads_path)
-                                    if user_path not in windows_users_extra_dirs and not os.path.basename(user_path).startswith('defaultuser') and os.path.exists(downloads_path):
-                                        users_has_downloads = True
-                                        downloads_reparse = subprocess.run(['getfattr', '-h', '-n', 'system.ntfs_reparse_data', '-e', 'hex', downloads_path], capture_output=True, text=True, check=False)
-                                        if downloads_reparse.returncode == 1 and 'No such attribute' in downloads_reparse.stderr:
-                                            is_downloads_part = True
-                                            if partition[0] not in install_parts_list:
-                                                install_parts_list.append(partition[0])
-                                                if not user_dirs:
-                                                    user_dirs = misc.set_user_dirs(source_dir)
-                                                main_dirs = misc.set_main_dirs(source_dir, user_dirs)
-                                                if main_dirs:
-                                                    install_parts.append([partition[0], main_dirs]) 
-                                                # Check used space of partition
-                                                source_size = misc.get_used(source_dir)
-                                                if source_size:
-                                                    install_used.append(source_size)
-                                        else:
-                                            dest_path = misc.set_dest_path(downloads_path)
-                                            if dest_path:
-                                                letter_src_dest.append([misc.get_junction_target(downloads_path), dest_path])
-                                for appdata_path in glob.glob(os.path.join(mount_point, 'Users/*/AppData')):
-                                    user_path = os.path.dirname(appdata_path)
-                                    if user_path not in windows_users_extra_dirs and not os.path.basename(user_path).startswith('defaultuser') and os.path.exists(appdata_path):
-                                        appdata_reparse = subprocess.run(['getfattr', '-h', '-n', 'system.ntfs_reparse_data', '-e', 'hex', appdata_path], capture_output=True, text=True, check=False)
-                                        if appdata_reparse.returncode == 1 and 'No such attribute' in appdata_reparse.stderr:
-                                            is_appdata_part = True
-                                            if partition[0] not in install_parts_list:
-                                                install_parts_list.append(partition[0])
-                                                if not user_dirs:
-                                                    user_dirs = misc.set_user_dirs(source_dir)
-                                                main_dirs = misc.set_main_dirs(source_dir, user_dirs)
-                                                if main_dirs:
-                                                    install_parts.append([partition[0], main_dirs]) 
-                                                # Check used space of partition
-                                                source_size = misc.get_used(source_dir)
-                                                if source_size:
-                                                    install_used.append(source_size)
-                                        else:
-                                            dest_path = misc.set_dest_path(appdata_path)
-                                            if dest_path:
-                                                letter_src_dest.append([misc.get_junction_target(appdata_path), dest_path])
-                                if os.path.exists(public_path):
-                                    public_reparse = subprocess.run(['getfattr', '-h', '-n', 'system.ntfs_reparse_data', '-e', 'hex', public_path], capture_output=True, text=True, check=False)
-                                    if public_reparse.returncode == 1 and 'No such attribute' in public_reparse.stderr:
-                                        is_public_part = True
-                                        if partition[0] not in install_parts_list:
-                                            install_parts_list.append(partition[0])
-                                            if os.path.exists(public_path) and os.path.isdir(public_path) and os.listdir(public_path):
-                                                install_parts.append([partition[0], ['Public']]) 
-                                            # Check used space of partition
-                                            source_size = misc.get_used(public_path)
-                                            if source_size:
-                                                install_used.append(source_size)
-                                    else:
-                                        dest_path = misc.set_dest_path(public_path)
-                                        if dest_path:
-                                            letter_src_dest.append([misc.get_junction_target(public_path), dest_path])
-                            except subprocess.CalledProcessError as e:
-                                are_parts_accurate = False
-                                syslog.syslog(syslog.LOG_ERR, f"JACKJUMP: getfattr failed: {e}")
-                            if users_has_documents and users_has_pictures and users_has_desktop and users_has_videos and users_has_music and users_has_downloads:
-                                if partition[0] not in install_parts_list:
-                                    install_parts_list.append(partition[0])
-                                    if not user_dirs:
-                                        user_dirs = misc.set_user_dirs(source_dir)
-                                    main_dirs = misc.set_main_dirs(source_dir, user_dirs)
-                                    if main_dirs:
-                                        if os.path.exists(public_path) and os.path.isdir(public_path) and os.listdir(public_path):
-                                            main_dirs.append('Public')
-                                        install_parts.append([partition[0], main_dirs]) 
-                                    # Check used space of partition
-                                    source_size = misc.get_used(source_dir)
-                                    if source_size:
-                                        install_used.append(source_size)
-                                syslog.syslog(f"JACKJUMP: Install drive has separate Users partition {partition[0]}.")
-                                users_part_needed = False
-                                if are_parts_accurate:
-                                    if not is_documents_part:
-                                        documents_part_needed = True
-                                    if not is_pictures_part:
-                                        pictures_part_needed = True
-                                    if not is_desktop_part:
-                                        desktop_part_needed = True
-                                    if not is_videos_part:
-                                        videos_part_needed = True
-                                    if not is_music_part:
-                                        music_part_needed = True
-                                    if not is_downloads_part:
-                                        downloads_part_needed = True
-                                    if not is_appdata_part:
-                                        appdata_part_needed = True
-                                    if not is_public_part:
-                                        public_part_needed = True
-                            elif are_parts_accurate:
-                                if is_documents_part:
-                                    syslog.syslog(f"JACKJUMP: Install drive has separate Documents partition {partition[0]}.")
-                                    documents_part_needed = False
-                                if is_pictures_part:
-                                    syslog.syslog(f"JACKJUMP: Install drive has separate Pictures partition {partition[0]}.")
-                                    pictures_part_needed = False
-                                if is_desktop_part:
-                                    syslog.syslog(f"JACKJUMP: Install drive has separate Desktop partition {partition[0]}.")
-                                    desktop_part_needed = False
-                                if is_videos_part:
-                                    syslog.syslog(f"JACKJUMP: Install drive has separate Videos partition {partition[0]}.")
-                                    videos_part_needed = False
-                                if is_music_part:
-                                    syslog.syslog(f"JACKJUMP: Install drive has separate Music partition {partition[0]}.")
-                                    music_part_needed = False
-                                if is_downloads_part:
-                                    syslog.syslog(f"JACKJUMP: Install drive has separate Downloads partition {partition[0]}.")
-                                    downloads_part_needed = False
-                                if is_appdata_part:
-                                    syslog.syslog(f"JACKJUMP: Install drive has separate AppData partition {partition[0]}.")
-                                    appdata_part_needed = False
-                                if is_public_part:
-                                    syslog.syslog(f"JACKJUMP: Install drive has separate Public partition {partition[0]}.")
-                                    public_part_needed = False
-                            if letter_src_dest:
+                                    syslog.syslog(f"JACKJUMP: Install drive has separate Users partition {partition[0]}.")
+                                    users_part_needed = False
+                                    if are_parts_accurate:
+                                        if not is_documents_part:
+                                            documents_part_needed = True
+                                        if not is_pictures_part:
+                                            pictures_part_needed = True
+                                        if not is_desktop_part:
+                                            desktop_part_needed = True
+                                        if not is_videos_part:
+                                            videos_part_needed = True
+                                        if not is_music_part:
+                                            music_part_needed = True
+                                        if not is_downloads_part:
+                                            downloads_part_needed = True
+                                        if not is_appdata_part:
+                                            appdata_part_needed = True
+                                        if not is_public_part:
+                                            public_part_needed = True
+                                elif are_parts_accurate:
+                                    if is_documents_part:
+                                        syslog.syslog(f"JACKJUMP: Install drive has separate Documents partition {partition[0]}.")
+                                        documents_part_needed = False
+                                    if is_pictures_part:
+                                        syslog.syslog(f"JACKJUMP: Install drive has separate Pictures partition {partition[0]}.")
+                                        pictures_part_needed = False
+                                    if is_desktop_part:
+                                        syslog.syslog(f"JACKJUMP: Install drive has separate Desktop partition {partition[0]}.")
+                                        desktop_part_needed = False
+                                    if is_videos_part:
+                                        syslog.syslog(f"JACKJUMP: Install drive has separate Videos partition {partition[0]}.")
+                                        videos_part_needed = False
+                                    if is_music_part:
+                                        syslog.syslog(f"JACKJUMP: Install drive has separate Music partition {partition[0]}.")
+                                        music_part_needed = False
+                                    if is_downloads_part:
+                                        syslog.syslog(f"JACKJUMP: Install drive has separate Downloads partition {partition[0]}.")
+                                        downloads_part_needed = False
+                                    if is_appdata_part:
+                                        syslog.syslog(f"JACKJUMP: Install drive has separate AppData partition {partition[0]}.")
+                                        appdata_part_needed = False
+                                    if is_public_part:
+                                        syslog.syslog(f"JACKJUMP: Install drive has separate Public partition {partition[0]}.")
+                                        public_part_needed = False
+                                if letter_src_dest:
+                                    from collections import Counter
+                                    letter_list = []
+                                    total_size = 0 
+                                    link_list = []
+                                    for letter, src, dest in letter_src_dest:
+                                        if letter and src and dest:
+                                            src_path = os.path.join(source_dir, src)
+                                            if os.path.exists(src_path) and os.path.isdir(src_path) and os.listdir(src_path):
+                                                letter_list.append(letter)
+                                                dirs = src_path.strip(os.sep).split(os.sep) 
+                                                if len(dirs) >= 3:
+                                                    dirs_root = os.sep.join(dirs[2:])
+                                                    link_list.append([dirs_root, dest])
+                                                    exclude_dirs.append(dirs_root)
+                                                    source_size = misc.get_used(src_path)
+                                                    if source_size:
+                                                        total_size += source_size
+                                                        syslog.syslog(f"JACKJUMP: Source directory {src_path} on {partition[0]} has {source_size} used space.")
+                                    if link_list:
+                                        install_links.append([partition[0], link_list])
+                                        if total_size > 0:
+                                            install_used.append(total_size)
+                                    if letter_list:
+                                        counter = Counter(letter_list)
+                                        most_common_letter = counter.most_common(1)
+                                        ntfs_dev_letter.append([partition[0], most_common_letter]) 
+                                        syslog.syslog(f"JACKJUMP: Partition info {ntfs_dev_letter}.")
+                            elif letter_src_dest:
                                 from collections import Counter
                                 letter_list = []
                                 total_size = 0 
@@ -1058,35 +1085,9 @@ class PageGtk(PageBase):
                                     most_common_letter = counter.most_common(1)
                                     ntfs_dev_letter.append([partition[0], most_common_letter]) 
                                     syslog.syslog(f"JACKJUMP: Partition info {ntfs_dev_letter}.")
-                        elif letter_src_dest:
-                            from collections import Counter
-                            letter_list = []
-                            total_size = 0 
-                            link_list = []
-                            for letter, src, dest in letter_src_dest:
-                                if letter and src and dest:
-                                    src_path = os.path.join(source_dir, src)
-                                    if os.path.exists(src_path) and os.path.isdir(src_path) and os.listdir(src_path):
-                                        letter_list.append(letter)
-                                        dirs = src_path.strip(os.sep).split(os.sep) 
-                                        if len(dirs) >= 3:
-                                            dirs_root = os.sep.join(dirs[2:])
-                                            link_list.append([dirs_root, dest])
-                                            exclude_dirs.append(dirs_root)
-                                            source_size = misc.get_used(src_path)
-                                            if source_size:
-                                                total_size += source_size
-                                                syslog.syslog(f"JACKJUMP: Source directory {src_path} on {partition[0]} has {source_size} used space.")
-                            if link_list:
-                                install_links.append([partition[0], link_list])
-                                if total_size > 0:
-                                    install_used.append(total_size)
-                            if letter_list:
-                                counter = Counter(letter_list)
-                                most_common_letter = counter.most_common(1)
-                                ntfs_dev_letter.append([partition[0], most_common_letter]) 
-                                syslog.syslog(f"JACKJUMP: Partition info {ntfs_dev_letter}.")
-                    misc.execute_root('umount', mount_point)
+                        misc.execute_root('umount', mount_point)
+                    else:
+                        syslog.syslog("JACKJUMP: It looks like you didn't schedule and run chkdsk /f on your install drive in Windows. Go do it now. Did it pass wmic diskdrive get status? Windows is the place to fix Windows hard drives.")
             misc.execute_root('umount', mount_point)
             misc.execute_root('rmdir', '--ignore-fail-on-non-empty', mount_point)
             if install_has_bitlocker:
@@ -1132,40 +1133,43 @@ class PageGtk(PageBase):
                     copy_has_bitlocker = True
                     break
                 elif (partition[3] == 'ntfs' or partition[3] == 'unknown') and partition[1] > 19777216:
-                    if misc.execute_root('mount', '-t', 'ntfs-3g', '-o', 'ro', partition[0], mount_point):
-                        copy_has_windows = os.path.exists(os.path.join(mount_point, 'Windows'))
-                        copy_has_users = os.path.exists(source_dir)
-                        if copy_has_windows and copy_has_users:
-                            if not install_has_windows:
-                                self.extra_options['copy_has_windows'] = copy_has_windows
-                                copy_fs_dev.append(partition[3])
-                                copy_fs_dev.append(partition[0])
-                                #user_dirs = misc.set_user_dirs(source_dir)
-                                #main_dirs = misc.set_main_dirs(source_dir, user_dirs)
-                                #copy_parts.append([partition[0], main_dirs]) 
-                                syslog.syslog(f"JACKJUMP: Copy drive {partition[0]} has Windows.")
-                                copy_mounted = True
-                                break
+                    if misc.execute_root('ntfsfix', partition[0]):
+                        if misc.execute_root('mount', '-t', 'ntfs-3g', '-o', 'ro', partition[0], mount_point):
+                            copy_has_windows = os.path.exists(os.path.join(mount_point, 'Windows'))
+                            copy_has_users = os.path.exists(source_dir)
+                            if copy_has_windows and copy_has_users:
+                                if not install_has_windows:
+                                    self.extra_options['copy_has_windows'] = copy_has_windows
+                                    copy_fs_dev.append(partition[3])
+                                    copy_fs_dev.append(partition[0])
+                                    #user_dirs = misc.set_user_dirs(source_dir)
+                                    #main_dirs = misc.set_main_dirs(source_dir, user_dirs)
+                                    #copy_parts.append([partition[0], main_dirs]) 
+                                    syslog.syslog(f"JACKJUMP: Copy drive {partition[0]} has Windows.")
+                                    copy_mounted = True
+                                    break
+                                else:
+                                    syslog.syslog(f"JACKJUMP: The install drive {install_device} and copy drive {partition[0]} both have Windows installed. That is not ok. Something could go horribly wrong. If you're ready to lose everything on one then format it and start over. Otherwise, select another drive.")
+                                    #title = ('Please select a valid install drive')
+                                    no_install_drive = 'ubiquity/text/no_install_drive'
+                                    self.extra_options['jackjump'] = no_install_drive
+                                    misc.execute_root('umount', mount_point)
+                                    misc.execute_root('rmdir', '--ignore-fail-on-non-empty', mount_point)
+                                    return
                             else:
-                                syslog.syslog(f"JACKJUMP: The install drive {install_device} and copy drive {partition[0]} both have Windows installed. That is not ok. Something could go horribly wrong. If you're ready to lose everything on one then format it and start over. Otherwise, select another drive.")
-                                #title = ('Please select a valid install drive')
-                                no_install_drive = 'ubiquity/text/no_install_drive'
-                                self.extra_options['jackjump'] = no_install_drive
-                                misc.execute_root('umount', mount_point)
-                                misc.execute_root('rmdir', '--ignore-fail-on-non-empty', mount_point)
-                                return
-                        else:
-                            if os.path.exists(jackjump_path):
-                                preinstall_copied = True
-                                break
-                            space = misc.get_free(mount_point)
-                            if space:
-                                space_part.append([space, [partition[3], partition[0]]]) 
-                                if space > copy_free:
-                                    copy_free = space
-                                copy_mounted = True
-                                syslog.syslog(f"JACKJUMP: Copy space: {space}, partition: {partition[0]}.")
-                    misc.execute_root('umount', mount_point)
+                                if os.path.exists(jackjump_path):
+                                    preinstall_copied = True
+                                    break
+                                space = misc.get_free(mount_point)
+                                if space:
+                                    space_part.append([space, [partition[3], partition[0]]]) 
+                                    if space > copy_free:
+                                        copy_free = space
+                                    copy_mounted = True
+                                    syslog.syslog(f"JACKJUMP: Copy space: {space}, partition: {partition[0]}.")
+                        misc.execute_root('umount', mount_point)
+                    else:
+                        syslog.syslog("JACKJUMP: It looks like you didn't schedule and run chkdsk /f on your copy drive in Windows. Go do it now. Did it pass wmic diskdrive get status? Windows is the place to fix Windows hard drives.")
                 elif partition[3] in filesystems and partition[1] > 33774433:
                     if misc.execute_root('mount', '-t', partition[3], '-o', 'ro', partition[0], mount_point):
                         if os.path.exists(jackjump_path):
@@ -1756,8 +1760,17 @@ class PageGtk(PageBase):
                 syslog.syslog(f"JACKJUMP: Copy drive {copy_device} may not be the same as install drive.")
                 #title = ('Install drive may not be copy drive.')
                 install_copy_same = 'ubiquity/text/install_copy_same'
-                self.extra_options['jackjump'] = install_copy_same
-                return None  # Prevent proceeding
+                msg = self.controller.get_string(install_copy_same)
+                from gi.repository import Gtk
+                dialog = Gtk.MessageDialog(
+                    self.current_page.get_toplevel(), Gtk.DialogFlags.MODAL,
+                    Gtk.MessageType.ERROR, Gtk.ButtonsType.CLOSE, None)
+                dialog.set_markup(msg)
+                dialog.run()
+                import sys
+                sys.exit(1)
+                dialog.destroy()
+                return 
 
             choice, method = choose_recipe()
             # Is the encoding necessary?
