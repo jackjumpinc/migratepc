@@ -892,6 +892,27 @@ def get_copy_parts(db):
     return []
 
 
+# steve@jackjump.com/grok3 added rsync user and config files
+def mount_with_retries(fs, dev, mount_point, db):
+    """Mount filesystem, specified device on specified mount point.
+    """
+    import time
+    max_attempts = 7
+    delay = 8
+    for attempt in range(max_attempts):
+        # Mount the copy drive
+        if not execute('mount', '-t', fs, '-o', 'ro', dev, mount_point):
+            syslog.syslog(f"JACKJUMP: Failed to mount copy drive {dev}. Ensure it is plugged in and powered on.")
+            if db is not None:
+                db.input('critical', 'ubiquity/install/mount_copy_drive')
+                db.go()
+            if attempt < max_attempts - 1:
+                time.sleep(delay)
+        else:
+            return True
+    return False
+
+
 # steve@jackjump.com/search.brave.com added get_uid_gid
 def get_uid_gid(username):
     """Get uid and gid of username from target passwd file.
