@@ -660,7 +660,7 @@ def create_bool(text):
 
 
 # steve@jackjump.com/grok3 added rsync user and config files
-def copy_to_drive(source_dir, fs_dev, dest_dir, db=None, was_compressed=False):
+def copy_to_drive(source_dir, fs_dev, dest_dir, source_size, db=None, was_compressed=False):
     """Copy files from source_dir to dest_dir on the specified fs_dev using rsync.
     If fs_dev is None, dest_dir is assumed to be on the target system (e.g., /target/home).
     was_compressed: If True, use rsync -z; if False, use space check.
@@ -694,7 +694,6 @@ def copy_to_drive(source_dir, fs_dev, dest_dir, db=None, was_compressed=False):
     use_compression = was_compressed
     if not use_compression:
         try:
-            source_size = shutil.disk_usage(source_dir).used
             dest_free = shutil.disk_usage(os.path.dirname(dest_path)).free
             if source_size > dest_free:
                 syslog.syslog(f"JACKJUMP: Not enough space in {os.path.dirname(dest_path)} to store files (only {dest_free} K whereas {source_size} K is needed).")
@@ -739,8 +738,8 @@ def copy_to_drive(source_dir, fs_dev, dest_dir, db=None, was_compressed=False):
 
 # steve@jackjump.com/grok3 added rsync user and config files
 @raise_privileges
-def copy_to_drive_root(source_dir, fs_dev, dest_dir, db=None, was_compressed=False):
-    return copy_to_drive(source_dir, fs_dev, dest_dir, db=None, was_compressed=False)
+def copy_to_drive_root(source_dir, fs_dev, dest_dir, source_size, db=None, was_compressed=False):
+    return copy_to_drive(source_dir, fs_dev, dest_dir, source_size, db=None, was_compressed=False)
 
 
 # steve@jackjump.com/search.brave.com added set_user_dirs
@@ -761,6 +760,27 @@ def set_user_dirs(source_dir):
     return ret
 
 
+# steve@jackjump.com/search.brave.com added get_size
+def get_size(source_dir):
+    """Get size of source directory contents in bytes.
+    """
+    if os.path.exists(source_dir) and not os.path.isdir(source_dir):
+        syslog.syslog(f"JACKJUMP: Source {source_dir} exists but is not a directory, skipping measurement of directory contents.")
+        return 0
+    try:
+        output = subprocess.check_output(['du', '-sb', source_dir], universal_newlines=True)
+        return int(output.split()[0])
+    except subprocess.CalledProcessError as e:
+        syslog.syslog(syslog.LOG_ERR, f"JACKJUMP: Failed to get size of source directory {source_dir}: {e}")
+    return 0
+
+
+# steve@jackjump.com/search.brave.com added get_size_root
+@raise_privileges
+def get_size_root(source_dir):
+    return get_size(source_dir)
+
+
 # steve@jackjump.com/search.brave.com added set_main_dirs
 @raise_privileges
 def set_main_dirs(source_dir, user_dirs):
@@ -773,6 +793,7 @@ def set_main_dirs(source_dir, user_dirs):
         return None
 
     ret = []
+    total_size = 0
 
     for user_dir in user_dirs:
         user_path = os.path.join(source_dir, user_dir)
@@ -781,10 +802,47 @@ def set_main_dirs(source_dir, user_dirs):
                 main_path = os.path.join(user_path, main_dir)
                 if os.path.exists(main_path) and os.path.isdir(main_path) and os.listdir(main_path):
                     dirs = main_path.strip(os.sep).split(os.sep)
-                    if len(dirs) >= 4:
+                    dirs_size = get_size(main_path)
+                    if len(dirs) >= 4 and dirs_size:
                         dirs_bottom = os.sep.join(dirs[3:])
-                        ret.append(dirs_bottom)
-    return ret
+                        ret.append([dirs_bottom, dirs_size])
+                        total_size += dirs_size
+    return ret, total_size
+
+
+# steve@jackjump.com/search.brave.com added set_var_link_list
+@raise_privileges
+def set_var_link_list(source_dir, user_dirs, variable):
+    """Determine main directories for each user."""
+    if os.path.exists(source_dir) and not os.path.isdir(source_dir):
+        syslog.syslog(f"JACKJUMP: Source {source_dir} exists but is not a directory, skipping retrieval of main directories.")
+        return None
+    if not user_dirs:
+        syslog.syslog(f"JACKJUMP: Somehow {user_dirs} is lacking, skipping retrieval of main directories.")
+        return None
+    if variable <= 0:
+        syslog.syslog("JACKJUMP: Somehow the count for reparse levels never got set or is off, skipping retrieval of main directories.")
+        return None
+
+    ret = []
+    total_size = 0
+    var = 2 + variable
+    check = 3 + variable
+
+    for user_dir in user_dirs:
+        user_path = os.path.join(source_dir, user_dir)
+        if os.path.exists(user_path) and os.path.isdir(user_path) and os.listdir(user_path):
+            for main_dir in os.listdir(user_path):
+                main_path = os.path.join(user_path, main_dir)
+                if os.path.exists(main_path) and os.path.isdir(main_path) and os.listdir(main_path):
+                    dirs = main_path.strip(os.sep).split(os.sep)
+                    dirs_size = get_size(main_path)
+                    if len(dirs) >= check and dirs_size:
+                        dirs_bottom = os.sep.join(dirs[var:])
+                        dirs_root = os.sep.join(dirs[2:])
+                        ret.append([dirs_root, dirs_bottom, dirs_size])
+                        total_size += dirs_size
+    return ret, total_size
 
 
 # steve@jackjump.com/search.brave.com added get_junction_target
@@ -826,6 +884,32 @@ def set_dest_path(source_path):
     return dirs_bottom
 
 
+# steve@jackjump.com/search.brave.com added set_var_dest_path
+@raise_privileges
+def set_var_dest_path(source_path, variable):
+    """Return bottom of source_path to complete dest_path."""
+    if not os.path.exists(source_path):
+        syslog.syslog(f"JACKJUMP: Source path {source_path} does not exist, skipping separation of path.")
+        return None
+    if variable <= 0:
+        syslog.syslog("JACKJUMP: Somehow the count for reparse levels never got set or is off, skipping retrieval of main directories.")
+        return None
+
+    var = 2 + variable
+    check = 3 + variable
+    dirs_bottom = None
+    dirs = source_path.strip(os.sep).split(os.sep)
+    if len(dirs) >= check:
+        dirs_bottom = os.sep.join(dirs[var:])
+    return dirs_bottom
+
+# steve@jackjump.com/search.brave.com added count_levels
+def count_levels(source_path):
+    """Count directories in source_path."""
+    dirs = source_path.strip(os.sep).split(os.sep)
+    return len(dirs)
+
+
 # steve@jackjump.com/search.brave.com added get_disk
 def get_disk(device):
     """Check for drive entry of device, return disk notation."""
@@ -843,13 +927,13 @@ def get_disk(device):
 # steve@jackjump.com/search.brave.com added get_used
 @raise_privileges
 def get_used(source_dir):
-    """Get amount of used space on the specified source_dir.
+    """Get amount of used space on partition.
     """
-    # Check used space on source directory
+    # Check used space on partition
     try:
         return shutil.disk_usage(source_dir).used
     except subprocess.CalledProcessError as e:
-        syslog.syslog(syslog.LOG_ERR, f"JACKJUMP: Failed to check space on source directory {source_dir}: {e}")
+        syslog.syslog(syslog.LOG_ERR, f"JACKJUMP: Failed to check space on partition {source_dir}: {e}")
         return None
     return None
 
@@ -857,13 +941,13 @@ def get_used(source_dir):
 # steve@jackjump.com/search.brave.com added get_free
 @raise_privileges
 def get_free(dest_dir):
-    """Get amount of available space on the specified mount_point.
+    """Get amount of available space on partition.
     """
-    # Check available space on destination directory
+    # Check available space on partition
     try:
         return shutil.disk_usage(dest_dir).free
     except subprocess.CalledProcessError as e:
-        syslog.syslog(syslog.LOG_ERR, f"JACKJUMP: Failed to check space on destination directory {dest_dir}: {e}")
+        syslog.syslog(syslog.LOG_ERR, f"JACKJUMP: Failed to check space on partition {dest_dir}: {e}")
         return None
     return None
 
@@ -888,6 +972,30 @@ def get_copy_parts(db):
         return json.loads(db.get('ubiquity/copy_parts')) if db.get('ubiquity/copy_parts') else []
     except json.JSONDecodeError:
         syslog.syslog("JACKJUMP: Failed to decode copy_parts, using empty list")
+        return []
+    return []
+
+
+# steve@jackjump.com/grok3 added rsync user and config files
+def get_copy_links(db):
+    """Get copy_links from debconf.
+    """
+    try:
+        return json.loads(db.get('ubiquity/copy_links')) if db.get('ubiquity/copy_links') else []
+    except json.JSONDecodeError:
+        syslog.syslog("JACKJUMP: Failed to decode copy_links, using empty list")
+        return []
+    return []
+
+
+# steve@jackjump.com/grok3 added rsync user and config files
+def get_other_links(db):
+    """Get other_links from debconf.
+    """
+    try:
+        return json.loads(db.get('ubiquity/other_links')) if db.get('ubiquity/other_links') else []
+    except json.JSONDecodeError:
+        syslog.syslog("JACKJUMP: Failed to decode other_links, using empty list")
         return []
     return []
 

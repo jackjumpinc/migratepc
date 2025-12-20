@@ -587,6 +587,9 @@ class PageGtk(PageBase):
         install_device = misc.utf8(m.get_value(i, 0), errors='replace')
         copy_fs_dev = []
         copy_free = 0
+        install_free = 0
+        other_free = 0
+        install_base = 9761816576
         install_has_windows = False
         copy_has_windows = False
         install_has_bitlocker = False
@@ -604,13 +607,16 @@ class PageGtk(PageBase):
         install_used = []
         copy_parts = []
         copy_used = []
-        other_parts = []
         other_used = []
+        install_links = []
+        copy_links = []
+        other_links = []
         user_dirs = []
         ntfs_dev_letter = []
         letter_src_dest = []
-        install_links = []
-        exclude_dirs = []
+        users_reparse = None
+        users_reparse_levels = 0
+        users_reparse_letter = None
         import syslog
         if install_device:
             install_disk = misc.get_disk(install_device)
@@ -625,6 +631,8 @@ class PageGtk(PageBase):
             # PartedServer 2: size 4: fs 5: dev
             # disk_layout  1: size 3: fs 0: dev
             for partition in self.disk_layout[install_disk]:
+                if partition[1]:
+                    install_free += partition[1]
                 if partition[3] == 'BitLocker':  # fs
                     install_has_bitlocker = True
                     break
@@ -635,6 +643,11 @@ class PageGtk(PageBase):
                         source_dir = os.path.join(mount_point, 'Users')
                         install_has_users = os.path.exists(source_dir)
                         public_path = os.path.join(source_dir, 'Public')
+                        install_has_reparse = False
+                        if users_reparse:
+                            users_dir = os.path.join(mount_point, users_reparse)
+                            install_has_reparse = os.path.exists(users_dir)
+                            users_public_path = os.path.join(users_dir, 'Public')
                         if install_has_windows and install_has_users:
                             self.extra_options['install_has_windows'] = install_has_windows
                             syslog.syslog(f"JACKJUMP: Install drive {partition[0]} has Windows.")
@@ -647,20 +660,25 @@ class PageGtk(PageBase):
                             if os.path.islink(source_dir):
                                 second_value = [misc.get_junction_target(source_dir)]
                                 if second_value:
-                                    syslog.syslog(f"JACKJUMP: Users directory is reparse point: {second_value[1]}. If path is not another Users directory then it will not be found and this migration will fail.")
+                                    if second_value[0]:
+                                        users_reparse_letter = second_value[0]
+                                    if second_value[1]:
+                                        users_reparse = second_value[1]
+                                        users_reparse_levels = misc.count_levels(users_reparse)
+                                    syslog.syslog(f"JACKJUMP: Users directory is reparse point: {second_value[1]}.")
                             else: 
                                 users_part_needed = False
                                 if not user_dirs:
                                     user_dirs = misc.set_user_dirs(source_dir)
-                                main_dirs = misc.set_main_dirs(source_dir, user_dirs)
-                                if main_dirs:
+                                main_dirs, main_size = misc.set_main_dirs(source_dir, user_dirs)
+                                if main_dirs and main_size:
                                     if os.path.exists(public_path) and os.path.isdir(public_path) and os.listdir(public_path):
-                                        main_dirs.append('Public')
-                                    install_parts.append([partition[0], main_dirs]) 
-                                # Check used space of partition
-                                source_size = misc.get_used(source_dir)
-                                if source_size:
-                                    install_used.append(source_size)
+                                        source_size = misc.get_size_root(public_path)
+                                        if source_size:
+                                            main_dirs.append(['Public', source_size])
+                                            main_size += source_size
+                                    install_parts.append([partition[0], main_dirs, main_size]) 
+                                    install_used.append(main_size)
                             if not users_part_needed:
                                 import glob
                                 for documents_path in glob.glob(os.path.join(mount_point, 'Users/*/Documents')):
@@ -745,20 +763,25 @@ class PageGtk(PageBase):
                                             dirs = src_path.strip(os.sep).split(os.sep) 
                                             if len(dirs) >= 3:
                                                 dirs_root = os.sep.join(dirs[2:])
-                                                link_list.append([dirs_root, dest])
-                                                exclude_dirs.append(dirs_root)
-                                                source_size = misc.get_used(src_path)
+                                                source_size = misc.get_size_root(src_path)
                                                 if source_size:
+                                                    link_list.append([dirs_root, dest, source_size])
                                                     total_size += source_size
                                                     syslog.syslog(f"JACKJUMP: Source directory {src_path} on {partition[0]} has {source_size} used space.")
                                 
                                 if link_list:
-                                    install_links.append([partition[0], link_list])
                                     if total_size > 0:
+                                        install_links.append([partition[0], link_list, total_size])
                                         install_used.append(total_size)
                             ntfs_dev_letter.append([partition[0], 'C:']) 
                             syslog.syslog(f"JACKJUMP: Partition info {ntfs_dev_letter}.")
-                        elif install_has_users: 
+                        elif install_has_reparse: 
+                            windows_users_extra_dirs = [
+                                os.path.join(users_dir, 'Public'),
+                                os.path.join(users_dir, 'Default'),
+                                os.path.join(users_dir, 'Default User'),
+                                os.path.join(users_dir, 'All Users')
+                            ]
                             is_documents_part = False
                             is_pictures_part = False
                             is_desktop_part = False
@@ -774,155 +797,128 @@ class PageGtk(PageBase):
                             users_has_music = False
                             users_has_downloads = False
                             import glob
-                            for documents_path in glob.glob(os.path.join(mount_point, 'Users/*/Documents')):
+                            for documents_path in glob.glob(os.path.join(users_dir, '*/Documents')):
                                 user_path = os.path.dirname(documents_path)
                                 if user_path not in windows_users_extra_dirs and not os.path.basename(user_path).startswith('defaultuser') and os.path.exists(documents_path):
                                     users_has_documents = True
                                     if os.path.islink(documents_path):
-                                        dest_path = misc.set_dest_path(documents_path)
+                                        dest_path = misc.set_var_dest_path(documents_path, users_reparse_levels)
                                         if dest_path:
                                             letter_src_dest.append([misc.get_junction_target(documents_path), dest_path])
                                     else:
                                         is_documents_part = True
-                            for pictures_path in glob.glob(os.path.join(mount_point, 'Users/*/Pictures')):
+                            for pictures_path in glob.glob(os.path.join(users_dir, '*/Pictures')):
                                 user_path = os.path.dirname(pictures_path)
                                 if user_path not in windows_users_extra_dirs and not os.path.basename(user_path).startswith('defaultuser') and os.path.exists(pictures_path):
                                     users_has_pictures = True
                                     if os.path.islink(pictures_path):
-                                        dest_path = misc.set_dest_path(pictures_path)
+                                        dest_path = misc.set_var_dest_path(pictures_path, users_reparse_levels)
                                         if dest_path:
                                             letter_src_dest.append([misc.get_junction_target(pictures_path), dest_path])
                                     else:
                                         is_pictures_part = True
-                            for desktop_path in glob.glob(os.path.join(mount_point, 'Users/*/Desktop')):
+                            for desktop_path in glob.glob(os.path.join(users_dir, '*/Desktop')):
                                 user_path = os.path.dirname(desktop_path)
                                 if user_path not in windows_users_extra_dirs and not os.path.basename(user_path).startswith('defaultuser') and os.path.exists(desktop_path):
                                     users_has_desktop = True
                                     if os.path.islink(desktop_path):
-                                        dest_path = misc.set_dest_path(desktop_path)
+                                        dest_path = misc.set_var_dest_path(desktop_path, users_reparse_levels)
                                         if dest_path:
                                             letter_src_dest.append([misc.get_junction_target(desktop_path), dest_path])
                                     else:
                                         is_desktop_part = True
-                            for videos_path in glob.glob(os.path.join(mount_point, 'Users/*/Videos')):
+                            for videos_path in glob.glob(os.path.join(users_dir, '*/Videos')):
                                 user_path = os.path.dirname(videos_path)
                                 if user_path not in windows_users_extra_dirs and not os.path.basename(user_path).startswith('defaultuser') and os.path.exists(videos_path):
                                     users_has_videos = True
                                     if os.path.islink(videos_path):
-                                        dest_path = misc.set_dest_path(videos_path)
+                                        dest_path = misc.set_var_dest_path(videos_path, users_reparse_levels)
                                         if dest_path:
                                             letter_src_dest.append([misc.get_junction_target(videos_path), dest_path])
                                     else:
                                         is_videos_part = True
-                            for music_path in glob.glob(os.path.join(mount_point, 'Users/*/Music')):
+                            for music_path in glob.glob(os.path.join(users_dir, '*/Music')):
                                 user_path = os.path.dirname(music_path)
                                 if user_path not in windows_users_extra_dirs and not os.path.basename(user_path).startswith('defaultuser') and os.path.exists(music_path):
                                     users_has_music = True
                                     if os.path.islink(music_path):
-                                        dest_path = misc.set_dest_path(music_path)
+                                        dest_path = misc.set_var_dest_path(music_path, users_reparse_levels)
                                         if dest_path:
                                             letter_src_dest.append([misc.get_junction_target(music_path), dest_path])
                                     else:
                                         is_music_part = True
-                            for downloads_path in glob.glob(os.path.join(mount_point, 'Users/*/Downloads')):
+                            for downloads_path in glob.glob(os.path.join(users_dir, '*/Downloads')):
                                 user_path = os.path.dirname(downloads_path)
                                 if user_path not in windows_users_extra_dirs and not os.path.basename(user_path).startswith('defaultuser') and os.path.exists(downloads_path):
                                     users_has_downloads = True
                                     if os.path.islink(downloads_path):
-                                        dest_path = misc.set_dest_path(downloads_path)
+                                        dest_path = misc.set_var_dest_path(downloads_path, users_reparse_levels)
                                         if dest_path:
                                             letter_src_dest.append([misc.get_junction_target(downloads_path), dest_path])
                                     else:
                                         is_downloads_part = True
-                            for appdata_path in glob.glob(os.path.join(mount_point, 'Users/*/AppData')):
+                            for appdata_path in glob.glob(os.path.join(users_dir, '*/AppData')):
                                 user_path = os.path.dirname(appdata_path)
                                 if user_path not in windows_users_extra_dirs and not os.path.basename(user_path).startswith('defaultuser') and os.path.exists(appdata_path):
                                     if os.path.islink(appdata_path):
-                                        dest_path = misc.set_dest_path(appdata_path)
+                                        dest_path = misc.set_var_dest_path(appdata_path, users_reparse_levels)
                                         if dest_path:
                                             letter_src_dest.append([misc.get_junction_target(appdata_path), dest_path])
                                     else:
                                         is_appdata_part = True
-                            if os.path.exists(public_path):
-                                if os.path.islink(public_path):
-                                    dest_path = misc.set_dest_path(public_path)
+                            if os.path.exists(users_public_path):
+                                if os.path.islink(users_public_path):
+                                    dest_path = misc.set_var_dest_path(users_public_path, users_reparse_levels)
                                     if dest_path:
-                                        letter_src_dest.append([misc.get_junction_target(public_path), dest_path])
+                                        letter_src_dest.append([misc.get_junction_target(users_public_path), dest_path])
                                 else:
                                     is_public_part = True
                             if is_documents_part or is_pictures_part or is_desktop_part or is_videos_part or is_music_part or is_downloads_part or is_appdata_part or is_public_part or (users_has_documents and users_has_pictures and users_has_desktop and users_has_videos and users_has_music and users_has_downloads):
                                 if not user_dirs:
-                                    user_dirs = misc.set_user_dirs(source_dir)
-                                main_dirs = misc.set_main_dirs(source_dir, user_dirs)
-                                if main_dirs:
-                                    if os.path.exists(public_path) and os.path.isdir(public_path) and os.listdir(public_path):
-                                        main_dirs.append('Public')
-                                    install_parts.append([partition[0], main_dirs]) 
-                                # Check used space of partition
-                                source_size = misc.get_used(source_dir)
-                                if source_size:
-                                    install_used.append(source_size)
-                            if users_part_needed and users_has_documents and users_has_pictures and users_has_desktop and users_has_videos and users_has_music and users_has_downloads:
+                                    user_dirs = misc.set_user_dirs(users_dir)
+                                link_list, link_size = misc.set_var_link_list(users_dir, user_dirs, users_reparse_levels)
+                                if link_list and link_size:
+                                    if os.path.exists(users_public_path) and os.path.isdir(users_public_path) and os.listdir(users_public_path):
+                                        source_size = misc.get_size_root(users_public_path)
+                                        if source_size:
+                                            link_list.append([os.path.join(users_reparse, 'Public'), 'Public', source_size])
+                                            link_size += source_size
+                                    install_links.append([partition[0], link_list, link_size]) 
+                                    install_used.append(link_size)
+                            if users_has_documents and users_has_pictures and users_has_desktop and users_has_videos and users_has_music and users_has_downloads:
                                 syslog.syslog(f"JACKJUMP: Install drive has separate Users partition {partition[0]}.")
                                 users_part_needed = False
-                            else:
-                                if documents_part_needed and is_documents_part:
-                                    syslog.syslog(f"JACKJUMP: Install drive has separate Documents partition {partition[0]}.")
-                                    documents_part_needed = False
-                                if pictures_part_needed and is_pictures_part:
-                                    syslog.syslog(f"JACKJUMP: Install drive has separate Pictures partition {partition[0]}.")
-                                    pictures_part_needed = False
-                                if desktop_part_needed and is_desktop_part:
-                                    syslog.syslog(f"JACKJUMP: Install drive has separate Desktop partition {partition[0]}.")
-                                    desktop_part_needed = False
-                                if videos_part_needed and is_videos_part:
-                                    syslog.syslog(f"JACKJUMP: Install drive has separate Videos partition {partition[0]}.")
-                                    videos_part_needed = False
-                                if music_part_needed and is_music_part:
-                                    syslog.syslog(f"JACKJUMP: Install drive has separate Music partition {partition[0]}.")
-                                    music_part_needed = False
-                                if downloads_part_needed and is_downloads_part:
-                                    syslog.syslog(f"JACKJUMP: Install drive has separate Downloads partition {partition[0]}.")
-                                    downloads_part_needed = False
-                                if appdata_part_needed and is_appdata_part:
-                                    syslog.syslog(f"JACKJUMP: Install drive has separate AppData partition {partition[0]}.")
-                                    appdata_part_needed = False
-                                if public_part_needed and is_public_part:
-                                    syslog.syslog(f"JACKJUMP: Install drive has separate Public partition {partition[0]}.")
-                                    public_part_needed = False
                             if letter_src_dest:
-                                from collections import Counter
-                                letter_list = []
                                 total_size = 0 
                                 link_list = []
                                 for letter, src, dest in letter_src_dest:
                                     if letter and src and dest:
                                         src_path = os.path.join(mount_point, src)
+                                        if users_reparse_letter and letter != users_reparse_letter:
+                                            syslog.syslog(f"JACKJUMP: Users Reparse Letter {users_reparse_letter} not same as the letter of this link {letter}, continuing...")
+                                            continue
                                         if os.path.exists(src_path) and os.path.isdir(src_path) and os.listdir(src_path):
-                                            letter_list.append(letter)
                                             dirs = src_path.strip(os.sep).split(os.sep) 
                                             if len(dirs) >= 3:
                                                 dirs_root = os.sep.join(dirs[2:])
-                                                link_list.append([dirs_root, dest])
-                                                exclude_dirs.append(dirs_root)
-                                                source_size = misc.get_used(src_path)
+                                                source_size = misc.get_size_root(src_path)
                                                 if source_size:
+                                                    link_list.append([dirs_root, dest, source_size])
                                                     total_size += source_size
-                                                    syslog.syslog(f"JACKJUMP: Source directory {src_path} on {partition[0]} has {source_size} used space.")
+                                                    syslog.syslog(f"JACKJUMP: Source directory {src_path} on {partition[0]} has {source_size} bytes.")
                                 if link_list:
-                                    install_links.append([partition[0], link_list])
                                     if total_size > 0:
+                                        install_links.append([partition[0], link_list, total_size])
                                         install_used.append(total_size)
-                                if letter_list:
-                                    counter = Counter(letter_list)
-                                    most_common_letter = counter.most_common(1)
-                                    ntfs_dev_letter.append([partition[0], most_common_letter]) 
-                                    syslog.syslog(f"JACKJUMP: Partition info {ntfs_dev_letter}.")
+                            if users_reparse_letter:
+                                ntfs_dev_letter.append([partition[0], users_reparse_letter]) 
+                                syslog.syslog(f"JACKJUMP: Partition info {ntfs_dev_letter} (from reparse).")
                         elif letter_src_dest:
                             from collections import Counter
                             letter_list = []
                             total_size = 0 
                             link_list = []
+                            same_letter_dirs = []
                             for letter, src, dest in letter_src_dest:
                                 if letter and src and dest:
                                     src_path = os.path.join(mount_point, src)
@@ -931,24 +927,42 @@ class PageGtk(PageBase):
                                         dirs = src_path.strip(os.sep).split(os.sep) 
                                         if len(dirs) >= 3:
                                             dirs_root = os.sep.join(dirs[2:])
-                                            link_list.append([dirs_root, dest])
-                                            exclude_dirs.append(dirs_root)
-                                            source_size = misc.get_used(src_path)
+                                            source_size = misc.get_size_root(src_path)
                                             if source_size:
+                                                link_list.append([dirs_root, dest, source_size])
+                                                same_letter_dirs.append([letter, dirs_root, dest, source_size])
                                                 total_size += source_size
-                                                syslog.syslog(f"JACKJUMP: Source directory {src_path} on {partition[0]} has {source_size} used space.")
-                            if link_list:
-                                install_links.append([partition[0], link_list])
-                                if total_size > 0:
-                                    install_used.append(total_size)
+                                                syslog.syslog(f"JACKJUMP: Source directory {src_path} on {partition[0]} has {source_size} bytes.")
                             if letter_list:
                                 counter = Counter(letter_list)
-                                most_common_letter = counter.most_common(1)
-                                ntfs_dev_letter.append([partition[0], most_common_letter]) 
-                                syslog.syslog(f"JACKJUMP: Partition info {ntfs_dev_letter}.")
+                                if len(set(counter.values())) == 1 and len(counter) > 1:
+                                    syslog.syslog(f"JACKJUMP: All install letters have same frequency: {letter_list}.")
+                                else:
+                                    most_common_letter = counter.most_common(1)
+                                    ntfs_dev_letter.append([partition[0], most_common_letter]) 
+                                    syslog.syslog(f"JACKJUMP: Partition info {ntfs_dev_letter}.")
+                            if link_list:
+                                if most_common_letter and same_letter_dirs:
+                                    for xletter, xdir, xdest, xsize in same_letter_dirs:
+                                        if xletter and xletter != most_common_letter:
+                                            if [xdir, xdest, xsize] in link_list:
+                                                link_list.remove([xdir, xdest, xsize])
+
+                                                total_size -= xsize
+                                                syslog.syslog(f"JACKJUMP: Removed {xletter} entry: {xdir}, {xdest}, {xsize}.")
+                                if total_size > 0:
+                                    install_links.append([partition[0], link_list, total_size])
+                                    install_used.append(total_size)
                     misc.execute_root('umount', mount_point)
             misc.execute_root('umount', mount_point)
             misc.execute_root('rmdir', '--ignore-fail-on-non-empty', mount_point)
+            if install_free:
+                if install_free > install_base:
+                    ten_percent = install_free * 0.1 
+                    if install_free > (install_base + ten_percent):
+                        install_free = install_free - install_base - ten_percent
+                    else:
+                        install_free = install_free - install_base
             if install_has_bitlocker:
                 syslog.syslog(f"JACKJUMP: An error occurred because BitLocker encryption was not disabled on install drive {install_device} beforehand. Please decrypt it before proceeding.")
                 #title = ('Install drive is BitLocker encrypted.')
@@ -983,6 +997,7 @@ class PageGtk(PageBase):
             # Check for jackjump directory (used previously as copy drive)
             preinstall_copied = False
             source_dir = os.path.join(mount_point, 'Users')
+            public_path = os.path.join(source_dir, 'Public')
             jackjump_path = os.path.join(mount_point, 'jackjump')
             # PartedServer 2: size 4: fs 5: dev
             # disk_layout  1: size 3: fs 0: dev
@@ -992,6 +1007,11 @@ class PageGtk(PageBase):
                     break
                 elif (partition[3] == 'ntfs' or partition[3] == 'unknown') and partition[1] > 19777216:
                     if misc.execute_root('mount', '-t', 'ntfs-3g', '-o', 'ro', partition[0], mount_point):
+                        copy_has_reparse = False
+                        if users_reparse:
+                            users_dir = os.path.join(mount_point, users_reparse)
+                            copy_has_reparse = os.path.exists(users_dir)
+                            users_public_path = os.path.join(users_dir, 'Public')
                         copy_has_windows = os.path.exists(os.path.join(mount_point, 'Windows'))
                         copy_has_users = os.path.exists(source_dir)
                         if copy_has_windows and copy_has_users:
@@ -999,12 +1019,132 @@ class PageGtk(PageBase):
                                 self.extra_options['copy_has_windows'] = copy_has_windows
                                 copy_fs_dev.append(partition[3])
                                 copy_fs_dev.append(partition[0])
-                                #user_dirs = misc.set_user_dirs(source_dir)
-                                #main_dirs = misc.set_main_dirs(source_dir, user_dirs)
-                                #copy_parts.append([partition[0], main_dirs]) 
                                 syslog.syslog(f"JACKJUMP: Copy drive {partition[0]} has Windows.")
                                 copy_mounted = True
-                                break
+                                windows_users_extra_dirs = [
+                                    os.path.join(mount_point, 'Users/Public'),
+                                    os.path.join(mount_point, 'Users/Default'),
+                                    os.path.join(mount_point, 'Users/Default User'),
+                                    os.path.join(mount_point, 'Users/All Users')
+                                ]
+                                if os.path.islink(source_dir):
+                                    second_value = [misc.get_junction_target(source_dir)]
+                                    if second_value:
+                                        if second_value[0]:
+                                            users_reparse_letter = second_value[0]
+                                        if second_value[1]:
+                                            users_reparse = second_value[1]
+                                            users_reparse_levels = misc.count_levels(users_reparse)
+                                        syslog.syslog(f"JACKJUMP: Users directory is reparse point: {second_value[1]}.")
+                                else: 
+                                    users_part_needed = False
+                                    if not user_dirs:
+                                        user_dirs = misc.set_user_dirs(source_dir)
+                                    main_dirs, main_size = misc.set_main_dirs(source_dir, user_dirs)
+                                    if main_dirs and main_size:
+                                        if os.path.exists(public_path) and os.path.isdir(public_path) and os.listdir(public_path):
+                                            source_size = misc.get_size_root(public_path)
+                                            if source_size:
+                                                main_dirs.append(['Public', source_size])
+                                                main_size += source_size
+                                        copy_parts.append([partition[0], main_dirs, main_size]) 
+                                        copy_used.append(main_size)
+                                if not users_part_needed:
+                                    import glob
+                                    for documents_path in glob.glob(os.path.join(mount_point, 'Users/*/Documents')):
+                                        user_path = os.path.dirname(documents_path)
+                                        if user_path not in windows_users_extra_dirs and not os.path.basename(user_path).startswith('defaultuser') and os.path.exists(documents_path):
+                                            if os.path.islink(documents_path):
+                                                dest_path = misc.set_dest_path(documents_path)
+                                                if dest_path:
+                                                    letter_src_dest.append([misc.get_junction_target(documents_path), dest_path])
+                                            else:
+                                                documents_part_needed = False
+                                    for pictures_path in glob.glob(os.path.join(mount_point, 'Users/*/Pictures')):
+                                        user_path = os.path.dirname(pictures_path)
+                                        if user_path not in windows_users_extra_dirs and not os.path.basename(user_path).startswith('defaultuser') and os.path.exists(pictures_path):
+                                            if os.path.islink(pictures_path):
+                                                dest_path = misc.set_dest_path(pictures_path)
+                                                if dest_path:
+                                                    letter_src_dest.append([misc.get_junction_target(pictures_path), dest_path])
+                                            else:
+                                                pictures_part_needed = False
+                                    for desktop_path in glob.glob(os.path.join(mount_point, 'Users/*/Desktop')):
+                                        user_path = os.path.dirname(desktop_path)
+                                        if user_path not in windows_users_extra_dirs and not os.path.basename(user_path).startswith('defaultuser') and os.path.exists(desktop_path):
+                                            if os.path.islink(desktop_path):
+                                                dest_path = misc.set_dest_path(desktop_path)
+                                                if dest_path:
+                                                    letter_src_dest.append([misc.get_junction_target(desktop_path), dest_path])
+                                            else:
+                                                desktop_part_needed = False
+                                    for videos_path in glob.glob(os.path.join(mount_point, 'Users/*/Videos')):
+                                        user_path = os.path.dirname(videos_path)
+                                        if user_path not in windows_users_extra_dirs and not os.path.basename(user_path).startswith('defaultuser') and os.path.exists(videos_path):
+                                            if os.path.islink(videos_path):
+                                                dest_path = misc.set_dest_path(videos_path)
+                                                if dest_path:
+                                                    letter_src_dest.append([misc.get_junction_target(videos_path), dest_path])
+                                            else:
+                                                videos_part_needed = False
+                                    for music_path in glob.glob(os.path.join(mount_point, 'Users/*/Music')):
+                                        user_path = os.path.dirname(music_path)
+                                        if user_path not in windows_users_extra_dirs and not os.path.basename(user_path).startswith('defaultuser') and os.path.exists(music_path):
+                                            if os.path.islink(music_path):
+                                                dest_path = misc.set_dest_path(music_path)
+                                                if dest_path:
+                                                    letter_src_dest.append([misc.get_junction_target(music_path), dest_path])
+                                            else:
+                                                music_part_needed = False
+                                    for downloads_path in glob.glob(os.path.join(mount_point, 'Users/*/Downloads')):
+                                        user_path = os.path.dirname(downloads_path)
+                                        if user_path not in windows_users_extra_dirs and not os.path.basename(user_path).startswith('defaultuser') and os.path.exists(downloads_path):
+                                            if os.path.islink(downloads_path):
+                                                dest_path = misc.set_dest_path(downloads_path)
+                                                if dest_path:
+                                                    letter_src_dest.append([misc.get_junction_target(downloads_path), dest_path])
+                                            else:
+                                                downloads_part_needed = False
+                                    for appdata_path in glob.glob(os.path.join(mount_point, 'Users/*/AppData')):
+                                        user_path = os.path.dirname(appdata_path)
+                                        if user_path not in windows_users_extra_dirs and not os.path.basename(user_path).startswith('defaultuser') and os.path.exists(appdata_path):
+                                            if os.path.islink(appdata_path):
+                                                dest_path = misc.set_dest_path(appdata_path)
+                                                if dest_path:
+                                                    letter_src_dest.append([misc.get_junction_target(appdata_path), dest_path])
+                                            else:
+                                               appdata_part_needed = False
+                                    if os.path.exists(public_path):
+                                        if os.path.islink(public_path):
+                                            dest_path = misc.set_dest_path(public_path)
+                                            if dest_path:
+                                                letter_src_dest.append([misc.get_junction_target(public_path), dest_path])
+                                        else:
+                                            public_part_needed = False
+                                if not users_part_needed and not documents_part_needed and not pictures_part_needed and not desktop_part_needed and not videos_part_needed and not music_part_needed and not downloads_part_needed and not appdata_part_needed and not public_part_needed:
+                                    syslog.syslog("JACKJUMP: No other shared partitions needed.")
+                                if letter_src_dest:
+                                    total_size = 0 
+                                    link_list = []
+                                    for letter, src, dest in letter_src_dest:
+                                        if not letter and src and dest:
+                                            src_path = os.path.join(mount_point, src)
+                                            if os.path.exists(src_path) and os.path.isdir(src_path) and os.listdir(src_path):
+                                                dirs = src_path.strip(os.sep).split(os.sep) 
+                                                if len(dirs) >= 3:
+                                                    dirs_root = os.sep.join(dirs[2:])
+                                                    source_size = misc.get_size_root(src_path)
+                                                    if source_size:
+                                                        link_list.append([dirs_root, dest, source_size])
+                                                        total_size += source_size
+                                                        syslog.syslog(f"JACKJUMP: Source directory {src_path} on {partition[0]} has {source_size} used space.")
+                                    
+                                    if link_list:
+                                        if total_size > 0:
+                                            copy_links.append([partition[0], link_list, total_size])
+                                            copy_used.append(total_size)
+                                ntfs_dev_letter.append([partition[0], 'C:']) 
+                                syslog.syslog(f"JACKJUMP: Partition info {ntfs_dev_letter}.")
                             else:
                                 syslog.syslog(f"JACKJUMP: The install drive {install_device} and copy drive {partition[0]} both have Windows installed. That is not ok. Something could go horribly wrong. If you're ready to lose everything on one then format it and start over. Otherwise, select another drive.")
                                 #title = ('Please select a valid install drive')
@@ -1013,6 +1153,183 @@ class PageGtk(PageBase):
                                 misc.execute_root('umount', mount_point)
                                 misc.execute_root('rmdir', '--ignore-fail-on-non-empty', mount_point)
                                 return
+                        elif copy_has_reparse: 
+                            windows_users_extra_dirs = [
+                                os.path.join(users_dir, 'Public'),
+                                os.path.join(users_dir, 'Default'),
+                                os.path.join(users_dir, 'Default User'),
+                                os.path.join(users_dir, 'All Users')
+                            ]
+                            is_documents_part = False
+                            is_pictures_part = False
+                            is_desktop_part = False
+                            is_videos_part = False
+                            is_music_part = False
+                            is_downloads_part = False
+                            is_appdata_part = False
+                            is_public_part = False
+                            users_has_documents = False
+                            users_has_pictures = False
+                            users_has_desktop = False
+                            users_has_videos = False
+                            users_has_music = False
+                            users_has_downloads = False
+                            import glob
+                            for documents_path in glob.glob(os.path.join(users_dir, '*/Documents')):
+                                user_path = os.path.dirname(documents_path)
+                                if user_path not in windows_users_extra_dirs and not os.path.basename(user_path).startswith('defaultuser') and os.path.exists(documents_path):
+                                    users_has_documents = True
+                                    if os.path.islink(documents_path):
+                                        dest_path = misc.set_var_dest_path(documents_path, users_reparse_levels)
+                                        if dest_path:
+                                            letter_src_dest.append([misc.get_junction_target(documents_path), dest_path])
+                                    else:
+                                        is_documents_part = True
+                            for pictures_path in glob.glob(os.path.join(users_dir, '*/Pictures')):
+                                user_path = os.path.dirname(pictures_path)
+                                if user_path not in windows_users_extra_dirs and not os.path.basename(user_path).startswith('defaultuser') and os.path.exists(pictures_path):
+                                    users_has_pictures = True
+                                    if os.path.islink(pictures_path):
+                                        dest_path = misc.set_var_dest_path(pictures_path, users_reparse_levels)
+                                        if dest_path:
+                                            letter_src_dest.append([misc.get_junction_target(pictures_path), dest_path])
+                                    else:
+                                        is_pictures_part = True
+                            for desktop_path in glob.glob(os.path.join(users_dir, '*/Desktop')):
+                                user_path = os.path.dirname(desktop_path)
+                                if user_path not in windows_users_extra_dirs and not os.path.basename(user_path).startswith('defaultuser') and os.path.exists(desktop_path):
+                                    users_has_desktop = True
+                                    if os.path.islink(desktop_path):
+                                        dest_path = misc.set_var_dest_path(desktop_path, users_reparse_levels)
+                                        if dest_path:
+                                            letter_src_dest.append([misc.get_junction_target(desktop_path), dest_path])
+                                    else:
+                                        is_desktop_part = True
+                            for videos_path in glob.glob(os.path.join(users_dir, '*/Videos')):
+                                user_path = os.path.dirname(videos_path)
+                                if user_path not in windows_users_extra_dirs and not os.path.basename(user_path).startswith('defaultuser') and os.path.exists(videos_path):
+                                    users_has_videos = True
+                                    if os.path.islink(videos_path):
+                                        dest_path = misc.set_var_dest_path(videos_path, users_reparse_levels)
+                                        if dest_path:
+                                            letter_src_dest.append([misc.get_junction_target(videos_path), dest_path])
+                                    else:
+                                        is_videos_part = True
+                            for music_path in glob.glob(os.path.join(users_dir, '*/Music')):
+                                user_path = os.path.dirname(music_path)
+                                if user_path not in windows_users_extra_dirs and not os.path.basename(user_path).startswith('defaultuser') and os.path.exists(music_path):
+                                    users_has_music = True
+                                    if os.path.islink(music_path):
+                                        dest_path = misc.set_var_dest_path(music_path, users_reparse_levels)
+                                        if dest_path:
+                                            letter_src_dest.append([misc.get_junction_target(music_path), dest_path])
+                                    else:
+                                        is_music_part = True
+                            for downloads_path in glob.glob(os.path.join(users_dir, '*/Downloads')):
+                                user_path = os.path.dirname(downloads_path)
+                                if user_path not in windows_users_extra_dirs and not os.path.basename(user_path).startswith('defaultuser') and os.path.exists(downloads_path):
+                                    users_has_downloads = True
+                                    if os.path.islink(downloads_path):
+                                        dest_path = misc.set_var_dest_path(downloads_path, users_reparse_levels)
+                                        if dest_path:
+                                            letter_src_dest.append([misc.get_junction_target(downloads_path), dest_path])
+                                    else:
+                                        is_downloads_part = True
+                            for appdata_path in glob.glob(os.path.join(users_dir, '*/AppData')):
+                                user_path = os.path.dirname(appdata_path)
+                                if user_path not in windows_users_extra_dirs and not os.path.basename(user_path).startswith('defaultuser') and os.path.exists(appdata_path):
+                                    if os.path.islink(appdata_path):
+                                        dest_path = misc.set_var_dest_path(appdata_path, users_reparse_levels)
+                                        if dest_path:
+                                            letter_src_dest.append([misc.get_junction_target(appdata_path), dest_path])
+                                    else:
+                                        is_appdata_part = True
+                            if os.path.exists(users_public_path):
+                                if os.path.islink(users_public_path):
+                                    dest_path = misc.set_var_dest_path(users_public_path, users_reparse_levels)
+                                    if dest_path:
+                                        letter_src_dest.append([misc.get_junction_target(users_public_path), dest_path])
+                                else:
+                                    is_public_part = True
+                            if is_documents_part or is_pictures_part or is_desktop_part or is_videos_part or is_music_part or is_downloads_part or is_appdata_part or is_public_part or (users_has_documents and users_has_pictures and users_has_desktop and users_has_videos and users_has_music and users_has_downloads):
+                                if not user_dirs:
+                                    user_dirs = misc.set_user_dirs(users_dir)
+                                link_list, link_size = misc.set_var_link_list(users_dir, user_dirs, users_reparse_levels)
+                                if link_list and link_size:
+                                    if os.path.exists(users_public_path) and os.path.isdir(users_public_path) and os.listdir(users_public_path):
+                                        source_size = misc.get_size_root(users_public_path)
+                                        if source_size:
+                                            link_list.append([os.path.join(users_reparse, 'Public'), 'Public', source_size])
+                                            link_size += source_size
+                                    copy_links.append([partition[0], link_list, link_size]) 
+                                    copy_used.append(link_size)
+                            if users_has_documents and users_has_pictures and users_has_desktop and users_has_videos and users_has_music and users_has_downloads:
+                                syslog.syslog(f"JACKJUMP: Copy drive has separate Users partition {partition[0]}.")
+                                users_part_needed = False
+                            if letter_src_dest:
+                                total_size = 0 
+                                link_list = []
+                                for letter, src, dest in letter_src_dest:
+                                    if letter and src and dest:
+                                        src_path = os.path.join(mount_point, src)
+                                        if users_reparse_letter and letter != users_reparse_letter:
+                                            syslog.syslog(f"JACKJUMP: Users Reparse Letter {users_reparse_letter} not same as the letter of this link {letter}, continuing...")
+                                            continue
+                                        if os.path.exists(src_path) and os.path.isdir(src_path) and os.listdir(src_path):
+                                            dirs = src_path.strip(os.sep).split(os.sep) 
+                                            if len(dirs) >= 3:
+                                                dirs_root = os.sep.join(dirs[2:])
+                                                source_size = misc.get_size_root(src_path)
+                                                if source_size:
+                                                    link_list.append([dirs_root, dest, source_size])
+                                                    total_size += source_size
+                                                    syslog.syslog(f"JACKJUMP: Source directory {src_path} on {partition[0]} has {source_size} bytes.")
+                                if link_list:
+                                    if total_size > 0:
+                                        copy_links.append([partition[0], link_list, total_size])
+                                        copy_used.append(total_size)
+                            if users_reparse_letter:
+                                ntfs_dev_letter.append([partition[0], users_reparse_letter]) 
+                                syslog.syslog(f"JACKJUMP: Partition info {ntfs_dev_letter} (from reparse).")
+                        elif not install_has_windows and letter_src_dest:
+                            from collections import Counter
+                            letter_list = []
+                            total_size = 0 
+                            link_list = []
+                            same_letter_dirs = []
+                            for letter, src, dest in letter_src_dest:
+                                if letter and src and dest:
+                                    src_path = os.path.join(mount_point, src)
+                                    if os.path.exists(src_path) and os.path.isdir(src_path) and os.listdir(src_path):
+                                        letter_list.append(letter)
+                                        dirs = src_path.strip(os.sep).split(os.sep) 
+                                        if len(dirs) >= 3:
+                                            dirs_root = os.sep.join(dirs[2:])
+                                            source_size = misc.get_size_root(src_path)
+                                            if source_size:
+                                                link_list.append([dirs_root, dest, source_size])
+                                                same_letter_dirs.append([letter, dirs_root, dest, source_size])
+                                                total_size += source_size
+                                                syslog.syslog(f"JACKJUMP: Source directory {src_path} on {partition[0]} has {source_size} bytes.")
+                            if letter_list:
+                                counter = Counter(letter_list)
+                                if len(set(counter.values())) == 1 and len(counter) > 1:
+                                    syslog.syslog(f"JACKJUMP: All copy letters have same frequency: {letter_list}.")
+                                else:
+                                    most_common_letter = counter.most_common(1)
+                                    ntfs_dev_letter.append([partition[0], most_common_letter]) 
+                                    syslog.syslog(f"JACKJUMP: Partition info {ntfs_dev_letter}.")
+                            if link_list:
+                                if most_common_letter and same_letter_dirs:
+                                    for xletter, xdir, xdest, xsize in same_letter_dirs:
+                                        if xletter and xletter != most_common_letter:
+                                            if [xdir, xdest, xsize] in link_list:
+                                                link_list.remove([xdir, xdest, xsize])
+                                                total_size -= xsize
+                                                syslog.syslog(f"JACKJUMP: Removed {xletter} entry: {xdir}, {xdest}, {xsize}.")
+                                if total_size > 0:
+                                    copy_links.append([partition[0], link_list, total_size])
+                                    copy_used.append(total_size)
                         else:
                             if os.path.exists(jackjump_path):
                                 preinstall_copied = True
@@ -1094,15 +1411,10 @@ class PageGtk(PageBase):
             no_copy_drive = 'ubiquity/text/no_copy_drive'
             self.extra_options['jackjump'] = no_copy_drive
             return
-        if not copy_fs_dev:
-            copy_fs_dev.append('zfs')
-            copy_fs_dev.append('/not/there')
-        self.extra_options['copy_fs_dev'] = copy_fs_dev
-        if not copy_parts:
-            copy_parts.append('/not/there')
-        self.extra_options['copy_parts'] = copy_parts
-        syslog.syslog(f"JACKJUMP: Copy_fs_dev {copy_fs_dev}.")
-        syslog.syslog(f"JACKJUMP: Copy_parts {copy_parts}.")
+        if install_has_windows and (not install_parts and not install_links and not other_links):
+            syslog.syslog("JACKJUMP: Install drive has windows but for some reason no directories are set to be copied.")
+        if copy_has_windows and (not copy_parts and not copy_links and not other_links):
+            syslog.syslog("JACKJUMP: Copy drive has windows but for some reason no directories are set to be copied.")
 
         # Part 1 & 2 ultimatum: Ensure install drive or copy drive has Windows
         if not install_has_windows and not copy_has_windows:
@@ -1112,10 +1424,239 @@ class PageGtk(PageBase):
             self.extra_options['jackjump'] = no_windows
             return
 
+        # Part 1 & 2 accessories: other drives used by Windows
+        if install_disk and copy_disk and (users_part_needed or documents_part_needed or pictures_part_needed or desktop_part_needed or videos_part_needed or music_part_needed or downloads_part_needed or appdata_part_needed or public_part_needed):
+            mount_point = '/mnt/other_windows'
+            if not os.path.exists(mount_point):
+                misc.execute_root('mkdir', '-p', mount_point)
+            if install_used:
+                other_free = install_free - sum(install_used)
+            elif copy_used:
+                other_free = install_free - sum(copy_used)
+            # PartedServer 2: size 4: fs 5: dev
+            # disk_layout  1: size 3: fs 0: dev
+            parted = parted_server.PartedServer()
+            for disk in parted.disks():
+                if disk == install_disk:
+                    continue
+                elif disk == copy_disk:
+                    continue
+                for partition in self.disk_layout[disk]:
+                    if (partition[3] == 'ntfs' or partition[3] == 'unknown'):
+                        if misc.execute_root('mount', '-t', 'ntfs-3g', '-o', 'ro', partition[0], mount_point):
+
+                            other_has_reparse = False
+                            if users_reparse:
+                                users_dir = os.path.join(mount_point, users_reparse)
+                                other_has_reparse = os.path.exists(users_dir)
+                                users_public_path = os.path.join(users_dir, 'Public')
+                            windows_users_extra_dirs = [
+                                os.path.join(users_dir, 'Public'),
+                                os.path.join(users_dir, 'Default'),
+                                os.path.join(users_dir, 'Default User'),
+                                os.path.join(users_dir, 'All Users')
+                            ]
+                            if other_has_reparse: 
+                                is_documents_part = False
+                                is_pictures_part = False
+                                is_desktop_part = False
+                                is_videos_part = False
+                                is_music_part = False
+                                is_downloads_part = False
+                                is_appdata_part = False
+                                is_public_part = False
+                                users_has_documents = False
+                                users_has_pictures = False
+                                users_has_desktop = False
+                                users_has_videos = False
+                                users_has_music = False
+                                users_has_downloads = False
+                                import glob
+                                for documents_path in glob.glob(os.path.join(users_dir, '*/Documents')):
+                                    user_path = os.path.dirname(documents_path)
+                                    if user_path not in windows_users_extra_dirs and not os.path.basename(user_path).startswith('defaultuser') and os.path.exists(documents_path):
+                                        users_has_documents = True
+                                        if os.path.islink(documents_path):
+                                            dest_path = misc.set_var_dest_path(documents_path, users_reparse_levels)
+                                            if dest_path:
+                                                letter_src_dest.append([misc.get_junction_target(documents_path), dest_path])
+                                        else:
+                                            is_documents_part = True
+                                for pictures_path in glob.glob(os.path.join(users_dir, '*/Pictures')):
+                                    user_path = os.path.dirname(pictures_path)
+                                    if user_path not in windows_users_extra_dirs and not os.path.basename(user_path).startswith('defaultuser') and os.path.exists(pictures_path):
+                                        users_has_pictures = True
+                                        if os.path.islink(pictures_path):
+                                            dest_path = misc.set_var_dest_path(pictures_path, users_reparse_levels)
+                                            if dest_path:
+                                                letter_src_dest.append([misc.get_junction_target(pictures_path), dest_path])
+                                        else:
+                                            is_pictures_part = True
+                                for desktop_path in glob.glob(os.path.join(users_dir, '*/Desktop')):
+                                    user_path = os.path.dirname(desktop_path)
+                                    if user_path not in windows_users_extra_dirs and not os.path.basename(user_path).startswith('defaultuser') and os.path.exists(desktop_path):
+                                        users_has_desktop = True
+                                        if os.path.islink(desktop_path):
+                                            dest_path = misc.set_var_dest_path(desktop_path, users_reparse_levels)
+                                            if dest_path:
+                                                letter_src_dest.append([misc.get_junction_target(desktop_path), dest_path])
+                                        else:
+                                            is_desktop_part = True
+                                for videos_path in glob.glob(os.path.join(users_dir, '*/Videos')):
+                                    user_path = os.path.dirname(videos_path)
+                                    if user_path not in windows_users_extra_dirs and not os.path.basename(user_path).startswith('defaultuser') and os.path.exists(videos_path):
+                                        users_has_videos = True
+                                        if os.path.islink(videos_path):
+                                            dest_path = misc.set_var_dest_path(videos_path, users_reparse_levels)
+                                            if dest_path:
+                                                letter_src_dest.append([misc.get_junction_target(videos_path), dest_path])
+                                        else:
+                                            is_videos_part = True
+                                for music_path in glob.glob(os.path.join(users_dir, '*/Music')):
+                                    user_path = os.path.dirname(music_path)
+                                    if user_path not in windows_users_extra_dirs and not os.path.basename(user_path).startswith('defaultuser') and os.path.exists(music_path):
+                                        users_has_music = True
+                                        if os.path.islink(music_path):
+                                            dest_path = misc.set_var_dest_path(music_path, users_reparse_levels)
+                                            if dest_path:
+                                                letter_src_dest.append([misc.get_junction_target(music_path), dest_path])
+                                        else:
+                                            is_music_part = True
+                                for downloads_path in glob.glob(os.path.join(users_dir, '*/Downloads')):
+                                    user_path = os.path.dirname(downloads_path)
+                                    if user_path not in windows_users_extra_dirs and not os.path.basename(user_path).startswith('defaultuser') and os.path.exists(downloads_path):
+                                        users_has_downloads = True
+                                        if os.path.islink(downloads_path):
+                                            dest_path = misc.set_var_dest_path(downloads_path, users_reparse_levels)
+                                            if dest_path:
+                                                letter_src_dest.append([misc.get_junction_target(downloads_path), dest_path])
+                                        else:
+                                            is_downloads_part = True
+                                for appdata_path in glob.glob(os.path.join(users_dir, '*/AppData')):
+                                    user_path = os.path.dirname(appdata_path)
+                                    if user_path not in windows_users_extra_dirs and not os.path.basename(user_path).startswith('defaultuser') and os.path.exists(appdata_path):
+                                        if os.path.islink(appdata_path):
+                                            dest_path = misc.set_var_dest_path(appdata_path, users_reparse_levels)
+                                            if dest_path:
+                                                letter_src_dest.append([misc.get_junction_target(appdata_path), dest_path])
+                                        else:
+                                            is_appdata_part = True
+                                if os.path.exists(users_public_path):
+                                    if os.path.islink(users_public_path):
+                                        dest_path = misc.set_var_dest_path(users_public_path, users_reparse_levels)
+                                        if dest_path:
+                                            letter_src_dest.append([misc.get_junction_target(users_public_path), dest_path])
+                                    else:
+                                        is_public_part = True
+                                if is_documents_part or is_pictures_part or is_desktop_part or is_videos_part or is_music_part or is_downloads_part or is_appdata_part or is_public_part or (users_has_documents and users_has_pictures and users_has_desktop and users_has_videos and users_has_music and users_has_downloads):
+                                    if not user_dirs:
+                                        user_dirs = misc.set_user_dirs(users_dir)
+                                    link_list, link_size = misc.set_var_link_list(users_dir, user_dirs, users_reparse_levels)
+                                    if link_list and link_size:
+                                        if os.path.exists(users_public_path) and os.path.isdir(users_public_path) and os.listdir(users_public_path):
+                                            source_size = misc.get_size_root(users_public_path)
+                                            if source_size:
+                                                link_list.append([os.path.join(users_reparse, 'Public'), 'Public', source_size])
+                                                link_size += source_size
+                                        install_links.append([partition[0], link_list, link_size]) 
+                                        install_used.append(link_size)
+                                        other_links.append([partition[0], link_list, link_size]) 
+                                        other_used.append(link_size)
+                                        other_free -= link_size
+                                if users_has_documents and users_has_pictures and users_has_desktop and users_has_videos and users_has_music and users_has_downloads:
+                                    syslog.syslog(f"JACKJUMP: Other drive has separate Users partition {partition[0]}.")
+                                    users_part_needed = False
+                                if letter_src_dest:
+                                    total_size = 0 
+                                    link_list = []
+                                    for letter, src, dest in letter_src_dest:
+                                        if letter and src and dest:
+                                            src_path = os.path.join(mount_point, src)
+                                            if users_reparse_letter and letter != users_reparse_letter:
+                                                syslog.syslog(f"JACKJUMP: Users Reparse Letter {users_reparse_letter} not same as the letter of this link {letter}, continuing...")
+                                                continue
+                                            if os.path.exists(src_path) and os.path.isdir(src_path) and os.listdir(src_path):
+                                                dirs = src_path.strip(os.sep).split(os.sep) 
+                                                if len(dirs) >= 3:
+                                                    dirs_root = os.sep.join(dirs[2:])
+                                                    source_size = misc.get_size_root(src_path)
+                                                    if source_size:
+                                                        other_free -= source_size
+                                                        link_list.append([dirs_root, dest, source_size])
+                                                        total_size += source_size
+                                                        syslog.syslog(f"JACKJUMP: Source directory {src_path} on {partition[0]} has {source_size} used space.")
+                                    if link_list:
+                                        if total_size > 0:
+                                            other_links.append([partition[0], link_list, total_size])
+                                            other_used.append(total_size)
+                                if users_reparse_letter:
+                                    ntfs_dev_letter.append([partition[0], users_reparse_letter]) 
+                                    syslog.syslog(f"JACKJUMP: Partition info {ntfs_dev_letter} (from reparse).")
+                            elif letter_src_dest:
+                                from collections import Counter
+                                letter_list = []
+                                total_size = 0 
+                                link_list = []
+                                same_letter_dirs = []
+                                for letter, src, dest in letter_src_dest:
+                                    if letter and src and dest:
+                                        src_path = os.path.join(mount_point, src)
+                                        if os.path.exists(src_path) and os.path.isdir(src_path) and os.listdir(src_path):
+                                            letter_list.append(letter)
+                                            dirs = src_path.strip(os.sep).split(os.sep) 
+                                            if len(dirs) >= 3:
+                                                dirs_root = os.sep.join(dirs[2:])
+                                                source_size = misc.get_size_root(src_path)
+                                                if source_size:
+                                                    other_free -= source_size
+                                                    link_list.append([dirs_root, dest, source_size])
+                                                    same_letter_dirs.append([letter, dirs_root, dest, source_size])
+                                                    total_size += source_size
+                                                    syslog.syslog(f"JACKJUMP: Source directory {src_path} on {partition[0]} has {source_size} used space.")
+                                if letter_list:
+                                    counter = Counter(letter_list)
+                                    if len(set(counter.values())) == 1 and len(counter) > 1:
+                                        syslog.syslog(f"JACKJUMP: All other letters have same frequency: {letter_list}.")
+                                    else:
+                                        most_common_letter = counter.most_common(1)
+                                        ntfs_dev_letter.append([partition[0], most_common_letter]) 
+                                        syslog.syslog(f"JACKJUMP: Partition info {ntfs_dev_letter}.")
+                                if link_list:
+                                    if most_common_letter and same_letter_dirs:
+                                        for xletter, xdir, xdest, xsize in same_letter_dirs:
+                                            if xletter and xletter != most_common_letter:
+                                                if [xdir, xdest, xsize] in link_list:
+                                                    link_list.remove([xdir, xdest, xsize])
+                                                    total_size -= xsize
+                                                    syslog.syslog(f"JACKJUMP: Removed {xletter} entry: {xdir}, {xdest}, {xsize}.")
+                                    if total_size > 0:
+                                        other_links.append([partition[0], link_list, total_size])
+                                        other_used.append(total_size)
+                        misc.execute_root('umount', mount_point)
+                misc.execute_root('umount', mount_point)
+            misc.execute_root('umount', mount_point)
+            misc.execute_root('rmdir', '--ignore-fail-on-non-empty', mount_point)
+
+        if install_links:
+            install_links.sort(key=lambda x: x[2], reverse=True)
+        if other_links:
+            other_links.sort(key=lambda x: x[2])
+        self.extra_options['copy_fs_dev'] = copy_fs_dev
+        self.extra_options['copy_parts'] = copy_parts
+        self.extra_options['copy_links'] = copy_links
+        self.extra_options['other_links'] = other_links
+        syslog.syslog(f"JACKJUMP: Copy_fs_dev {copy_fs_dev}.")
+        syslog.syslog(f"JACKJUMP: Copy_parts {copy_parts}.")
         syslog.syslog(f"JACKJUMP: Users part needed {users_part_needed}.")
         syslog.syslog(f"JACKJUMP: Documents part needed {documents_part_needed}. Default is True.")
+        if users_part_needed:
+            syslog.syslog("JACKJUMP: The Users directory is not found. One of the hard drives you selected has Windows but across multiple hard drives. If it were another partition missing you could figure things out later but the Users partition is critical. Its absence is a deal breaker. This message is for Windows on install or copy drive with Users reparse point: no Users directory on other drives.")
+            #title = ('No Users directory on install drive')
+            no_users_dir = 'ubiquity/text/no_users_dir'
+            self.extra_options['jackjump'] = no_users_dir
+            return
         # Part 3: Copy user files and Windows data if install drive has Windows
-        if copy_device and install_parts and copy_fs_dev and install_has_windows:
+        if copy_device and copy_fs_dev and install_has_windows:
             use_compression = False
             if install_used and copy_free > 0:
                 # Check space to determine compression
@@ -1156,16 +1697,11 @@ class PageGtk(PageBase):
 
                 source_dir = os.path.join(mount_point, 'Users')
                 if os.path.exists(source_dir):
-                    for main_path in part[1]:
-                        source_path = os.path.join(source_dir, main_path) 
-                        dirs = source_path.strip(os.sep).split(os.sep) 
-                        if len(dirs) >= 3:
-                            dirs_root = os.sep.join(dirs[2:])
-                            if dirs_root in exclude_dirs:
-                                continue
+                    for main_path_size in part[1]:
+                        source_path = os.path.join(source_dir, main_path_size[0]) 
                         if os.path.exists(source_path):
-                            dest_path = os.path.join('jackjump/users', main_path)
-                            if not misc.copy_to_drive_root(source_path, copy_fs_dev, dest_path, db=None, was_compressed=use_compression):
+                            dest_path = os.path.join('jackjump/users', main_path_size[0])
+                            if not misc.copy_to_drive_root(source_path, copy_fs_dev, dest_path, main_path_size[1], db=None, was_compressed=use_compression):
                                 syslog.syslog(f"JACKJUMP: Failed to copy Windows user files from main path {source_path} to copy drive {copy_fs_dev[1]}. Installation cannot proceed.")
                                 #title = ('Copying user files failed.')
                                 no_user_files = 'ubiquity/text/no_user_files'
@@ -1195,11 +1731,11 @@ class PageGtk(PageBase):
                     return
 
                 if os.path.exists(mount_point):
-                    for src_path, dest_path in part[1]:
+                    for src_path, dst_path, src_size in part[1]:
                         source_path = os.path.join(mount_point, src_path) 
                         if os.path.exists(source_path):
-                            dest_path = os.path.join('jackjump/users', dest_path)
-                            if not misc.copy_to_drive_root(source_path, copy_fs_dev, dest_path, db=None, was_compressed=use_compression):
+                            dest_path = os.path.join('jackjump/users', dst_path)
+                            if not misc.copy_to_drive_root(source_path, copy_fs_dev, dest_path, src_size, db=None, was_compressed=use_compression):
                                 misc.execute_root('umount', mount_point)
                                 syslog.syslog(f"JACKJUMP: Failed to copy Windows user link files from main path {source_path} to copy drive {copy_fs_dev[1]}. Installation cannot proceed.")
                                 #title = ('Copying user files failed.')
@@ -4281,6 +4817,14 @@ class Page(plugin.Plugin):
                 copy_parts = self.extra_options.get('copy_parts')
                 import json
                 self.db.set('ubiquity/copy_parts', json.dumps(copy_parts))
+            if 'copy_links' in self.extra_options:
+                copy_links = self.extra_options.get('copy_links')
+                import json
+                self.db.set('ubiquity/copy_links', json.dumps(copy_links))
+            if 'other_links' in self.extra_options:
+                other_links = self.extra_options.get('other_links')
+                import json
+                self.db.set('ubiquity/other_links', json.dumps(other_links))
             if 'install_has_windows' in self.extra_options:
                 install_has_windows = self.extra_options.get('install_has_windows', False)
                 self.db.set('ubiquity/install_has_windows', 'true' if install_has_windows else 'false')

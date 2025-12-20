@@ -303,11 +303,13 @@ class Install(install_misc.InstallBase):
         self.db.progress('INFO', 'ubiquity/install/migrate_user_files')
         copy_fs_dev = misc.get_copy_fs_dev(self.db)
         copy_parts = misc.get_copy_parts(self.db)
+        copy_links = misc.get_copy_links(self.db)
+        other_links = misc.get_other_links(self.db)
         install_has_windows = self.db.get('ubiquity/install_has_windows') == 'true'
         copy_has_windows = self.db.get('ubiquity/copy_has_windows') == 'true'
         copy_compressed = self.db.get('ubiquity/copy_compressed') == 'true'
 
-        if copy_fs_dev or copy_parts:
+        if copy_fs_dev or (copy_parts or copy_links or other_links):
             target_user = self.db.get('passwd/username')
             home_dir = os.path.join(self.target, 'home')
             jackjump_dir = os.path.join(self.target, 'var/lib/jackjump')
@@ -319,29 +321,57 @@ class Install(install_misc.InstallBase):
                 if misc.mount_with_retries(copy_fs_dev[0], copy_fs_dev[1], mount_point, self.db):
                     # Copy from copy drive's jackjump/users to /target/home
                     source_dir = os.path.join(mount_point, 'jackjump/users')
-                    if not misc.copy_to_drive(source_dir, None, home_dir, db=self.db, was_compressed=copy_compressed):
+                    if not misc.copy_to_drive(source_dir, None, home_dir, 333, db=self.db, was_compressed=copy_compressed):
                         self.db.input('critical', 'ubiquity/install/copy_user_files_failed')
                         self.db.go()
                         raise install_misc.InstallStepError("Failed to copy backed-up Windows user files to /home")
+                    misc.execute('umount', mount_point)
+                    misc.execute('rmdir', '--ignore-fail-on-non-empty', mount_point)
                 else:
                     syslog.syslog(f"JACKJUMP: Failed to mount copy drive {copy_fs_dev[1]}. Ensure it is a valid drive with a supported filesystem.")
                     self.db.input('critical', 'ubiquity/install/mount_copy_drive')
                     self.db.go()
                     misc.execute('rmdir', '--ignore-fail-on-non-empty', mount_point)
-            elif copy_has_windows and copy_parts:
+            elif copy_has_windows and (copy_parts or copy_links or other_links):
                 # Copy directly from copy drive's Windows to /target/home
                 windows_mount = '/mnt/copy_windows'
                 if not os.path.exists(windows_mount):
                     misc.execute('mkdir', '-p', windows_mount)
                 for part in copy_parts:
-                    if misc.execute('mount', '-t', 'ntfs', '-o', 'ro', part[0], windows_mount):
+                    if misc.mount_with_retries('ntfs', part[0], windows_mount, self.db):
                         source_dir = os.path.join(windows_mount, 'Users')
                         if os.path.exists(source_dir):
-                            for main_path in part[1]:
-                                source_path = os.path.join(source_dir, main_path) 
+                            for main_path_size in part[1]:
+                                source_path = os.path.join(source_dir, main_path_size[0]) 
                                 if os.path.exists(source_path):
-                                    dest_path = os.path.join(home_dir, main_path)
-                                    if not misc.copy_to_drive(source_path, None, dest_path, db=self.db, was_compressed=False):
+                                    dest_path = os.path.join(home_dir, main_path_size[0])
+                                    if not misc.copy_to_drive(source_path, None, dest_path, main_path_size[1], db=self.db, was_compressed=False):
+                                        misc.execute('umount', windows_mount)
+                                        self.db.input('critical', 'ubiquity/install/return_user_files_failed')
+                                        self.db.go()
+                                        raise install_misc.InstallStepError("Failed to return Windows user files from copy drive to /home")
+                    misc.execute('umount', windows_mount)
+                for part in copy_links:
+                    if misc.mount_with_retries('ntfs', part[0], windows_mount, self.db):
+                        if os.path.exists(windows_mount):
+                            for src_path, dst_path, src_size in part[1]:
+                                source_path = os.path.join(windows_mount, src_path) 
+                                if os.path.exists(source_path):
+                                    dest_path = os.path.join(home_dir, dst_path)
+                                    if not misc.copy_to_drive(source_path, None, dest_path, src_size, db=self.db, was_compressed=False):
+                                        misc.execute('umount', windows_mount)
+                                        self.db.input('critical', 'ubiquity/install/return_user_files_failed')
+                                        self.db.go()
+                                        raise install_misc.InstallStepError("Failed to return Windows user files from copy drive to /home")
+                    misc.execute('umount', windows_mount)
+                for part in other_links:
+                    if misc.mount_with_retries('ntfs', part[0], windows_mount, self.db):
+                        if os.path.exists(windows_mount):
+                            for src_path, dst_path, src_size in part[1]:
+                                source_path = os.path.join(windows_mount, src_path) 
+                                if os.path.exists(source_path):
+                                    dest_path = os.path.join(home_dir, dst_path)
+                                    if not misc.copy_to_drive(source_path, None, dest_path, src_size, db=self.db, was_compressed=False):
                                         misc.execute('umount', windows_mount)
                                         self.db.input('critical', 'ubiquity/install/return_user_files_failed')
                                         self.db.go()
@@ -398,7 +428,7 @@ class Install(install_misc.InstallBase):
             for user_dir in os.listdir(home_dir):
                 user_path = os.path.join(home_dir, user_dir)
                 if os.path.exists(user_path) and os.path.isdir(user_path):
-                    if not misc.copy_to_drive(skel_dir, None, user_path, db=self.db, was_compressed=False):
+                    if not misc.copy_to_drive(skel_dir, None, user_path, 333, db=self.db, was_compressed=False):
                         syslog.syslog(syslog.LOG_WARNING, f"JACKJUMP: Failed to copy skel files for user {user_dir}.")
             for user_dir in os.listdir(home_dir):
                 user_path = os.path.join(home_dir, user_dir)
@@ -509,6 +539,12 @@ for user_dir in "$HOME_DIR"/*; do
         VALID_USERS+=("$user")
     fi
 done
+REMAINING_USERS=()
+for user in "${VALID_USERS[@]}"; do
+    if [ ! -f "/home/$user/.jackjump_config_done" ]; then
+        REMAINING_USERS+=("$user")
+    fi
+done
 
 # Prompt for username if not provided
 MAIN_FLAG="/home/$MAIN_USER/.jackjump_config_done"
@@ -516,7 +552,7 @@ if [ -z "$1" ]; then
     if [ ! -f "$MAIN_FLAG" ]; then
         TARGET_USER="$MAIN_USER"
     else
-        echo "Available users to configure: ${VALID_USERS[*]}"
+        echo "Available users to configure: ${REMAINING_USERS[*]}"
         while true; do
             read -r -p "Enter username to configure: " TARGET_USER
             [[ -n "$TARGET_USER" ]] && break
@@ -577,11 +613,11 @@ echo "Configuring desktop icons for $TARGET_USER..."
 DESKTOP_SRC="/home/$TARGET_USER/Desktop"
 if [ -d "$DESKTOP_SRC" ]; then
     sudo mkdir -p -m 755 "/home/$TARGET_USER/.jackjump/desktop_backup" || { echo "Warning: Failed to create desktop backup directory for $TARGET_USER, continuing..."; }
-    sudo cp -r "$DESKTOP_SRC"/* "/home/$TARGET_USER/.jackjump/desktop_backup/" || { echo "Warning: Failed to back up desktop for $TARGET_USER, continuing..."; }
-    sudo chown -R "$TARGET_USER:$TARGET_USER" "/home/$TARGET_USER/.jackjump" || { echo "Warning: Failed to chown desktop backup for $TARGET_USER, continuing..."; }
+    sudo cp -r "$DESKTOP_SRC"/* "/home/$TARGET_USER/.jackjump/desktop_backup/" 2>/dev/null || { echo "Warning: Failed to back up desktop for $TARGET_USER, continuing..."; }
+    sudo chown -R "$TARGET_USER:$TARGET_USER" "/home/$TARGET_USER/.jackjump" 2>/dev/null || { echo "Warning: Failed to chown desktop backup for $TARGET_USER, continuing..."; }
     for file in "$DESKTOP_SRC"/*.url; do
         if [ -f "$file" ]; then
-            URL=$(grep -i '^URL=' "$file" | cut -d= -f2- | tr -d '\r')
+            URL=$(grep -i '^URL=' "$file" | cut -d= -f2- | tr -d '\\r')
             if [ -n "$URL" ]; then
                 BASE_NAME=$(basename "$file" .url)
                 DESKTOP_FILE="$DESKTOP_SRC/$BASE_NAME.desktop"
@@ -627,23 +663,55 @@ fi
 # Set locale
 if [ "$TARGET_USER" != "$MAIN_USER" ]; then
     echo "Setting locale for $TARGET_USER..."
-    sudo -u "$TARGET_USER" -g "$TARGET_USER" -H bash -c '
-    read -r -p "Select locale (e.g. en_US, de_DE, fr_FR): " LOCALE
-    if [[ "$LOCALE" =~ ^[[:lower:]]{2}_[[:upper:]]{2}$ ]]; then
-        if ! locale -a | grep -qi "^${LOCALE}\."; then
-            sudo locale-gen "$LOCALE.UTF-8" || sudo localectl set-locale "$LOCALE.UTF-8" || { echo "Warning: Failed to generate locale requested, continuing..."; }
+    SYSTEM_LOCALE=$(grep '^LANG=' /etc/locale.conf | cut -d= -f2 | cut -d'.' -f1)   
+    if [ -z "$SYSTEM_LOCALE" ]; then
+        echo "(system locale: $SYSTEM_LOCALE)"
+    fi
+
+    # Temp file to pass LOCALE from target user to root
+    TEMP_LOCALE="/tmp/jackjump_locale_$TARGET_USER"
+    sudo rm -f "$TEMP_LOCALE" || true # Clean any old one
+
+    # Step 1: Prompt as target user and save LOCALE
+    sudo -u "$TARGET_USER" -g "$TARGET_USER" -H bash -c "
+        read -r -p 'Select locale (e.g. en_US, de_DE, fr_FR): ' LOCALE
+        if [[ \\"\$LOCALE\\" =~ ^[[:lower:]]{2}_[[:upper:]]{2}\$ ]]; then
+            echo \\"\$LOCALE\\" > '$TEMP_LOCALE'
+        else
+            echo 'Invalid format' > '$TEMP_LOCALE'
         fi
-        echo "export LANG=${LOCALE}.UTF-8" >> ~/.profile
-        if [[ ! "$LOCALE" =~ ^(en_US|en_GB|en_AU|en_CA)$ ]]; then
-            export LANG="$LOCALE.UTF-8"
-            echo "$LOCALE" > ~/.config/user-dirs.locale
-            xdg-user-dirs-update --force
+    " || { echo "Warning: Failed to prompt for locale for $TARGET_USER, continuing..."; }
+
+    # Read the result
+    if [[ -f "$TEMP_LOCALE" ]]; then
+        LOCALE=$(cat "$TEMP_LOCALE")
+        sudo rm -f "$TEMP_LOCALE" || true
+
+        if [[ "$LOCALE" == "Invalid format" ]]; then
+            echo "Invalid locale format entered for $TARGET_USER – skipping locale setup."
+        else
+            # Step 2: Generate locale as root (if needed)
+            if ! locale -a | grep -qi "^${LOCALE}\."; then
+                echo "Generating locale $LOCALE.UTF-8..."
+                sudo locale-gen "$LOCALE.UTF-8" || sudo localectl set-locale "LANG=$LOCALE.UTF-8" || {
+                    echo "Warning: Failed to generate locale $LOCALE, continuing..."
+                }
+            fi
+
+            # Step 3: Set user-specific files as target user
+            sudo -u "$TARGET_USER" -g "$TARGET_USER" -H env LANG="$LOCALE.UTF-8" bash -c "
+                echo 'export LANG=${LOCALE}.UTF-8' >> ~/.profile
+                if [[ ! \\"$LOCALE\\" =~ ^en_ ]]; then
+                    echo '$LOCALE' > ~/.config/user-dirs.locale
+                    xdg-user-dirs-update --force
+                fi
+            " || { echo "Warning: Failed to set user locale files for $TARGET_USER, continuing..."; }
         fi
     else
-        echo "Invalid or unsupported locale."
+        echo "Warning: No locale selected for $TARGET_USER, continuing..."
     fi
-    ' || { echo "Warning: Failed to set locale for $TARGET_USER, continuing..."; }
 fi
+
 LOCALE_FILE="/home/$TARGET_USER/.config/user-dirs.locale"
 if [ -f "$LOCALE_FILE" ]; then
     USER_LOCALE=$(cat "$LOCALE_FILE")
@@ -653,11 +721,35 @@ fi
 LANG_CODE="${USER_LOCALE%_*}"
 if [[ "$LANG_CODE" != "en" ]]; then
     CONFIG=".config/user-dirs.dirs"
-    eval "$(sudo -u "$TARGET_USER" -g "$TARGET_USER" -H awk -F'=' '
-    /^[[:space:]]*XDG_[A-Z_]*_DIR/ {
-        gsub(/"/, "", $2); gsub(/\$HOME/, ENVIRON["HOME"], $2);
-        printf "%s=\"%s\"\n", $1, $2
-    }' "/home/$TARGET_USER/$CONFIG")" || { echo "Warning: loading XDG vars failed."; }
+    if [ "$TARGET_USER" != "$MAIN_USER" ]; then
+        # Save original XDG variables
+        declare -A ORIGINAL_XDG
+        for var in XDG_DESKTOP_DIR XDG_DOWNLOAD_DIR XDG_TEMPLATES_DIR XDG_PUBLICSHARE_DIR XDG_DOCUMENTS_DIR XDG_MUSIC_DIR XDG_PICTURES_DIR XDG_VIDEOS_DIR; do
+            [[ -n "${!var:-}" ]] && ORIGINAL_XDG[$var]="${!var}"
+        done
+        # Restore them on exit
+        trap 'for var in "${!ORIGINAL_XDG[@]}"; do
+            if [[ -n "${ORIGINAL_XDG[$var]}" ]]; then
+                export "$var=${ORIGINAL_XDG[$var]}"
+            else
+                unset "$var" 2>/dev/null || true
+            fi
+        done' EXIT
+        # Load target user's XDG paths
+        if ! output=$(sudo -u "$TARGET_USER" -g "$TARGET_USER" -H awk -F'=' '
+            /^[[:space:]]*XDG_[A-Z_]*_DIR/ {
+                gsub(/"/, "", $2)
+                gsub(/\$HOME/, ENVIRON["HOME"], $2)
+                gsub(/^[ \\t]+|[ \\t]+$/, "", $2)
+                printf "%s=%s\\n", $1, $2
+            }' "/home/$TARGET_USER/$CONFIG" 2>/dev/null); then
+            echo "Warning: failed to read XDG config, continuing..." >&2
+        else
+            while IFS='=' read -r var value; do
+                export "$var=$value"
+            done <<< "$output"
+        fi
+    fi
     if [[ -n "$XDG_DESKTOP_DIR" && "$DESKTOP_SRC" != "$XDG_DESKTOP_DIR" && -d "$DESKTOP_SRC" && -d "$XDG_DESKTOP_DIR" && ! -L "$XDG_DESKTOP_DIR" ]]; then
         sudo -u "$TARGET_USER" -g "$TARGET_USER" -H rm -rf "$XDG_DESKTOP_DIR" || true
         sudo -u "$TARGET_USER" -g "$TARGET_USER" -H ln -s "$DESKTOP_SRC" "$XDG_DESKTOP_DIR" || true
@@ -751,7 +843,7 @@ if [ "$TARGET_USER" = "$MAIN_USER" ]; then
     if ! command -v google-chrome >/dev/null 2>&1; then
         echo "Adding Chrome repository..."
         sudo curl -fsSL https://dl.google.com/linux/linux_signing_key.pub | sudo gpg --dearmor -o /usr/share/keyrings/google-chrome.gpg >/dev/null || { echo "Warning: Failed to set up Chrome keyring, continuing..."; }
-        echo "deb [arch=amd64 signed-by=/usr/share/keyrings/google-chrome.gpg] http://dl.google.com/linux/chrome/deb/ stable main" | sudo tee /etc/apt/sources.list.d/google-chrome.list || { echo "Warning: Failed to add google-chrome.list to apt sources." >&2; }
+        echo "deb [arch=amd64 signed-by=/usr/share/keyrings/google-chrome.gpg] http://dl.google.com/linux/chrome/deb/ stable main" | sudo tee /etc/apt/sources.list.d/google-chrome.list >/dev/null || { echo "Warning: Failed to add google-chrome.list to apt sources." >&2; }
     fi
     if ! command -v microsoft-edge >/dev/null 2>&1; then
         echo "Adding Edge repository..."
@@ -801,7 +893,7 @@ for browser in "${BROWSERS[@]}"; do
         PKG_PID=$!
         sleep 33
         kill "$PKG_PID" || true
-        wait "$PKG_PID" || true
+        wait "$PKG_PID" 2>/dev/null || true
         pkg="${pkg%\-browser}"
         if [[ "$pkg" != "firefox" ]] && [[ "$pkg" != "vivaldi" ]] && [[ "$pkg" != "opera" ]]; then
             DEST_DEFAULT="$dest/Default"
@@ -832,14 +924,14 @@ for browser in "${BROWSERS[@]}"; do
         fi
         if [[ "$pkg" == "firefox" ]]; then
             installs_ini="$dest/installs.ini"
-            INSTALLS_PROFILE=$(awk -F= '/^\[.*\]$/,/^$/ {if (/^Default=/) {print $2; exit}}' "$installs_ini")
+            INSTALLS_PROFILE=$(sudo -u "$TARGET_USER" -g "$TARGET_USER" -H awk -F= '/^\[.*\]$/,/^$/ {if (/^Default=/) {print $2; exit}}' "$installs_ini")
             LINUX_PROFILE="$dest/$INSTALLS_PROFILE"
             BACKUP_DIR="/home/$TARGET_USER/.jackjump/$pkg-backup"
             sudo -u "$TARGET_USER" -g "$TARGET_USER" -H mkdir -p -m 700 "$BACKUP_DIR" 2>/dev/null || true
             sudo -u "$TARGET_USER" -g "$TARGET_USER" -H cp -r "$LINUX_PROFILE"/* "$BACKUP_DIR/" 2>/dev/null || true
             WIN_INI="/home/$TARGET_USER/.AppData/Roaming/Mozilla/Firefox/profiles.ini"
             if [ -f "$WIN_INI" ]; then
-                DEFAULT_PROFILE=$(tr -d '\r' < "$WIN_INI" | awk '
+                DEFAULT_PROFILE=$(tr -d '\\r' < "$WIN_INI" | awk '
                 /^\[Install/ { in_install=1; next }
                 in_install && /^Default=/ { sub(/Default=/, ""); profile=$0 }
                 in_install && /^Locked=1/ { print profile; exit }
