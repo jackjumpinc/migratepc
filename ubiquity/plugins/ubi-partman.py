@@ -639,7 +639,8 @@ class PageGtk(PageBase):
                 elif (partition[3] == 'ntfs' or partition[3] == 'unknown') and partition[1] > 19777216:
                     if misc.execute_root('mount', '-t', 'ntfs-3g', '-o', 'ro', partition[0], mount_point):
 
-                        install_has_windows = os.path.exists(os.path.join(mount_point, 'Windows'))
+                        if not install_has_windows:
+                            install_has_windows = os.path.exists(os.path.join(mount_point, 'Windows'))
                         source_dir = os.path.join(mount_point, 'Users')
                         install_has_users = os.path.exists(source_dir)
                         public_path = os.path.join(source_dir, 'Public')
@@ -1012,7 +1013,8 @@ class PageGtk(PageBase):
                             users_dir = os.path.join(mount_point, users_reparse)
                             copy_has_reparse = os.path.exists(users_dir)
                             users_public_path = os.path.join(users_dir, 'Public')
-                        copy_has_windows = os.path.exists(os.path.join(mount_point, 'Windows'))
+                        if not copy_has_windows:
+                            copy_has_windows = os.path.exists(os.path.join(mount_point, 'Windows'))
                         copy_has_users = os.path.exists(source_dir)
                         if copy_has_windows and copy_has_users:
                             if not install_has_windows:
