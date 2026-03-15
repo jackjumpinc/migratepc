@@ -5,7 +5,7 @@
 # Copyright (C) 2005, 2006, 2007, 2008, 2009 Canonical Ltd.
 # Copyright (C) 2007 Mario Limonciello
 #
-# Copyright (C) 2025 Jackjump.com, Inc.
+# Copyright (C) 2025, 2026 Jackjump.com, Inc.
 # Changes by Steve Saunders <steve@jackjump.com>.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -511,7 +511,7 @@ Terminal=true
             with open(jackjump_config, 'w') as f:
                 f.write("""#!/bin/bash
 #
-# Copyright (C) 2025 Jackjump.com, Inc.
+# Copyright (C) 2025, 2026 Jackjump.com, Inc.
 #
 # Jackjump configuration script for post-install user setup
 # Run as MAIN_USER: ./jackjump-config.sh [username]
@@ -923,6 +923,8 @@ for browser in "${BROWSERS[@]}"; do
             sudo -u "$TARGET_USER" -g "$TARGET_USER" -H chmod -R 700 "$DEST_DEFAULT" 2>/dev/null || true
         fi
         if [[ "$pkg" == "firefox" ]]; then
+            killall -w firefox >/dev/null 2>&1 || true
+            sleep 3
             installs_ini="$dest/installs.ini"
             INSTALLS_PROFILE=$(sudo -u "$TARGET_USER" -g "$TARGET_USER" -H awk -F= '/^\[.*\]$/,/^$/ {if (/^Default=/) {print $2; exit}}' "$installs_ini")
             LINUX_PROFILE="$dest/$INSTALLS_PROFILE"
@@ -956,6 +958,75 @@ for browser in "${BROWSERS[@]}"; do
     fi
 done
 
+# Thousands of games are on offer via Steam through Lutris and Protonup-rs:
+# GE community-maintained installers for games, Adobe Creative Cloud, etc.
+# Just say yes. Say no if you prefer official Steam client or purchasing
+# annual support for Windows programs via CodeWeavers:
+# CrossOver Linux is $74.
+if [ "$TARGET_USER" = "$MAIN_USER" ]; then
+    read -r -p "Install Steam through Lutris and Protonup-rs (GE: community-maintained installers for games and more)? (Y/n): " INSTALL_LUTRIS
+    case $INSTALL_LUTRIS in
+        [Yy]*|"")
+            echo "You need to be here to click Install in a minute."
+            # Enable 32-bit architecture
+            sudo dpkg --add-architecture i386 >/dev/null 2>&1 || { echo "Warning: Failed to reset default of 32-bit enabled, continuing..."; }
+
+            sudo add-apt-repository -y ppa:lutris-team/lutris >/dev/null 2>&1 || { echo "Warning: Failed to add ppa for Lutris, continuing..."; }
+            sudo apt-get update >/dev/null 2>&1 || { echo "Warning: Failed to update apt for Lutris and Steam, continuing..."; }
+            sudo DEBIAN_FRONTEND=noninteractive apt-get -y -o Dpkg::Options::="--force-confdef" install lutris steam >/dev/null 2>&1 || { echo "Warning: Failed to install Lutris and Steam, continuing..."; }
+
+            # Install Protonup-rs and GE-Proton with auyer deb package
+            #if curl -L -o /tmp/protonup-rs.deb https://github.com/auyer/Protonup-rs/releases/latest/download/protonup-rs-amd64.deb >/dev/null 2>&1; then
+            if curl -L -o /tmp/protonup-rs.deb https://github.com/auyer/Protonup-rs/releases/download/v0.10.0/protonup-rs_0.10.0_amd64.deb >/dev/null 2>&1; then
+                chmod 755 /tmp/protonup-rs.deb >/dev/null 2>&1 || { echo "Warning: Failed to chmod Protonup-rs deb package, continuing..."; }
+                sudo DEBIAN_FRONTEND=noninteractive apt-get -y -o Dpkg::Options::="--force-confdef" install /tmp/protonup-rs.deb >/dev/null 2>&1 || { echo "Warning: Failed to install Protonup-rs, continuing..."; }
+                echo "Do not close Lutris window. It will close itself within a minute."
+                lutris >/dev/null 2>&1 || { echo "Warning: Failed to run Lutris, continuing..."; }
+                LUTRIS_PID=$!
+                sleep 55
+                kill "$LUTRIS_PID" || true
+                wait "$LUTRIS_PID" 2>/dev/null || true
+                echo "Steam installer: click Install."
+                steam >/dev/null 2>&1 || { echo "Warning: Failed to run Steam, continuing..."; }
+                STEAM_PID=$!
+                sleep 195
+                kill "$STEAM_PID" || true
+                wait "$STEAM_PID" 2>/dev/null || true
+                protonup-rs --quick-download || { echo "Warning: Failed to download or install GE-Proton, continuing..."; }
+                rm /tmp/protonup-rs.deb >/dev/null 2>&1 || { echo "Warning: Failed to remove Protonup-rs deb package, continuing..."; }
+            else
+                echo "Protonup-rs deb package failed to download."
+            fi
+            ;;
+    esac
+else
+    read -r -p "Install Steam GE-Proton through Protonup-rs for $TARGET_USER (if Steam, Lutris and Protonup-rs were installed system wide)? (Y/n): " INSTALL_PROTON
+    case $INSTALL_PROTON in
+        [Yy]*|"")
+            echo "You need to be here to click Install in a minute."
+            echo "Do not close Lutris window. It will close itself within a minute."
+            sudo -u "$TARGET_USER" -g "$TARGET_USER" -H /usr/games/lutris >/dev/null 2>&1 &
+            LUTRIS_PID=$!
+            sleep 55
+            kill "$LUTRIS_PID" || true
+            wait "$LUTRIS_PID" 2>/dev/null || true
+            echo " "
+            echo "Steam installer: click Install."
+            echo " "
+            echo "Steam installer: click Install."
+            echo " "
+            echo "Steam installer: click Install."
+            echo " "
+            sudo -u "$TARGET_USER" -g "$TARGET_USER" -H /usr/games/steam >/dev/null 2>&1 &
+            STEAM_PID=$!
+            sleep 195
+            kill "$STEAM_PID" || true
+            wait "$STEAM_PID" 2>/dev/null || true
+            sudo -u "$TARGET_USER" -g "$TARGET_USER" -H protonup-rs --quick-download || { echo "Warning: Failed to download or install GE-Proton with Protonup-rs, continuing..."; }
+            ;;
+    esac
+fi
+
 if [ "$TARGET_USER" != "$MAIN_USER" ]; then
     # Disable X access
     if ! sudo xhost -SI:localuser:"$TARGET_USER"; then
@@ -963,11 +1034,92 @@ if [ "$TARGET_USER" != "$MAIN_USER" ]; then
     fi
 fi
 
+# Configure Timeshift per Linux Mint defaults and install duplicity similarly
+if [ "$TARGET_USER" = "$MAIN_USER" ]; then
+    read -r -p "No dedicated backup drive so configure Timeshift (system) restore points and install duplicity (user file) backups in place? (Y/n): " INSTALL_BACKUP
+    case $INSTALL_BACKUP in
+        [Yy]*|"")
+            # Configure Timeshift
+            SNAPSHOT_DEVICE=$(sudo findmnt -n -o SOURCE /)
+            SNAPSHOT_PATH="/timeshift"
+            CONFIG_FILE="/etc/timeshift/timeshift.json"
+            CRON_FILE="/etc/cron.d/timeshift-hourly"
+
+            sudo mkdir -p "$SNAPSHOT_PATH" >/dev/null 2>&1 || { echo "Warning: Failed to create timeshift directory, continuing..."; }
+            sudo apt-get update >/dev/null 2>&1 || { echo "Warning: Failed to update apt for jq, continuing..."; }
+            sudo DEBIAN_FRONTEND=noninteractive apt-get -y -o Dpkg::Options::="--force-confdef" install jq >/dev/null 2>&1 || { echo "Warning: Failed to install jq continuing..."; }
+            if sudo timeshift --snapshot-device "$SNAPSHOT_DEVICE"; then
+                if [ -f "$CONFIG_FILE" ]; then
+                    jq '.schedule_daily = true' "$CONFIG_FILE" > /tmp/timeshift.json && sudo mv /tmp/timeshift.json "$CONFIG_FILE" >/dev/null 2>&1
+                fi
+                if sudo timeshift --create --comments "Initial restore point" --scripted; then
+                    if [ ! -f "$CRON_FILE" ]; then
+                        sudo tee "$CRON_FILE" > /dev/null << 'EOT'
+SHELL=/bin/bash
+PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
+MAILTO=""
+
+0 * * * * root timeshift --check --scripted
+EOT
+                    fi
+                fi
+            fi
+
+            # Install duplicity to back up user files separately
+            BACKUP_DIR="/duplicity/$MAIN_USER"
+            DUP_FILE="/etc/cron.d/duplicity-daily"
+
+            sudo DEBIAN_FRONTEND=noninteractive apt-get -y -o Dpkg::Options::="--force-confdef" install duplicity >/dev/null 2>&1 || { echo "Warning: Failed to install duplicity continuing..."; }
+
+            sudo mkdir -p "$BACKUP_DIR" >/dev/null 2>&1 || { echo "Warning: Failed to create duplicity directory, continuing..."; }
+            sudo chown "$MAIN_USER:$MAIN_USER" "$BACKUP_DIR" >/dev/null 2>&1 || { echo "Warning: Failed to chown duplicity directory, continuing..."; }
+
+            DUPLICITY=$(cat <<DUP
+SHELL=/bin/bash
+PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
+MAILTO=""
+
+0 2 * * * $MAIN_USER duplicity --no-encryption /home/$MAIN_USER/Documents /home/$MAIN_USER/Desktop file://$BACKUP_DIR
+DUP
+)
+            echo "$DUPLICITY" | sudo tee "$DUP_FILE" > /dev/null || { echo "Warning: Failed to add duplicity cron job." >&2; }
+            ;;
+    esac
+else
+    if [ -d /duplicity ]; then
+        # Configure duplicity for target user
+        BACKUP_DIR="/duplicity/$TARGET_USER"
+        DUP_FILE="/etc/cron.d/duplicity-daily"
+
+        sudo mkdir -p "$BACKUP_DIR" >/dev/null 2>&1 || { echo "Warning: Failed to create duplicity directory, continuing..."; }
+        sudo chown "$TARGET_USER:$TARGET_USER" "$BACKUP_DIR" >/dev/null 2>&1 || { echo "Warning: Failed to chown duplicity directory, continuing..."; }
+
+        DUPLICITY=$(cat <<DUP
+0 2 * * * $TARGET_USER duplicity --no-encryption /home/$TARGET_USER/Documents /home/$TARGET_USER/Desktop file://$BACKUP_DIR
+DUP
+)
+        echo "$DUPLICITY" | sudo tee -a "$DUP_FILE" > /dev/null || { echo "Warning: Failed to add duplicity entry to existing cron job." >&2; }
+    fi
+fi
+
+# Zoom Apt Repository via mirror: https://www.matthewthom.as/mirrors/
+if [ "$TARGET_USER" = "$MAIN_USER" ]; then
+    read -r -p "Install Zoom through MWT mirror (for automatic updates of Zoom)? (Y/n): " INSTALL_ZOOM
+    case $INSTALL_ZOOM in
+        [Yy]*|"")
+            sudo wget -qO- https://mirror.mwt.me/zoom/gpgkey | sudo tee /etc/apt/keyrings/mwt.asc > /dev/null || { echo "Warning: Failed to set up Zoom keyring, continuing..."; }
+            echo "deb [arch=amd64 signed-by=/etc/apt/keyrings/mwt.asc by-hash=force] https://mirror.mwt.me/zoom/deb any main" | sudo tee /etc/apt/sources.list.d/mwt.list >/dev/null || { echo "Warning: Failed to add Zoom mwt.list to apt sources." >&2; }
+            sudo apt-get update >/dev/null 2>&1 || { echo "Warning: Failed to update apt for Zoom, continuing..."; }
+            sudo DEBIAN_FRONTEND=noninteractive apt-get -y -o Dpkg::Options::="--force-confdef" install zoom >/dev/null 2>&1 || { echo "Warning: Failed to install Zoom continuing..."; }
+            ;;
+    esac
+fi
+
 # You can install vivaldi, opera, google-chrome or microsoft-edge as well:
 # sudo apt install -y vivaldi-stable
 #
 # But only when its third-party repository is installed.
-# You can reinstall a third-party repository with above commands.
+# You can reinstall a third-party repository with above command.
 #
 # Why Brave? (when some sites don't work in Brave)
 # Brave is the most secure browser. Sites that don't work are insecure.
@@ -976,9 +1128,9 @@ fi
 # Otherwise, use Brave (which is based on chromium).
 # This goes for Windows or Mac browsing as well.
 if ! command -v brave-browser >/dev/null 2>&1; then
-    read -r -p "Install Brave Browser (most secure) while third-party repository available? (y/n): " INSTALL_BRAVE
+    read -r -p "Install Brave Browser (most secure) while third-party repository available (for automatic updates of Brave)? (Y/n): " INSTALL_BRAVE
     case $INSTALL_BRAVE in
-    [Yy]*) sudo DEBIAN_FRONTEND=noninteractive apt-get -y -o Dpkg::Options::="--force-confdef" install brave-browser >/dev/null 2>&1 || { echo "Warning: Failed to install Brave Browser, continuing..."; } ;;
+        [Yy]*|"") sudo DEBIAN_FRONTEND=noninteractive apt-get -y -o Dpkg::Options::="--force-confdef" install brave-browser >/dev/null 2>&1 || { echo "Warning: Failed to install Brave Browser, continuing..."; } ;;
     esac
 fi
 
