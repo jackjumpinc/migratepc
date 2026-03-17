@@ -608,6 +608,8 @@ if [ "$TARGET_USER" != "$MAIN_USER" ]; then
     done
 fi
 
+trap 'echo "Warning: it is best to finish after coming this far!"' SIGINT
+
 # Desktop icons
 echo "Configuring desktop icons for $TARGET_USER..."
 DESKTOP_SRC="/home/$TARGET_USER/Desktop"
@@ -815,8 +817,8 @@ if [[ "$LANG_CODE" != "en" ]]; then
     fi
 fi
 
+sudo -u "$TARGET_USER" -g "$TARGET_USER" -H wmctrl -c "Mozilla Firefox" >/dev/null 2>&1 || true
 killall -w opera >/dev/null 2>&1 || true
-killall -w firefox >/dev/null 2>&1 || true
 killall -w chromium >/dev/null 2>&1 || true
 killall -w google-chrome >/dev/null 2>&1 || true
 killall -w microsoft-edge >/dev/null 2>&1 || true
@@ -892,8 +894,13 @@ for browser in "${BROWSERS[@]}"; do
         sudo -u "$TARGET_USER" -g "$TARGET_USER" -H "$pkg" --no-remote >/dev/null 2>&1 &
         PKG_PID=$!
         sleep 33
-        kill "$PKG_PID" || true
-        wait "$PKG_PID" 2>/dev/null || true
+        if [[ "$pkg" != "firefox" ]]; then
+            kill "$PKG_PID" || true
+            wait "$PKG_PID" 2>/dev/null || true
+        else
+            sudo -u "$TARGET_USER" -g "$TARGET_USER" -H wmctrl -c "Mozilla Firefox" >/dev/null 2>&1 || true
+            wait "$PKG_PID" 2>/dev/null || true
+        fi
         pkg="${pkg%\-browser}"
         if [[ "$pkg" != "firefox" ]] && [[ "$pkg" != "vivaldi" ]] && [[ "$pkg" != "opera" ]]; then
             DEST_DEFAULT="$dest/Default"
@@ -923,8 +930,6 @@ for browser in "${BROWSERS[@]}"; do
             sudo -u "$TARGET_USER" -g "$TARGET_USER" -H chmod -R 700 "$DEST_DEFAULT" 2>/dev/null || true
         fi
         if [[ "$pkg" == "firefox" ]]; then
-            killall -w firefox >/dev/null 2>&1 || true
-            sleep 3
             installs_ini="$dest/installs.ini"
             INSTALLS_PROFILE=$(sudo -u "$TARGET_USER" -g "$TARGET_USER" -H awk -F= '/^\[.*\]$/,/^$/ {if (/^Default=/) {print $2; exit}}' "$installs_ini")
             LINUX_PROFILE="$dest/$INSTALLS_PROFILE"
@@ -967,7 +972,6 @@ if [ "$TARGET_USER" = "$MAIN_USER" ]; then
     read -r -p "Install Steam through Lutris and Protonup-rs (GE: community-maintained installers for games and more)? (Y/n): " INSTALL_LUTRIS
     case $INSTALL_LUTRIS in
         [Yy]*|"")
-            echo "You need to be here to click Install in a minute."
             # Enable 32-bit architecture
             sudo dpkg --add-architecture i386 >/dev/null 2>&1 || { echo "Warning: Failed to reset default of 32-bit enabled, continuing..."; }
 
@@ -980,18 +984,19 @@ if [ "$TARGET_USER" = "$MAIN_USER" ]; then
             if curl -L -o /tmp/protonup-rs.deb https://github.com/auyer/Protonup-rs/releases/download/v0.10.0/protonup-rs_0.10.0_amd64.deb >/dev/null 2>&1; then
                 chmod 755 /tmp/protonup-rs.deb >/dev/null 2>&1 || { echo "Warning: Failed to chmod Protonup-rs deb package, continuing..."; }
                 sudo DEBIAN_FRONTEND=noninteractive apt-get -y -o Dpkg::Options::="--force-confdef" install /tmp/protonup-rs.deb >/dev/null 2>&1 || { echo "Warning: Failed to install Protonup-rs, continuing..."; }
-                echo "Do not close Lutris window. It will close itself within a minute."
+                echo "Do not close Lutris window until all the updates have completed (bottom left)."
+                echo "When the updates have completed close Lutris window to continue."
                 lutris >/dev/null 2>&1 || { echo "Warning: Failed to run Lutris, continuing..."; }
-                LUTRIS_PID=$!
-                sleep 55
-                kill "$LUTRIS_PID" || true
-                wait "$LUTRIS_PID" 2>/dev/null || true
+                echo " "
                 echo "Steam installer: click Install."
+                echo " "
+                echo "Steam installer: click Install."
+                echo " "
+                echo "Steam installer: click Install."
+                echo " "
+                echo "Do not close Steam setup, Steam or Progress windows."
+                echo "When the updates have completed and the STEAM Sign In window comes up, close that to continue."
                 steam >/dev/null 2>&1 || { echo "Warning: Failed to run Steam, continuing..."; }
-                STEAM_PID=$!
-                sleep 195
-                kill "$STEAM_PID" || true
-                wait "$STEAM_PID" 2>/dev/null || true
                 protonup-rs --quick-download || { echo "Warning: Failed to download or install GE-Proton, continuing..."; }
                 rm /tmp/protonup-rs.deb >/dev/null 2>&1 || { echo "Warning: Failed to remove Protonup-rs deb package, continuing..."; }
             else
@@ -1003,13 +1008,10 @@ else
     read -r -p "Install Steam GE-Proton through Protonup-rs for $TARGET_USER (if Steam, Lutris and Protonup-rs were installed system wide)? (Y/n): " INSTALL_PROTON
     case $INSTALL_PROTON in
         [Yy]*|"")
-            echo "You need to be here to click Install in a minute."
-            echo "Do not close Lutris window. It will close itself within a minute."
+            echo "Do not close Lutris window until all the updates have completed (bottom left)."
+            echo "When the updates have completed close Lutris window to continue."
             sudo -u "$TARGET_USER" -g "$TARGET_USER" -H /usr/games/lutris >/dev/null 2>&1 &
-            LUTRIS_PID=$!
-            sleep 55
-            kill "$LUTRIS_PID" || true
-            wait "$LUTRIS_PID" 2>/dev/null || true
+            wait $! 2>/dev/null || true
             echo " "
             echo "Steam installer: click Install."
             echo " "
@@ -1017,11 +1019,10 @@ else
             echo " "
             echo "Steam installer: click Install."
             echo " "
+            echo "Do not close Steam setup, Steam or Progress windows."
+            echo "When the updates have completed and the STEAM Sign In window comes up, close that to continue."
             sudo -u "$TARGET_USER" -g "$TARGET_USER" -H /usr/games/steam >/dev/null 2>&1 &
-            STEAM_PID=$!
-            sleep 195
-            kill "$STEAM_PID" || true
-            wait "$STEAM_PID" 2>/dev/null || true
+            wait $! 2>/dev/null || true
             sudo -u "$TARGET_USER" -g "$TARGET_USER" -H protonup-rs --quick-download || { echo "Warning: Failed to download or install GE-Proton with Protonup-rs, continuing..."; }
             ;;
     esac
@@ -1049,9 +1050,6 @@ if [ "$TARGET_USER" = "$MAIN_USER" ]; then
             sudo apt-get update >/dev/null 2>&1 || { echo "Warning: Failed to update apt for jq, continuing..."; }
             sudo DEBIAN_FRONTEND=noninteractive apt-get -y -o Dpkg::Options::="--force-confdef" install jq >/dev/null 2>&1 || { echo "Warning: Failed to install jq continuing..."; }
             if sudo timeshift --snapshot-device "$SNAPSHOT_DEVICE"; then
-                if [ -f "$CONFIG_FILE" ]; then
-                    jq '.schedule_daily = true' "$CONFIG_FILE" > /tmp/timeshift.json && sudo mv /tmp/timeshift.json "$CONFIG_FILE" >/dev/null 2>&1
-                fi
                 if sudo timeshift --create --comments "Initial restore point" --scripted; then
                     if [ ! -f "$CRON_FILE" ]; then
                         sudo tee "$CRON_FILE" > /dev/null << 'EOT'
@@ -1061,6 +1059,9 @@ MAILTO=""
 
 0 * * * * root timeshift --check --scripted
 EOT
+                    fi
+                    if [ -f "$CONFIG_FILE" ]; then
+                        jq '.schedule_daily = true' "$CONFIG_FILE" > /tmp/timeshift.json && sudo mv /tmp/timeshift.json "$CONFIG_FILE" >/dev/null 2>&1
                     fi
                 fi
             fi
