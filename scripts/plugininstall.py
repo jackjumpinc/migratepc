@@ -752,67 +752,115 @@ if [[ "$LANG_CODE" != "en" ]]; then
             done <<< "$output"
         fi
     fi
-    if [[ -n "$XDG_DESKTOP_DIR" && "$DESKTOP_SRC" != "$XDG_DESKTOP_DIR" && -d "$DESKTOP_SRC" && -d "$XDG_DESKTOP_DIR" && ! -L "$XDG_DESKTOP_DIR" ]]; then
-        sudo -u "$TARGET_USER" -g "$TARGET_USER" -H rm -rf "$XDG_DESKTOP_DIR" || true
-        sudo -u "$TARGET_USER" -g "$TARGET_USER" -H ln -s "$DESKTOP_SRC" "$XDG_DESKTOP_DIR" || true
-        if [[ -L "$XDG_DESKTOP_DIR" ]]; then
-            echo "Symlinked: $XDG_DESKTOP_DIR-> $DESKTOP_SRC"
+    if [[ -n "$XDG_DESKTOP_DIR" && "$DESKTOP_SRC" != "$XDG_DESKTOP_DIR" ]]; then
+        if sudo -u "$TARGET_USER" -g "$TARGET_USER" -H test -d "$DESKTOP_SRC"; then
+            if sudo -u "$TARGET_USER" -g "$TARGET_USER" -H test -d "$XDG_DESKTOP_DIR"; then
+                if ! sudo -u "$TARGET_USER" -g "$TARGET_USER" -H test -L "$XDG_DESKTOP_DIR"; then
+                    sudo -u "$TARGET_USER" -g "$TARGET_USER" -H rm -rf "$XDG_DESKTOP_DIR" || true
+                    sudo -u "$TARGET_USER" -g "$TARGET_USER" -H ln -s "$DESKTOP_SRC" "$XDG_DESKTOP_DIR" || true
+                    if sudo -u "$TARGET_USER" -g "$TARGET_USER" -H test -L "$XDG_DESKTOP_DIR"; then
+                        echo "Symlinked: $XDG_DESKTOP_DIR-> $DESKTOP_SRC"
+                    fi
+                fi
+            fi
         fi
     fi
     DOWNLOAD_SRC="/home/$TARGET_USER/Downloads"
-    if [[ -n "$XDG_DOWNLOAD_DIR" && "$DOWNLOAD_SRC" != "$XDG_DOWNLOAD_DIR" && -d "$DOWNLOAD_SRC" && -d "$XDG_DOWNLOAD_DIR" && ! -L "$XDG_DOWNLOAD_DIR" ]]; then
-        sudo -u "$TARGET_USER" -g "$TARGET_USER" -H rmdir "$XDG_DOWNLOAD_DIR" || true
-        sudo -u "$TARGET_USER" -g "$TARGET_USER" -H ln -s "$DOWNLOAD_SRC" "$XDG_DOWNLOAD_DIR" || true
-        if [[ -L "$XDG_DOWNLOAD_DIR" ]]; then
-            echo "Symlinked: $XDG_DOWNLOAD_DIR-> $DOWNLOAD_SRC"
+    if [[ -n "$XDG_DOWNLOAD_DIR" && "$DOWNLOAD_SRC" != "$XDG_DOWNLOAD_DIR" ]]; then
+        if sudo -u "$TARGET_USER" -g "$TARGET_USER" -H test -d "$DOWNLOAD_SRC"; then
+            if sudo -u "$TARGET_USER" -g "$TARGET_USER" -H test -d "$XDG_DOWNLOAD_DIR"; then
+                if ! sudo -u "$TARGET_USER" -g "$TARGET_USER" -H test -L "$XDG_DOWNLOAD_DIR"; then
+                    sudo -u "$TARGET_USER" -g "$TARGET_USER" -H rmdir "$XDG_DOWNLOAD_DIR" || true
+                    sudo -u "$TARGET_USER" -g "$TARGET_USER" -H ln -s "$DOWNLOAD_SRC" "$XDG_DOWNLOAD_DIR" || true
+                    if sudo -u "$TARGET_USER" -g "$TARGET_USER" -H test -L "$XDG_DOWNLOAD_DIR"; then
+                        echo "Symlinked: $XDG_DOWNLOAD_DIR-> $DOWNLOAD_SRC"
+                    fi
+                fi
+            fi
         fi
     fi
     TEMPLATES_SRC="/home/$TARGET_USER/Templates"
-    if [[ -n "$XDG_TEMPLATES_DIR" && "$TEMPLATES_SRC" != "$XDG_TEMPLATES_DIR" && -d "$TEMPLATES_SRC" && -d "$XDG_TEMPLATES_DIR" && ! -L "$XDG_TEMPLATES_DIR" ]]; then
-        sudo -u "$TARGET_USER" -g "$TARGET_USER" -H rmdir "$XDG_TEMPLATES_DIR" || true
-        sudo -u "$TARGET_USER" -g "$TARGET_USER" -H ln -s "$TEMPLATES_SRC" "$XDG_TEMPLATES_DIR" || true
-        if [[ -L "$XDG_TEMPLATES_DIR" ]]; then
-            echo "Symlinked: $XDG_TEMPLATES_DIR-> $TEMPLATES_SRC"
+    if [[ -n "$XDG_TEMPLATES_DIR" && "$TEMPLATES_SRC" != "$XDG_TEMPLATES_DIR" ]]; then
+        if sudo -u "$TARGET_USER" -g "$TARGET_USER" -H test -d "$TEMPLATES_SRC"; then
+            if sudo -u "$TARGET_USER" -g "$TARGET_USER" -H test -d "$XDG_TEMPLATES_DIR"; then
+                if ! sudo -u "$TARGET_USER" -g "$TARGET_USER" -H test -L "$XDG_TEMPLATES_DIR"; then
+                    sudo -u "$TARGET_USER" -g "$TARGET_USER" -H rmdir "$XDG_TEMPLATES_DIR" || true
+                    sudo -u "$TARGET_USER" -g "$TARGET_USER" -H ln -s "$TEMPLATES_SRC" "$XDG_TEMPLATES_DIR" || true
+                    if sudo -u "$TARGET_USER" -g "$TARGET_USER" -H test -L "$XDG_TEMPLATES_DIR"; then
+                        echo "Symlinked: $XDG_TEMPLATES_DIR-> $TEMPLATES_SRC"
+                    fi
+                fi
+            fi
         fi
     fi
     PUBLICSHARE_SRC="/home/$TARGET_USER/Public"
-    if [[ -n "$XDG_PUBLICSHARE_DIR" && "$PUBLICSHARE_SRC" != "$XDG_PUBLICSHARE_DIR" && -d "$PUBLICSHARE_SRC" && -d "$XDG_PUBLICSHARE_DIR" && ! -L "$XDG_PUBLICSHARE_DIR" ]]; then
-        sudo -u "$TARGET_USER" -g "$TARGET_USER" -H rmdir "$XDG_PUBLICSHARE_DIR" || true
-        sudo -u "$TARGET_USER" -g "$TARGET_USER" -H ln -s "$PUBLICSHARE_SRC" "$XDG_PUBLICSHARE_DIR" || true
-        if [[ -L "$XDG_PUBLICSHARE_DIR" ]]; then
-            echo "Symlinked: $XDG_PUBLICSHARE_DIR-> $PUBLICSHARE_SRC"
+    if [[ -n "$XDG_PUBLICSHARE_DIR" && "$PUBLICSHARE_SRC" != "$XDG_PUBLICSHARE_DIR" ]]; then
+        if sudo -u "$TARGET_USER" -g "$TARGET_USER" -H test -d "$PUBLICSHARE_SRC"; then
+            if sudo -u "$TARGET_USER" -g "$TARGET_USER" -H test -d "$XDG_PUBLICSHARE_DIR"; then
+                if ! sudo -u "$TARGET_USER" -g "$TARGET_USER" -H test -L "$XDG_PUBLICSHARE_DIR"; then
+                    sudo -u "$TARGET_USER" -g "$TARGET_USER" -H rmdir "$XDG_PUBLICSHARE_DIR" || true
+                    sudo -u "$TARGET_USER" -g "$TARGET_USER" -H ln -s "$PUBLICSHARE_SRC" "$XDG_PUBLICSHARE_DIR" || true
+                    if sudo -u "$TARGET_USER" -g "$TARGET_USER" -H test -L "$XDG_PUBLICSHARE_DIR"; then
+                        echo "Symlinked: $XDG_PUBLICSHARE_DIR-> $PUBLICSHARE_SRC"
+                    fi
+                fi
+            fi
         fi
     fi
     DOCUMENTS_SRC="/home/$TARGET_USER/Documents"
-    if [[ -n "$XDG_DOCUMENTS_DIR" && "$DOCUMENTS_SRC" != "$XDG_DOCUMENTS_DIR" && -d "$DOCUMENTS_SRC" && -d "$XDG_DOCUMENTS_DIR" && ! -L "$XDG_DOCUMENTS_DIR" ]]; then
-        sudo -u "$TARGET_USER" -g "$TARGET_USER" -H rmdir "$XDG_DOCUMENTS_DIR" || true
-        sudo -u "$TARGET_USER" -g "$TARGET_USER" -H ln -s "$DOCUMENTS_SRC" "$XDG_DOCUMENTS_DIR" || true
-        if [[ -L "$XDG_DOCUMENTS_DIR" ]]; then
-            echo "Symlinked: $XDG_DOCUMENTS_DIR-> $DOCUMENTS_SRC"
+    if [[ -n "$XDG_DOCUMENTS_DIR" && "$DOCUMENTS_SRC" != "$XDG_DOCUMENTS_DIR" ]]; then
+        if sudo -u "$TARGET_USER" -g "$TARGET_USER" -H test -d "$DOCUMENTS_SRC"; then
+            if sudo -u "$TARGET_USER" -g "$TARGET_USER" -H test -d "$XDG_DOCUMENTS_DIR"; then
+                if ! sudo -u "$TARGET_USER" -g "$TARGET_USER" -H test -L "$XDG_DOCUMENTS_DIR"; then
+                    sudo -u "$TARGET_USER" -g "$TARGET_USER" -H rmdir "$XDG_DOCUMENTS_DIR" || true
+                    sudo -u "$TARGET_USER" -g "$TARGET_USER" -H ln -s "$DOCUMENTS_SRC" "$XDG_DOCUMENTS_DIR" || true
+                    if sudo -u "$TARGET_USER" -g "$TARGET_USER" -H test -L "$XDG_DOCUMENTS_DIR"; then
+                        echo "Symlinked: $XDG_DOCUMENTS_DIR-> $DOCUMENTS_SRC"
+                    fi
+                fi
+            fi
         fi
     fi
     MUSIC_SRC="/home/$TARGET_USER/Music"
-    if [[ -n "$XDG_MUSIC_DIR" && "$MUSIC_SRC" != "$XDG_MUSIC_DIR" && -d "$MUSIC_SRC" && -d "$XDG_MUSIC_DIR" && ! -L "$XDG_MUSIC_DIR" ]]; then
-        sudo -u "$TARGET_USER" -g "$TARGET_USER" -H rmdir "$XDG_MUSIC_DIR" || true
-        sudo -u "$TARGET_USER" -g "$TARGET_USER" -H ln -s "$MUSIC_SRC" "$XDG_MUSIC_DIR" || true
-        if [[ -L "$XDG_MUSIC_DIR" ]]; then
-            echo "Symlinked: $XDG_MUSIC_DIR-> $MUSIC_SRC"
+    if [[ -n "$XDG_MUSIC_DIR" && "$MUSIC_SRC" != "$XDG_MUSIC_DIR" ]]; then
+        if sudo -u "$TARGET_USER" -g "$TARGET_USER" -H test -d "$MUSIC_SRC"; then
+            if sudo -u "$TARGET_USER" -g "$TARGET_USER" -H test -d "$XDG_MUSIC_DIR"; then
+                if ! sudo -u "$TARGET_USER" -g "$TARGET_USER" -H test -L "$XDG_MUSIC_DIR"; then
+                    sudo -u "$TARGET_USER" -g "$TARGET_USER" -H rmdir "$XDG_MUSIC_DIR" || true
+                    sudo -u "$TARGET_USER" -g "$TARGET_USER" -H ln -s "$MUSIC_SRC" "$XDG_MUSIC_DIR" || true
+                    if sudo -u "$TARGET_USER" -g "$TARGET_USER" -H test -L "$XDG_MUSIC_DIR"; then
+                        echo "Symlinked: $XDG_MUSIC_DIR-> $MUSIC_SRC"
+                    fi
+                fi
+            fi
         fi
     fi
     PICTURES_SRC="/home/$TARGET_USER/Pictures"
-    if [[ -n "$XDG_PICTURES_DIR" && "$PICTURES_SRC" != "$XDG_PICTURES_DIR" && -d "$PICTURES_SRC" && -d "$XDG_PICTURES_DIR" && ! -L "$XDG_PICTURES_DIR" ]]; then
-        sudo -u "$TARGET_USER" -g "$TARGET_USER" -H rmdir "$XDG_PICTURES_DIR" || true
-        sudo -u "$TARGET_USER" -g "$TARGET_USER" -H ln -s "$PICTURES_SRC" "$XDG_PICTURES_DIR" || true
-        if [[ -L "$XDG_PICTURES_DIR" ]]; then
-            echo "Symlinked: $XDG_PICTURES_DIR-> $PICTURES_SRC"
+    if [[ -n "$XDG_PICTURES_DIR" && "$PICTURES_SRC" != "$XDG_PICTURES_DIR" ]]; then
+        if sudo -u "$TARGET_USER" -g "$TARGET_USER" -H test -d "$PICTURES_SRC"; then
+            if sudo -u "$TARGET_USER" -g "$TARGET_USER" -H test -d "$XDG_PICTURES_DIR"; then
+                if ! sudo -u "$TARGET_USER" -g "$TARGET_USER" -H test -L "$XDG_PICTURES_DIR"; then
+                    sudo -u "$TARGET_USER" -g "$TARGET_USER" -H rmdir "$XDG_PICTURES_DIR" || true
+                    sudo -u "$TARGET_USER" -g "$TARGET_USER" -H ln -s "$PICTURES_SRC" "$XDG_PICTURES_DIR" || true
+                    if sudo -u "$TARGET_USER" -g "$TARGET_USER" -H test -L "$XDG_PICTURES_DIR"; then
+                        echo "Symlinked: $XDG_PICTURES_DIR-> $PICTURES_SRC"
+                    fi
+                fi
+            fi
         fi
     fi
     VIDEOS_SRC="/home/$TARGET_USER/Videos"
-    if [[ -n "$XDG_VIDEOS_DIR" && "$VIDEOS_SRC" != "$XDG_VIDEOS_DIR" && -d "$VIDEOS_SRC" && -d "$XDG_VIDEOS_DIR" && ! -L "$XDG_VIDEOS_DIR" ]]; then
-        sudo -u "$TARGET_USER" -g "$TARGET_USER" -H rmdir "$XDG_VIDEOS_DIR" || true
-        sudo -u "$TARGET_USER" -g "$TARGET_USER" -H ln -s "$VIDEOS_SRC" "$XDG_VIDEOS_DIR" || true
-        if [[ -L "$XDG_VIDEOS_DIR" ]]; then
-            echo "Symlinked: $XDG_VIDEOS_DIR-> $VIDEOS_SRC"
+    if [[ -n "$XDG_VIDEOS_DIR" && "$VIDEOS_SRC" != "$XDG_VIDEOS_DIR" ]]; then
+        if sudo -u "$TARGET_USER" -g "$TARGET_USER" -H test -d "$VIDEOS_SRC"; then
+            if sudo -u "$TARGET_USER" -g "$TARGET_USER" -H test -d "$XDG_VIDEOS_DIR"; then
+                if ! sudo -u "$TARGET_USER" -g "$TARGET_USER" -H test -L "$XDG_VIDEOS_DIR"; then
+                    sudo -u "$TARGET_USER" -g "$TARGET_USER" -H rmdir "$XDG_VIDEOS_DIR" || true
+                    sudo -u "$TARGET_USER" -g "$TARGET_USER" -H ln -s "$VIDEOS_SRC" "$XDG_VIDEOS_DIR" || true
+                    if sudo -u "$TARGET_USER" -g "$TARGET_USER" -H test -L "$XDG_VIDEOS_DIR"; then
+                        echo "Symlinked: $XDG_VIDEOS_DIR-> $VIDEOS_SRC"
+                    fi
+                fi
+            fi
         fi
     fi
 fi
@@ -883,7 +931,7 @@ for browser in "${BROWSERS[@]}"; do
         if ! command -v "$pkg" >/dev/null 2>&1; then
             echo "Installing $name..."
             sudo apt-get update >/dev/null 2>&1 || { echo "Warning: Failed to update apt for $name, continuing..."; }
-            sudo DEBIAN_FRONTEND=noninteractive apt-get -y install -o Dpkg::Options::="--force-confdef" "$pkg" >/dev/null 2>&1 || {
+            sudo DEBIAN_FRONTEND=noninteractive apt-get -y -o Dpkg::Options::="--force-confdef" install "$pkg" >/dev/null 2>&1 || {
                 echo "Warning: Failed to install $name, continuing..."
                 continue
             }
@@ -930,8 +978,15 @@ for browser in "${BROWSERS[@]}"; do
             sudo -u "$TARGET_USER" -g "$TARGET_USER" -H chmod -R 700 "$DEST_DEFAULT" 2>/dev/null || true
         fi
         if [[ "$pkg" == "firefox" ]]; then
-            installs_ini="$dest/installs.ini"
-            INSTALLS_PROFILE=$(sudo -u "$TARGET_USER" -g "$TARGET_USER" -H awk -F= '/^\[.*\]$/,/^$/ {if (/^Default=/) {print $2; exit}}' "$installs_ini")
+            if sudo -u "$TARGET_USER" -g "$TARGET_USER" -H test -d "$dest"; then
+                installs_ini="$dest/installs.ini"
+            else
+                dest=/home/$TARGET_USER/.config/mozilla/firefox
+                installs_ini="$dest/installs.ini"
+            fi
+            if sudo -u "$TARGET_USER" -g "$TARGET_USER" -H test -f "$installs_ini"; then
+                INSTALLS_PROFILE=$(sudo -u "$TARGET_USER" -g "$TARGET_USER" -H awk -F= '/^\[.*\]$/,/^$/ {if (/^Default=/) {print $2; exit}}' "$installs_ini")
+            fi
             LINUX_PROFILE="$dest/$INSTALLS_PROFILE"
             BACKUP_DIR="/home/$TARGET_USER/.jackjump/$pkg-backup"
             sudo -u "$TARGET_USER" -g "$TARGET_USER" -H mkdir -p -m 700 "$BACKUP_DIR" 2>/dev/null || true
@@ -994,9 +1049,9 @@ if [ "$TARGET_USER" = "$MAIN_USER" ]; then
                 echo " "
                 echo "Steam installer: click Install."
                 echo " "
-                echo "Do not close Steam setup, Steam or Progress windows."
-                echo "When the updates have completed and the STEAM Sign In window comes up, close that to continue."
                 steam >/dev/null 2>&1 || { echo "Warning: Failed to run Steam, continuing..."; }
+                echo "Do not close Steam setup, Steam or other update windows."
+                echo "When the updates have completed and the STEAM Sign In window comes up, close that to continue."
                 protonup-rs --quick-download || { echo "Warning: Failed to download or install GE-Proton, continuing..."; }
                 rm /tmp/protonup-rs.deb >/dev/null 2>&1 || { echo "Warning: Failed to remove Protonup-rs deb package, continuing..."; }
             else
@@ -1019,10 +1074,11 @@ else
             echo " "
             echo "Steam installer: click Install."
             echo " "
-            echo "Do not close Steam setup, Steam or Progress windows."
-            echo "When the updates have completed and the STEAM Sign In window comes up, close that to continue."
             sudo -u "$TARGET_USER" -g "$TARGET_USER" -H /usr/games/steam >/dev/null 2>&1 &
-            wait $! 2>/dev/null || true
+            STEAM_PID=$!
+            echo "Do not close Steam setup, Steam or other update windows."
+            echo "When the updates have completed and the STEAM Sign In window comes up, close that to continue."
+            wait "$STEAM_PID" 2>/dev/null || true
             sudo -u "$TARGET_USER" -g "$TARGET_USER" -H protonup-rs --quick-download || { echo "Warning: Failed to download or install GE-Proton with Protonup-rs, continuing..."; }
             ;;
     esac
@@ -1044,24 +1100,15 @@ if [ "$TARGET_USER" = "$MAIN_USER" ]; then
             SNAPSHOT_DEVICE=$(sudo findmnt -n -o SOURCE /)
             SNAPSHOT_PATH="/timeshift"
             CONFIG_FILE="/etc/timeshift/timeshift.json"
-            CRON_FILE="/etc/cron.d/timeshift-hourly"
 
             sudo mkdir -p "$SNAPSHOT_PATH" >/dev/null 2>&1 || { echo "Warning: Failed to create timeshift directory, continuing..."; }
             sudo apt-get update >/dev/null 2>&1 || { echo "Warning: Failed to update apt for jq, continuing..."; }
             sudo DEBIAN_FRONTEND=noninteractive apt-get -y -o Dpkg::Options::="--force-confdef" install jq >/dev/null 2>&1 || { echo "Warning: Failed to install jq continuing..."; }
             if sudo timeshift --snapshot-device "$SNAPSHOT_DEVICE"; then
                 if sudo timeshift --create --comments "Initial restore point" --scripted; then
-                    if [ ! -f "$CRON_FILE" ]; then
-                        sudo tee "$CRON_FILE" > /dev/null << 'EOT'
-SHELL=/bin/bash
-PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
-MAILTO=""
-
-0 * * * * root timeshift --check --scripted
-EOT
-                    fi
                     if [ -f "$CONFIG_FILE" ]; then
                         jq '.schedule_daily = true' "$CONFIG_FILE" > /tmp/timeshift.json && sudo mv /tmp/timeshift.json "$CONFIG_FILE" >/dev/null 2>&1
+                        sudo timeshift --check
                     fi
                 fi
             fi
@@ -1080,7 +1127,8 @@ SHELL=/bin/bash
 PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
 MAILTO=""
 
-0 2 * * * $MAIN_USER duplicity --no-encryption /home/$MAIN_USER/Documents /home/$MAIN_USER/Desktop file://$BACKUP_DIR
+0 2 * * * $MAIN_USER duplicity --no-encryption /home/$MAIN_USER/Documents file://$BACKUP_DIR/Documents
+0 2 * * * $MAIN_USER duplicity --no-encryption /home/$MAIN_USER/Desktop file://$BACKUP_DIR/Desktop
 DUP
 )
             echo "$DUPLICITY" | sudo tee "$DUP_FILE" > /dev/null || { echo "Warning: Failed to add duplicity cron job." >&2; }
@@ -1096,7 +1144,8 @@ else
         sudo chown "$TARGET_USER:$TARGET_USER" "$BACKUP_DIR" >/dev/null 2>&1 || { echo "Warning: Failed to chown duplicity directory, continuing..."; }
 
         DUPLICITY=$(cat <<DUP
-0 2 * * * $TARGET_USER duplicity --no-encryption /home/$TARGET_USER/Documents /home/$TARGET_USER/Desktop file://$BACKUP_DIR
+0 2 * * * $TARGET_USER duplicity --no-encryption /home/$TARGET_USER/Documents file://$BACKUP_DIR/Documents
+0 2 * * * $TARGET_USER duplicity --no-encryption /home/$TARGET_USER/Desktop file://$BACKUP_DIR/Desktop
 DUP
 )
         echo "$DUPLICITY" | sudo tee -a "$DUP_FILE" > /dev/null || { echo "Warning: Failed to add duplicity entry to existing cron job." >&2; }
