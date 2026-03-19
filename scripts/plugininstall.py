@@ -1049,9 +1049,9 @@ if [ "$TARGET_USER" = "$MAIN_USER" ]; then
                 echo " "
                 echo "Steam installer: click Install."
                 echo " "
-                steam >/dev/null 2>&1 || { echo "Warning: Failed to run Steam, continuing..."; }
                 echo "Do not close Steam setup, Steam or other update windows."
                 echo "When the updates have completed and the STEAM Sign In window comes up, close that to continue."
+                steam >/dev/null 2>&1 || { echo "Warning: Failed to run Steam, continuing..."; }
                 protonup-rs --quick-download || { echo "Warning: Failed to download or install GE-Proton, continuing..."; }
                 rm /tmp/protonup-rs.deb >/dev/null 2>&1 || { echo "Warning: Failed to remove Protonup-rs deb package, continuing..."; }
             else
@@ -1074,11 +1074,10 @@ else
             echo " "
             echo "Steam installer: click Install."
             echo " "
-            sudo -u "$TARGET_USER" -g "$TARGET_USER" -H /usr/games/steam >/dev/null 2>&1 &
-            STEAM_PID=$!
             echo "Do not close Steam setup, Steam or other update windows."
             echo "When the updates have completed and the STEAM Sign In window comes up, close that to continue."
-            wait "$STEAM_PID" 2>/dev/null || true
+            sudo -u "$TARGET_USER" -g "$TARGET_USER" -H /usr/games/steam >/dev/null 2>&1 &
+            wait $! 2>/dev/null || true
             sudo -u "$TARGET_USER" -g "$TARGET_USER" -H protonup-rs --quick-download || { echo "Warning: Failed to download or install GE-Proton with Protonup-rs, continuing..."; }
             ;;
     esac
@@ -1108,7 +1107,9 @@ if [ "$TARGET_USER" = "$MAIN_USER" ]; then
                 if sudo timeshift --create --comments "Initial restore point" --scripted; then
                     if [ -f "$CONFIG_FILE" ]; then
                         jq '.schedule_daily = true' "$CONFIG_FILE" > /tmp/timeshift.json && sudo mv /tmp/timeshift.json "$CONFIG_FILE" >/dev/null 2>&1
-                        sudo timeshift --check
+                        if sudo timeshift --check; then
+                            echo "Timeshift enabled."
+                        fi
                     fi
                 fi
             fi
