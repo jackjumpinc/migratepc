@@ -1099,16 +1099,30 @@ if [ "$TARGET_USER" = "$MAIN_USER" ]; then
             SNAPSHOT_DEVICE=$(sudo findmnt -n -o SOURCE /)
             SNAPSHOT_PATH="/timeshift"
             CONFIG_FILE="/etc/timeshift/timeshift.json"
+            CRON_FILE="/etc/cron.d/timeshift-hourly"
+            DAILY_VALUE="false"
 
             sudo mkdir -p "$SNAPSHOT_PATH" >/dev/null 2>&1 || { echo "Warning: Failed to create timeshift directory, continuing..."; }
             sudo apt-get update >/dev/null 2>&1 || { echo "Warning: Failed to update apt for jq, continuing..."; }
             sudo DEBIAN_FRONTEND=noninteractive apt-get -y -o Dpkg::Options::="--force-confdef" install jq >/dev/null 2>&1 || { echo "Warning: Failed to install jq continuing..."; }
             if sudo timeshift --snapshot-device "$SNAPSHOT_DEVICE"; then
-                if sudo timeshift --create --comments "Initial restore point" --scripted; then
-                    if [ -f "$CONFIG_FILE" ]; then
+                if [ -f "$CONFIG_FILE" ]; then
+                    jq '.schedule_daily = true' "$CONFIG_FILE" > /tmp/timeshift.json && sudo mv /tmp/timeshift.json "$CONFIG_FILE" >/dev/null 2>&1
+                    DAILY_VALUE="true"
+                fi
+                if sudo timeshift --create --comments "Initial restore point"; then
+                    if [ "$DAILY_VALUE" = "false" ] && [ -f "$CONFIG_FILE" ]; then
                         jq '.schedule_daily = true' "$CONFIG_FILE" > /tmp/timeshift.json && sudo mv /tmp/timeshift.json "$CONFIG_FILE" >/dev/null 2>&1
                         if sudo timeshift --check; then
-                            echo "Timeshift enabled."
+                            if [ ! -f "$CRON_FILE" ]; then
+                                sudo tee "$CRON_FILE" > /dev/null << 'EOT'
+SHELL=/bin/bash
+PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
+MAILTO=""
+
+0 * * * * root timeshift --check --scripted
+EOT
+                            fi
                         fi
                     fi
                 fi
