@@ -722,45 +722,43 @@ else
 fi
 LANG_CODE="${USER_LOCALE%_*}"
 if [[ "$LANG_CODE" != "en" ]]; then
+    if [ "$TARGET_USER" = "$MAIN_USER" ]; then
+        xdg-user-dirs-update --force
+    fi
     CONFIG=".config/user-dirs.dirs"
-    if [ "$TARGET_USER" != "$MAIN_USER" ]; then
-        # Save original XDG variables
-        declare -A ORIGINAL_XDG
-        for var in XDG_DESKTOP_DIR XDG_DOWNLOAD_DIR XDG_TEMPLATES_DIR XDG_PUBLICSHARE_DIR XDG_DOCUMENTS_DIR XDG_MUSIC_DIR XDG_PICTURES_DIR XDG_VIDEOS_DIR; do
-            [[ -n "${!var:-}" ]] && ORIGINAL_XDG[$var]="${!var}"
-        done
-        # Restore them on exit
-        trap 'for var in "${!ORIGINAL_XDG[@]}"; do
-            if [[ -n "${ORIGINAL_XDG[$var]}" ]]; then
-                export "$var=${ORIGINAL_XDG[$var]}"
-            else
-                unset "$var" 2>/dev/null || true
-            fi
-        done' EXIT
-        # Load target user's XDG paths
-        if ! output=$(sudo -u "$TARGET_USER" -g "$TARGET_USER" -H awk -F'=' '
-            /^[[:space:]]*XDG_[A-Z_]*_DIR/ {
-                gsub(/"/, "", $2)
-                gsub(/\$HOME/, ENVIRON["HOME"], $2)
-                gsub(/^[ \\t]+|[ \\t]+$/, "", $2)
-                printf "%s=%s\\n", $1, $2
-            }' "/home/$TARGET_USER/$CONFIG" 2>/dev/null); then
-            echo "Warning: failed to read XDG config, continuing..." >&2
+    # Save original XDG variables
+    declare -A ORIGINAL_XDG
+    for var in XDG_DESKTOP_DIR XDG_DOWNLOAD_DIR XDG_TEMPLATES_DIR XDG_PUBLICSHARE_DIR XDG_DOCUMENTS_DIR XDG_MUSIC_DIR XDG_PICTURES_DIR XDG_VIDEOS_DIR; do
+        [[ -n "${!var:-}" ]] && ORIGINAL_XDG[$var]="${!var}"
+    done
+    # Restore them on exit
+    trap 'for var in "${!ORIGINAL_XDG[@]}"; do
+        if [[ -n "${ORIGINAL_XDG[$var]}" ]]; then
+            export "$var=${ORIGINAL_XDG[$var]}"
         else
-            while IFS='=' read -r var value; do
-                export "$var=$value"
-            done <<< "$output"
+            unset "$var" 2>/dev/null || true
         fi
+    done' EXIT
+    # Load target user's XDG paths
+    if ! output=$(sudo -u "$TARGET_USER" -g "$TARGET_USER" -H awk -F'=' '
+        /^[[:space:]]*XDG_[A-Z_]*_DIR/ {
+            gsub(/"/, "", $2)
+            gsub(/\$HOME/, ENVIRON["HOME"], $2)
+            gsub(/^[ \\t]+|[ \\t]+$/, "", $2)
+            printf "%s=%s\\n", $1, $2
+        }' "/home/$TARGET_USER/$CONFIG" 2>/dev/null); then
+        echo "Warning: failed to read XDG config, continuing..." >&2
+    else
+        while IFS='=' read -r var value; do
+            export "$var=$value"
+        done <<< "$output"
     fi
     if [[ -n "$XDG_DESKTOP_DIR" && "$DESKTOP_SRC" != "$XDG_DESKTOP_DIR" ]]; then
         if sudo -u "$TARGET_USER" -g "$TARGET_USER" -H test -d "$DESKTOP_SRC"; then
+            sudo -u "$TARGET_USER" -g "$TARGET_USER" -H mv -f "$DESKTOP_SRC" "$XDG_DESKTOP_DIR" || true
             if sudo -u "$TARGET_USER" -g "$TARGET_USER" -H test -d "$XDG_DESKTOP_DIR"; then
-                if ! sudo -u "$TARGET_USER" -g "$TARGET_USER" -H test -L "$XDG_DESKTOP_DIR"; then
-                    sudo -u "$TARGET_USER" -g "$TARGET_USER" -H rm -rf "$XDG_DESKTOP_DIR" || true
-                    sudo -u "$TARGET_USER" -g "$TARGET_USER" -H ln -s "$DESKTOP_SRC" "$XDG_DESKTOP_DIR" || true
-                    if sudo -u "$TARGET_USER" -g "$TARGET_USER" -H test -L "$XDG_DESKTOP_DIR"; then
-                        echo "Symlinked: $XDG_DESKTOP_DIR-> $DESKTOP_SRC"
-                    fi
+                if ! sudo -u "$TARGET_USER" -g "$TARGET_USER" -H test -e "$DESKTOP_SRC"; then
+                    echo "Moved: $DESKTOP_SRC-> $XDG_DESKTOP_DIR"
                 fi
             fi
         fi
@@ -769,11 +767,10 @@ if [[ "$LANG_CODE" != "en" ]]; then
     if [[ -n "$XDG_DOWNLOAD_DIR" && "$DOWNLOAD_SRC" != "$XDG_DOWNLOAD_DIR" ]]; then
         if sudo -u "$TARGET_USER" -g "$TARGET_USER" -H test -d "$DOWNLOAD_SRC"; then
             if sudo -u "$TARGET_USER" -g "$TARGET_USER" -H test -d "$XDG_DOWNLOAD_DIR"; then
-                if ! sudo -u "$TARGET_USER" -g "$TARGET_USER" -H test -L "$XDG_DOWNLOAD_DIR"; then
-                    sudo -u "$TARGET_USER" -g "$TARGET_USER" -H rmdir "$XDG_DOWNLOAD_DIR" || true
-                    sudo -u "$TARGET_USER" -g "$TARGET_USER" -H ln -s "$DOWNLOAD_SRC" "$XDG_DOWNLOAD_DIR" || true
-                    if sudo -u "$TARGET_USER" -g "$TARGET_USER" -H test -L "$XDG_DOWNLOAD_DIR"; then
-                        echo "Symlinked: $XDG_DOWNLOAD_DIR-> $DOWNLOAD_SRC"
+                sudo -u "$TARGET_USER" -g "$TARGET_USER" -H mv -f "$DOWNLOAD_SRC" "$XDG_DOWNLOAD_DIR" || true
+                if sudo -u "$TARGET_USER" -g "$TARGET_USER" -H test -d "$XDG_DOWNLOAD_DIR"; then
+                    if ! sudo -u "$TARGET_USER" -g "$TARGET_USER" -H test -e "$DOWNLOAD_SRC"; then
+                        echo "Moved: $DOWNLOAD_SRC-> $XDG_DOWNLOAD_DIR"
                     fi
                 fi
             fi
@@ -783,11 +780,10 @@ if [[ "$LANG_CODE" != "en" ]]; then
     if [[ -n "$XDG_TEMPLATES_DIR" && "$TEMPLATES_SRC" != "$XDG_TEMPLATES_DIR" ]]; then
         if sudo -u "$TARGET_USER" -g "$TARGET_USER" -H test -d "$TEMPLATES_SRC"; then
             if sudo -u "$TARGET_USER" -g "$TARGET_USER" -H test -d "$XDG_TEMPLATES_DIR"; then
-                if ! sudo -u "$TARGET_USER" -g "$TARGET_USER" -H test -L "$XDG_TEMPLATES_DIR"; then
-                    sudo -u "$TARGET_USER" -g "$TARGET_USER" -H rmdir "$XDG_TEMPLATES_DIR" || true
-                    sudo -u "$TARGET_USER" -g "$TARGET_USER" -H ln -s "$TEMPLATES_SRC" "$XDG_TEMPLATES_DIR" || true
-                    if sudo -u "$TARGET_USER" -g "$TARGET_USER" -H test -L "$XDG_TEMPLATES_DIR"; then
-                        echo "Symlinked: $XDG_TEMPLATES_DIR-> $TEMPLATES_SRC"
+                sudo -u "$TARGET_USER" -g "$TARGET_USER" -H mv -f "$TEMPLATES_SRC" "$XDG_TEMPLATES_DIR" || true
+                if sudo -u "$TARGET_USER" -g "$TARGET_USER" -H test -d "$XDG_TEMPLATES_DIR"; then
+                    if ! sudo -u "$TARGET_USER" -g "$TARGET_USER" -H test -e "$TEMPLATES_SRC"; then
+                        echo "Moved: $TEMPLATES_SRC-> $XDG_TEMPLATES_DIR"
                     fi
                 fi
             fi
@@ -797,11 +793,10 @@ if [[ "$LANG_CODE" != "en" ]]; then
     if [[ -n "$XDG_PUBLICSHARE_DIR" && "$PUBLICSHARE_SRC" != "$XDG_PUBLICSHARE_DIR" ]]; then
         if sudo -u "$TARGET_USER" -g "$TARGET_USER" -H test -d "$PUBLICSHARE_SRC"; then
             if sudo -u "$TARGET_USER" -g "$TARGET_USER" -H test -d "$XDG_PUBLICSHARE_DIR"; then
-                if ! sudo -u "$TARGET_USER" -g "$TARGET_USER" -H test -L "$XDG_PUBLICSHARE_DIR"; then
-                    sudo -u "$TARGET_USER" -g "$TARGET_USER" -H rmdir "$XDG_PUBLICSHARE_DIR" || true
-                    sudo -u "$TARGET_USER" -g "$TARGET_USER" -H ln -s "$PUBLICSHARE_SRC" "$XDG_PUBLICSHARE_DIR" || true
-                    if sudo -u "$TARGET_USER" -g "$TARGET_USER" -H test -L "$XDG_PUBLICSHARE_DIR"; then
-                        echo "Symlinked: $XDG_PUBLICSHARE_DIR-> $PUBLICSHARE_SRC"
+                sudo -u "$TARGET_USER" -g "$TARGET_USER" -H mv -f "$PUBLICSHARE_SRC" "$XDG_PUBLICSHARE_DIR" || true
+                if sudo -u "$TARGET_USER" -g "$TARGET_USER" -H test -d "$XDG_PUBLICSHARE_DIR"; then
+                    if ! sudo -u "$TARGET_USER" -g "$TARGET_USER" -H test -e "$PUBLICSHARE_SRC"; then
+                        echo "Moved: $PUBLICSHARE_SRC-> $XDG_PUBLICSHARE_DIR"
                     fi
                 fi
             fi
@@ -811,11 +806,10 @@ if [[ "$LANG_CODE" != "en" ]]; then
     if [[ -n "$XDG_DOCUMENTS_DIR" && "$DOCUMENTS_SRC" != "$XDG_DOCUMENTS_DIR" ]]; then
         if sudo -u "$TARGET_USER" -g "$TARGET_USER" -H test -d "$DOCUMENTS_SRC"; then
             if sudo -u "$TARGET_USER" -g "$TARGET_USER" -H test -d "$XDG_DOCUMENTS_DIR"; then
-                if ! sudo -u "$TARGET_USER" -g "$TARGET_USER" -H test -L "$XDG_DOCUMENTS_DIR"; then
-                    sudo -u "$TARGET_USER" -g "$TARGET_USER" -H rmdir "$XDG_DOCUMENTS_DIR" || true
-                    sudo -u "$TARGET_USER" -g "$TARGET_USER" -H ln -s "$DOCUMENTS_SRC" "$XDG_DOCUMENTS_DIR" || true
-                    if sudo -u "$TARGET_USER" -g "$TARGET_USER" -H test -L "$XDG_DOCUMENTS_DIR"; then
-                        echo "Symlinked: $XDG_DOCUMENTS_DIR-> $DOCUMENTS_SRC"
+                sudo -u "$TARGET_USER" -g "$TARGET_USER" -H mv -f "$DOCUMENTS_SRC" "$XDG_DOCUMENTS_DIR" || true
+                if sudo -u "$TARGET_USER" -g "$TARGET_USER" -H test -d "$XDG_DOCUMENTS_DIR"; then
+                    if ! sudo -u "$TARGET_USER" -g "$TARGET_USER" -H test -e "$DOCUMENTS_SRC"; then
+                        echo "Moved: $DOCUMENTS_SRC-> $XDG_DOCUMENTS_DIR"
                     fi
                 fi
             fi
@@ -825,11 +819,10 @@ if [[ "$LANG_CODE" != "en" ]]; then
     if [[ -n "$XDG_MUSIC_DIR" && "$MUSIC_SRC" != "$XDG_MUSIC_DIR" ]]; then
         if sudo -u "$TARGET_USER" -g "$TARGET_USER" -H test -d "$MUSIC_SRC"; then
             if sudo -u "$TARGET_USER" -g "$TARGET_USER" -H test -d "$XDG_MUSIC_DIR"; then
-                if ! sudo -u "$TARGET_USER" -g "$TARGET_USER" -H test -L "$XDG_MUSIC_DIR"; then
-                    sudo -u "$TARGET_USER" -g "$TARGET_USER" -H rmdir "$XDG_MUSIC_DIR" || true
-                    sudo -u "$TARGET_USER" -g "$TARGET_USER" -H ln -s "$MUSIC_SRC" "$XDG_MUSIC_DIR" || true
-                    if sudo -u "$TARGET_USER" -g "$TARGET_USER" -H test -L "$XDG_MUSIC_DIR"; then
-                        echo "Symlinked: $XDG_MUSIC_DIR-> $MUSIC_SRC"
+                sudo -u "$TARGET_USER" -g "$TARGET_USER" -H mv -f "$MUSIC_SRC" "$XDG_MUSIC_DIR" || true
+                if sudo -u "$TARGET_USER" -g "$TARGET_USER" -H test -d "$XDG_MUSIC_DIR"; then
+                    if ! sudo -u "$TARGET_USER" -g "$TARGET_USER" -H test -e "$MUSIC_SRC"; then
+                        echo "Moved: $MUSIC_SRC-> $XDG_MUSIC_DIR"
                     fi
                 fi
             fi
@@ -839,11 +832,10 @@ if [[ "$LANG_CODE" != "en" ]]; then
     if [[ -n "$XDG_PICTURES_DIR" && "$PICTURES_SRC" != "$XDG_PICTURES_DIR" ]]; then
         if sudo -u "$TARGET_USER" -g "$TARGET_USER" -H test -d "$PICTURES_SRC"; then
             if sudo -u "$TARGET_USER" -g "$TARGET_USER" -H test -d "$XDG_PICTURES_DIR"; then
-                if ! sudo -u "$TARGET_USER" -g "$TARGET_USER" -H test -L "$XDG_PICTURES_DIR"; then
-                    sudo -u "$TARGET_USER" -g "$TARGET_USER" -H rmdir "$XDG_PICTURES_DIR" || true
-                    sudo -u "$TARGET_USER" -g "$TARGET_USER" -H ln -s "$PICTURES_SRC" "$XDG_PICTURES_DIR" || true
-                    if sudo -u "$TARGET_USER" -g "$TARGET_USER" -H test -L "$XDG_PICTURES_DIR"; then
-                        echo "Symlinked: $XDG_PICTURES_DIR-> $PICTURES_SRC"
+                sudo -u "$TARGET_USER" -g "$TARGET_USER" -H mv -f "$PICTURES_SRC" "$XDG_PICTURES_DIR" || true
+                if sudo -u "$TARGET_USER" -g "$TARGET_USER" -H test -d "$XDG_PICTURES_DIR"; then
+                    if ! sudo -u "$TARGET_USER" -g "$TARGET_USER" -H test -e "$PICTURES_SRC"; then
+                        echo "Moved: $PICTURES_SRC-> $XDG_PICTURES_DIR"
                     fi
                 fi
             fi
@@ -853,16 +845,16 @@ if [[ "$LANG_CODE" != "en" ]]; then
     if [[ -n "$XDG_VIDEOS_DIR" && "$VIDEOS_SRC" != "$XDG_VIDEOS_DIR" ]]; then
         if sudo -u "$TARGET_USER" -g "$TARGET_USER" -H test -d "$VIDEOS_SRC"; then
             if sudo -u "$TARGET_USER" -g "$TARGET_USER" -H test -d "$XDG_VIDEOS_DIR"; then
-                if ! sudo -u "$TARGET_USER" -g "$TARGET_USER" -H test -L "$XDG_VIDEOS_DIR"; then
-                    sudo -u "$TARGET_USER" -g "$TARGET_USER" -H rmdir "$XDG_VIDEOS_DIR" || true
-                    sudo -u "$TARGET_USER" -g "$TARGET_USER" -H ln -s "$VIDEOS_SRC" "$XDG_VIDEOS_DIR" || true
-                    if sudo -u "$TARGET_USER" -g "$TARGET_USER" -H test -L "$XDG_VIDEOS_DIR"; then
-                        echo "Symlinked: $XDG_VIDEOS_DIR-> $VIDEOS_SRC"
+                sudo -u "$TARGET_USER" -g "$TARGET_USER" -H mv -f "$VIDEOS_SRC" "$XDG_VIDEOS_DIR" || true
+                if sudo -u "$TARGET_USER" -g "$TARGET_USER" -H test -d "$XDG_VIDEOS_DIR"; then
+                    if ! sudo -u "$TARGET_USER" -g "$TARGET_USER" -H test -e "$VIDEOS_SRC"; then
+                        echo "Moved: $VIDEOS_SRC-> $XDG_VIDEOS_DIR"
                     fi
                 fi
             fi
         fi
     fi
+    sudo -u "$TARGET_USER" -g "$TARGET_USER" -H xdg-user-dirs-update --force
 fi
 
 sudo -u "$TARGET_USER" -g "$TARGET_USER" -H wmctrl -c "Mozilla Firefox" >/dev/null 2>&1 || true
@@ -1100,18 +1092,13 @@ if [ "$TARGET_USER" = "$MAIN_USER" ]; then
             SNAPSHOT_PATH="/timeshift"
             CONFIG_FILE="/etc/timeshift/timeshift.json"
             CRON_FILE="/etc/cron.d/timeshift-hourly"
-            DAILY_VALUE="false"
 
             sudo mkdir -p "$SNAPSHOT_PATH" >/dev/null 2>&1 || { echo "Warning: Failed to create timeshift directory, continuing..."; }
             sudo apt-get update >/dev/null 2>&1 || { echo "Warning: Failed to update apt for jq, continuing..."; }
             sudo DEBIAN_FRONTEND=noninteractive apt-get -y -o Dpkg::Options::="--force-confdef" install jq >/dev/null 2>&1 || { echo "Warning: Failed to install jq continuing..."; }
             if sudo timeshift --snapshot-device "$SNAPSHOT_DEVICE"; then
-                if [ -f "$CONFIG_FILE" ]; then
-                    jq '.schedule_daily = true' "$CONFIG_FILE" > /tmp/timeshift.json && sudo mv /tmp/timeshift.json "$CONFIG_FILE" >/dev/null 2>&1
-                    DAILY_VALUE="true"
-                fi
                 if sudo timeshift --create --comments "Initial restore point"; then
-                    if [ "$DAILY_VALUE" = "false" ] && [ -f "$CONFIG_FILE" ]; then
+                    if [ -f "$CONFIG_FILE" ]; then
                         jq '.schedule_daily = true' "$CONFIG_FILE" > /tmp/timeshift.json && sudo mv /tmp/timeshift.json "$CONFIG_FILE" >/dev/null 2>&1
                         if sudo timeshift --check; then
                             if [ ! -f "$CRON_FILE" ]; then
