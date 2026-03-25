@@ -755,10 +755,14 @@ if [[ "$LANG_CODE" != "en" ]]; then
     fi
     if [[ -n "$XDG_DESKTOP_DIR" && "$DESKTOP_SRC" != "$XDG_DESKTOP_DIR" ]]; then
         if sudo -u "$TARGET_USER" -g "$TARGET_USER" -H test -d "$DESKTOP_SRC"; then
-            sudo -u "$TARGET_USER" -g "$TARGET_USER" -H mv -f "$DESKTOP_SRC" "$XDG_DESKTOP_DIR" || true
-            if sudo -u "$TARGET_USER" -g "$TARGET_USER" -H test -d "$XDG_DESKTOP_DIR"; then
-                if ! sudo -u "$TARGET_USER" -g "$TARGET_USER" -H test -e "$DESKTOP_SRC"; then
-                    echo "Moved: $DESKTOP_SRC-> $XDG_DESKTOP_DIR"
+            sudo -u "$TARGET_USER" -g "$TARGET_USER" -H rm -rf "$XDG_DESKTOP_DIR" || true
+            if sudo -u "$TARGET_USER" -g "$TARGET_USER" -H mv "$DESKTOP_SRC" "$XDG_DESKTOP_DIR"; then
+                if sudo -u "$TARGET_USER" -g "$TARGET_USER" -H test -d "$XDG_DESKTOP_DIR"; then
+                    if ! sudo -u "$TARGET_USER" -g "$TARGET_USER" -H test -e "$DESKTOP_SRC"; then
+                        echo "Moved: $DESKTOP_SRC-> $XDG_DESKTOP_DIR"
+                        BASE_DIR="/home/$TARGET_USER/"
+                        DESKTOP_TRANSLATION="${XDG_DESKTOP_DIR#$BASE_DIR}"
+                    fi
                 fi
             fi
         fi
@@ -767,10 +771,13 @@ if [[ "$LANG_CODE" != "en" ]]; then
     if [[ -n "$XDG_DOWNLOAD_DIR" && "$DOWNLOAD_SRC" != "$XDG_DOWNLOAD_DIR" ]]; then
         if sudo -u "$TARGET_USER" -g "$TARGET_USER" -H test -d "$DOWNLOAD_SRC"; then
             if sudo -u "$TARGET_USER" -g "$TARGET_USER" -H test -d "$XDG_DOWNLOAD_DIR"; then
-                sudo -u "$TARGET_USER" -g "$TARGET_USER" -H mv -f "$DOWNLOAD_SRC" "$XDG_DOWNLOAD_DIR" || true
-                if sudo -u "$TARGET_USER" -g "$TARGET_USER" -H test -d "$XDG_DOWNLOAD_DIR"; then
-                    if ! sudo -u "$TARGET_USER" -g "$TARGET_USER" -H test -e "$DOWNLOAD_SRC"; then
-                        echo "Moved: $DOWNLOAD_SRC-> $XDG_DOWNLOAD_DIR"
+                if sudo -u "$TARGET_USER" -g "$TARGET_USER" -H rmdir "$XDG_DOWNLOAD_DIR"; then
+                    if sudo -u "$TARGET_USER" -g "$TARGET_USER" -H mv "$DOWNLOAD_SRC" "$XDG_DOWNLOAD_DIR"; then
+                        if sudo -u "$TARGET_USER" -g "$TARGET_USER" -H test -d "$XDG_DOWNLOAD_DIR"; then
+                            if ! sudo -u "$TARGET_USER" -g "$TARGET_USER" -H test -e "$DOWNLOAD_SRC"; then
+                                echo "Moved: $DOWNLOAD_SRC-> $XDG_DOWNLOAD_DIR"
+                            fi
+                        fi
                     fi
                 fi
             fi
@@ -780,10 +787,13 @@ if [[ "$LANG_CODE" != "en" ]]; then
     if [[ -n "$XDG_TEMPLATES_DIR" && "$TEMPLATES_SRC" != "$XDG_TEMPLATES_DIR" ]]; then
         if sudo -u "$TARGET_USER" -g "$TARGET_USER" -H test -d "$TEMPLATES_SRC"; then
             if sudo -u "$TARGET_USER" -g "$TARGET_USER" -H test -d "$XDG_TEMPLATES_DIR"; then
-                sudo -u "$TARGET_USER" -g "$TARGET_USER" -H mv -f "$TEMPLATES_SRC" "$XDG_TEMPLATES_DIR" || true
-                if sudo -u "$TARGET_USER" -g "$TARGET_USER" -H test -d "$XDG_TEMPLATES_DIR"; then
-                    if ! sudo -u "$TARGET_USER" -g "$TARGET_USER" -H test -e "$TEMPLATES_SRC"; then
-                        echo "Moved: $TEMPLATES_SRC-> $XDG_TEMPLATES_DIR"
+                if sudo -u "$TARGET_USER" -g "$TARGET_USER" -H rmdir "$XDG_TEMPLATES_DIR"; then
+                    if sudo -u "$TARGET_USER" -g "$TARGET_USER" -H mv "$TEMPLATES_SRC" "$XDG_TEMPLATES_DIR"; then
+                        if sudo -u "$TARGET_USER" -g "$TARGET_USER" -H test -d "$XDG_TEMPLATES_DIR"; then
+                            if ! sudo -u "$TARGET_USER" -g "$TARGET_USER" -H test -e "$TEMPLATES_SRC"; then
+                                echo "Moved: $TEMPLATES_SRC-> $XDG_TEMPLATES_DIR"
+                            fi
+                        fi
                     fi
                 fi
             fi
@@ -793,10 +803,13 @@ if [[ "$LANG_CODE" != "en" ]]; then
     if [[ -n "$XDG_PUBLICSHARE_DIR" && "$PUBLICSHARE_SRC" != "$XDG_PUBLICSHARE_DIR" ]]; then
         if sudo -u "$TARGET_USER" -g "$TARGET_USER" -H test -d "$PUBLICSHARE_SRC"; then
             if sudo -u "$TARGET_USER" -g "$TARGET_USER" -H test -d "$XDG_PUBLICSHARE_DIR"; then
-                sudo -u "$TARGET_USER" -g "$TARGET_USER" -H mv -f "$PUBLICSHARE_SRC" "$XDG_PUBLICSHARE_DIR" || true
-                if sudo -u "$TARGET_USER" -g "$TARGET_USER" -H test -d "$XDG_PUBLICSHARE_DIR"; then
-                    if ! sudo -u "$TARGET_USER" -g "$TARGET_USER" -H test -e "$PUBLICSHARE_SRC"; then
-                        echo "Moved: $PUBLICSHARE_SRC-> $XDG_PUBLICSHARE_DIR"
+                if sudo -u "$TARGET_USER" -g "$TARGET_USER" -H rmdir "$XDG_PUBLICSHARE_DIR"; then
+                    if sudo -u "$TARGET_USER" -g "$TARGET_USER" -H mv "$PUBLICSHARE_SRC" "$XDG_PUBLICSHARE_DIR"; then
+                        if sudo -u "$TARGET_USER" -g "$TARGET_USER" -H test -d "$XDG_PUBLICSHARE_DIR"; then
+                            if ! sudo -u "$TARGET_USER" -g "$TARGET_USER" -H test -e "$PUBLICSHARE_SRC"; then
+                                echo "Moved: $PUBLICSHARE_SRC-> $XDG_PUBLICSHARE_DIR"
+                            fi
+                        fi
                     fi
                 fi
             fi
@@ -806,10 +819,13 @@ if [[ "$LANG_CODE" != "en" ]]; then
     if [[ -n "$XDG_DOCUMENTS_DIR" && "$DOCUMENTS_SRC" != "$XDG_DOCUMENTS_DIR" ]]; then
         if sudo -u "$TARGET_USER" -g "$TARGET_USER" -H test -d "$DOCUMENTS_SRC"; then
             if sudo -u "$TARGET_USER" -g "$TARGET_USER" -H test -d "$XDG_DOCUMENTS_DIR"; then
-                sudo -u "$TARGET_USER" -g "$TARGET_USER" -H mv -f "$DOCUMENTS_SRC" "$XDG_DOCUMENTS_DIR" || true
-                if sudo -u "$TARGET_USER" -g "$TARGET_USER" -H test -d "$XDG_DOCUMENTS_DIR"; then
-                    if ! sudo -u "$TARGET_USER" -g "$TARGET_USER" -H test -e "$DOCUMENTS_SRC"; then
-                        echo "Moved: $DOCUMENTS_SRC-> $XDG_DOCUMENTS_DIR"
+                if sudo -u "$TARGET_USER" -g "$TARGET_USER" -H rmdir "$XDG_DOCUMENTS_DIR"; then
+                    if sudo -u "$TARGET_USER" -g "$TARGET_USER" -H mv "$DOCUMENTS_SRC" "$XDG_DOCUMENTS_DIR"; then
+                        if sudo -u "$TARGET_USER" -g "$TARGET_USER" -H test -d "$XDG_DOCUMENTS_DIR"; then
+                            if ! sudo -u "$TARGET_USER" -g "$TARGET_USER" -H test -e "$DOCUMENTS_SRC"; then
+                                echo "Moved: $DOCUMENTS_SRC-> $XDG_DOCUMENTS_DIR"
+                            fi
+                        fi
                     fi
                 fi
             fi
@@ -819,10 +835,13 @@ if [[ "$LANG_CODE" != "en" ]]; then
     if [[ -n "$XDG_MUSIC_DIR" && "$MUSIC_SRC" != "$XDG_MUSIC_DIR" ]]; then
         if sudo -u "$TARGET_USER" -g "$TARGET_USER" -H test -d "$MUSIC_SRC"; then
             if sudo -u "$TARGET_USER" -g "$TARGET_USER" -H test -d "$XDG_MUSIC_DIR"; then
-                sudo -u "$TARGET_USER" -g "$TARGET_USER" -H mv -f "$MUSIC_SRC" "$XDG_MUSIC_DIR" || true
-                if sudo -u "$TARGET_USER" -g "$TARGET_USER" -H test -d "$XDG_MUSIC_DIR"; then
-                    if ! sudo -u "$TARGET_USER" -g "$TARGET_USER" -H test -e "$MUSIC_SRC"; then
-                        echo "Moved: $MUSIC_SRC-> $XDG_MUSIC_DIR"
+                if sudo -u "$TARGET_USER" -g "$TARGET_USER" -H rmdir "$XDG_MUSIC_DIR"; then
+                    if sudo -u "$TARGET_USER" -g "$TARGET_USER" -H mv "$MUSIC_SRC" "$XDG_MUSIC_DIR"; then
+                        if sudo -u "$TARGET_USER" -g "$TARGET_USER" -H test -d "$XDG_MUSIC_DIR"; then
+                            if ! sudo -u "$TARGET_USER" -g "$TARGET_USER" -H test -e "$MUSIC_SRC"; then
+                                echo "Moved: $MUSIC_SRC-> $XDG_MUSIC_DIR"
+                            fi
+                        fi
                     fi
                 fi
             fi
@@ -832,10 +851,13 @@ if [[ "$LANG_CODE" != "en" ]]; then
     if [[ -n "$XDG_PICTURES_DIR" && "$PICTURES_SRC" != "$XDG_PICTURES_DIR" ]]; then
         if sudo -u "$TARGET_USER" -g "$TARGET_USER" -H test -d "$PICTURES_SRC"; then
             if sudo -u "$TARGET_USER" -g "$TARGET_USER" -H test -d "$XDG_PICTURES_DIR"; then
-                sudo -u "$TARGET_USER" -g "$TARGET_USER" -H mv -f "$PICTURES_SRC" "$XDG_PICTURES_DIR" || true
-                if sudo -u "$TARGET_USER" -g "$TARGET_USER" -H test -d "$XDG_PICTURES_DIR"; then
-                    if ! sudo -u "$TARGET_USER" -g "$TARGET_USER" -H test -e "$PICTURES_SRC"; then
-                        echo "Moved: $PICTURES_SRC-> $XDG_PICTURES_DIR"
+                if sudo -u "$TARGET_USER" -g "$TARGET_USER" -H rmdir "$XDG_PICTURES_DIR"; then
+                    if sudo -u "$TARGET_USER" -g "$TARGET_USER" -H mv "$PICTURES_SRC" "$XDG_PICTURES_DIR"; then
+                        if sudo -u "$TARGET_USER" -g "$TARGET_USER" -H test -d "$XDG_PICTURES_DIR"; then
+                            if ! sudo -u "$TARGET_USER" -g "$TARGET_USER" -H test -e "$PICTURES_SRC"; then
+                                echo "Moved: $PICTURES_SRC-> $XDG_PICTURES_DIR"
+                            fi
+                        fi
                     fi
                 fi
             fi
@@ -845,10 +867,13 @@ if [[ "$LANG_CODE" != "en" ]]; then
     if [[ -n "$XDG_VIDEOS_DIR" && "$VIDEOS_SRC" != "$XDG_VIDEOS_DIR" ]]; then
         if sudo -u "$TARGET_USER" -g "$TARGET_USER" -H test -d "$VIDEOS_SRC"; then
             if sudo -u "$TARGET_USER" -g "$TARGET_USER" -H test -d "$XDG_VIDEOS_DIR"; then
-                sudo -u "$TARGET_USER" -g "$TARGET_USER" -H mv -f "$VIDEOS_SRC" "$XDG_VIDEOS_DIR" || true
-                if sudo -u "$TARGET_USER" -g "$TARGET_USER" -H test -d "$XDG_VIDEOS_DIR"; then
-                    if ! sudo -u "$TARGET_USER" -g "$TARGET_USER" -H test -e "$VIDEOS_SRC"; then
-                        echo "Moved: $VIDEOS_SRC-> $XDG_VIDEOS_DIR"
+                if sudo -u "$TARGET_USER" -g "$TARGET_USER" -H rmdir "$XDG_VIDEOS_DIR"; then
+                    if sudo -u "$TARGET_USER" -g "$TARGET_USER" -H mv "$VIDEOS_SRC" "$XDG_VIDEOS_DIR"; then
+                        if sudo -u "$TARGET_USER" -g "$TARGET_USER" -H test -d "$XDG_VIDEOS_DIR"; then
+                            if ! sudo -u "$TARGET_USER" -g "$TARGET_USER" -H test -e "$VIDEOS_SRC"; then
+                                echo "Moved: $VIDEOS_SRC-> $XDG_VIDEOS_DIR"
+                            fi
+                        fi
                     fi
                 fi
             fi
@@ -1224,31 +1249,35 @@ if [ "$ALL_CONFIGURED" = true ]; then
     # Remove unused repositories
     if [ "$BRAVE_USED" = false ]; then
         echo "Removing Brave repository..."
-        sudo rm -f /etc/apt/sources.list.d/brave-browser-release.list || { echo "Warning: Failed to remove Brave Browser from apt sources, continuing..."; }
-        sudo rm -f /usr/share/keyrings/brave-browser-archive-keyring.gpg || { echo "Warning: Failed to remove Brave keyring, continuing..."; }
+        sudo rm -f /etc/apt/sources.list.d/brave-browser-release.list || true
+        sudo rm -f /usr/share/keyrings/brave-browser-archive-keyring.gpg || true
     fi
     if [ "$VIVALDI_USED" = false ]; then
         echo "Removing Vivaldi repository..."
-        sudo rm -f /etc/apt/sources.list.d/vivaldi.list || { echo "Warning: Failed to remove Vivaldi from apt sources, continuing..."; }
-        sudo rm -f /usr/share/keyrings/vivaldi.gpg || { echo "Warning: Failed to remove Vivaldi keyring, continuing..."; }
+        sudo rm -f /etc/apt/sources.list.d/vivaldi.list || true
+        sudo rm -f /usr/share/keyrings/vivaldi.gpg || true
     fi
     if [ "$OPERA_USED" = false ]; then
         echo "Removing Opera repository..."
-        sudo rm -f /etc/apt/sources.list.d/opera-stable.list || { echo "Warning: Failed to remove Opera from apt sources, continuing..."; }
-        sudo rm -f /usr/share/keyrings/opera-browser.gpg || { echo "Warning: Failed to remove Opera keyring, continuing..."; }
+        sudo rm -f /etc/apt/sources.list.d/opera-stable.list || true
+        sudo rm -f /usr/share/keyrings/opera-browser.gpg || true
     fi
     if [ "$CHROME_USED" = false ]; then
         echo "Removing Chrome repository..."
-        sudo rm -f /etc/apt/sources.list.d/google-chrome.list || { echo "Warning: Failed to remove Chrome from apt sources, continuing..."; }
-        sudo rm -f /usr/share/keyrings/google-chrome.gpg || { echo "Warning: Failed to remove Chrome keyring, continuing..."; }
+        sudo rm -f /etc/apt/sources.list.d/google-chrome.list || true
+        sudo rm -f /usr/share/keyrings/google-chrome.gpg || true
     fi
     if [ "$EDGE_USED" = false ]; then
         echo "Removing Edge repository..."
-        sudo rm -f /etc/apt/sources.list.d/microsoft-edge.list || { echo "Warning: Failed to remove Edge from apt sources, continuing..."; }
-        sudo rm -f /usr/share/keyrings/microsoft-edge.gpg || { echo "Warning: Failed to remove Edge keyring, continuing..."; }
+        sudo rm -f /etc/apt/sources.list.d/microsoft-edge.list || true
+        sudo rm -f /usr/share/keyrings/microsoft-edge.gpg || true
     fi
     sudo apt-get update >/dev/null 2>&1 || { echo "Warning: Failed to update apt, continuing..."; }
-    mv "/home/$MAIN_USER/Desktop/jackjump-config.desktop" "/home/$MAIN_USER/.jackjump/desktop_backup/" || { echo "Warning: Failed to move desktop icon for Jackjump Configuration script, continuing..."; }
+    if [ -d "/home/$MAIN_USER/Desktop" ]; then
+        mv "/home/$MAIN_USER/Desktop/jackjump-config.desktop" "/home/$MAIN_USER/.jackjump/desktop_backup/" >/dev/null 2>&1 || true
+    else
+        mv "/home/$MAIN_USER/$DESKTOP_TRANSLATION/jackjump-config.desktop" "/home/$MAIN_USER/.jackjump/desktop_backup/" >/dev/null 2>&1 || true
+    fi
     mv "/home/$MAIN_USER/jackjump-config.sh" "/home/$MAIN_USER/.jackjump/jackjump-config.sh.bak" || { echo "Warning: Failed to move Jackjump Configuration script, continuing..."; }
 fi
 
