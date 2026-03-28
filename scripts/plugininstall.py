@@ -337,12 +337,17 @@ class Install(install_misc.InstallBase):
                 windows_mount = '/mnt/copy_windows'
                 if not os.path.exists(windows_mount):
                     misc.execute('mkdir', '-p', windows_mount)
+                exclude_dirs = {'Application Data', 'Local Settings', 'My Documents', 'My Music', 'My Pictures', 'My Videos', 'Start Menu'}
                 for part in copy_parts:
                     if misc.mount_with_retries('ntfs', part[0], windows_mount, self.db):
                         source_dir = os.path.join(windows_mount, 'Users')
                         if os.path.exists(source_dir):
                             for main_path_size in part[1]:
                                 source_path = os.path.join(source_dir, main_path_size[0]) 
+                                base_dir = os.path.basename(source_path)
+                                if base_dir in exclude_dirs:
+                                    continue
+
                                 if os.path.exists(source_path):
                                     dest_path = os.path.join(home_dir, main_path_size[0])
                                     if not misc.copy_to_drive(source_path, None, dest_path, main_path_size[1], db=self.db, was_compressed=False):
@@ -449,7 +454,7 @@ class Install(install_misc.InstallBase):
                         syslog.syslog(syslog.LOG_WARNING, f"JACKJUMP: Failed to set permissions for user {user_dir}: {e}")
 
             # Hide some Windows remnants 
-            hide_dir = ['AppData', 'IntelGraphicsProfiles']
+            hide_dir = ['AppData', 'IntelGraphicsProfiles', 'Saved Games', '3D Objects']
             hide_ini = 'desktop.ini'
             for user_dir in os.listdir(home_dir):
                 user_path = os.path.join(home_dir, user_dir)
@@ -1035,11 +1040,16 @@ for browser in "${BROWSERS[@]}"; do
     fi
 done
 
+if [ "$TARGET_USER" = "$MAIN_USER" ] && [ ${#REMAINING_USERS[@]} -gt 0 ]; then
+    echo "The following three options are system wide: you have to install it now, as $MAIN_USER, for another user to be able to install it or run it."
+fi
+
 # Thousands of games are on offer via Steam through Lutris and Protonup-rs:
 # GE community-maintained installers for games, Adobe Creative Cloud, etc.
 # Just say yes. Say no if you prefer official Steam client or purchasing
 # annual support for Windows programs via CodeWeavers:
 # CrossOver Linux is $74.
+STEAM_FLAG="/home/$MAIN_USER/.jackjump_steam"
 if [ "$TARGET_USER" = "$MAIN_USER" ]; then
     read -r -p "Install Steam through Lutris and Protonup-rs (GE: community-maintained installers for games and more)? (Y/n): " INSTALL_LUTRIS
     case $INSTALL_LUTRIS in
@@ -1052,8 +1062,10 @@ if [ "$TARGET_USER" = "$MAIN_USER" ]; then
             sudo DEBIAN_FRONTEND=noninteractive apt-get -y -o Dpkg::Options::="--force-confdef" install lutris steam >/dev/null 2>&1 || { echo "Warning: Failed to install Lutris and Steam, continuing..."; }
 
             # Install Protonup-rs and GE-Proton with auyer deb package
-            #if curl -L -o /tmp/protonup-rs.deb https://github.com/auyer/Protonup-rs/releases/latest/download/protonup-rs-amd64.deb >/dev/null 2>&1; then
-            if curl -L -o /tmp/protonup-rs.deb https://github.com/auyer/Protonup-rs/releases/download/v0.10.0/protonup-rs_0.10.0_amd64.deb >/dev/null 2>&1; then
+            sudo apt-get update >/dev/null 2>&1 || { echo "Warning: Failed to update apt for jq, continuing..."; }
+            sudo DEBIAN_FRONTEND=noninteractive apt-get -y -o Dpkg::Options::="--force-confdef" install jq >/dev/null 2>&1 || { echo "Warning: Failed to install jq continuing..."; }
+            LATEST_URL=$(curl -s https://api.github.com/repos/auyer/Protonup-rs/releases/latest | jq -r '.assets[] | select(.name | endswith("amd64.deb")) | .browser_download_url')   
+            if curl -L -o /tmp/protonup-rs.deb "$LATEST_URL" >/dev/null 2>&1; then
                 chmod 755 /tmp/protonup-rs.deb >/dev/null 2>&1 || { echo "Warning: Failed to chmod Protonup-rs deb package, continuing..."; }
                 sudo DEBIAN_FRONTEND=noninteractive apt-get -y -o Dpkg::Options::="--force-confdef" install /tmp/protonup-rs.deb >/dev/null 2>&1 || { echo "Warning: Failed to install Protonup-rs, continuing..."; }
                 echo "Do not close Lutris window until all the updates have completed (bottom left)."
@@ -1066,38 +1078,43 @@ if [ "$TARGET_USER" = "$MAIN_USER" ]; then
                 echo " "
                 echo "Steam installer: click Install."
                 echo " "
-                echo "Do not close Steam setup, Steam or other update windows."
+                echo "Do not close Steam setup, Steam or Progress windows."
                 echo "When the updates have completed and the STEAM Sign In window comes up, close that to continue."
                 steam >/dev/null 2>&1 || { echo "Warning: Failed to run Steam, continuing..."; }
                 protonup-rs --quick-download || { echo "Warning: Failed to download or install GE-Proton, continuing..."; }
                 rm /tmp/protonup-rs.deb >/dev/null 2>&1 || { echo "Warning: Failed to remove Protonup-rs deb package, continuing..."; }
+                sudo touch "$STEAM_FLAG" || { echo "Warning: Failed to mark steam as installed, continuing..."; }
+                echo "Launching each game once is necessary to generate directory structure before saved games can be copied from /home/$MAIN_USER/.Saved Games."
             else
                 echo "Protonup-rs deb package failed to download."
             fi
             ;;
     esac
 else
-    read -r -p "Install Steam GE-Proton through Protonup-rs for $TARGET_USER (if Steam, Lutris and Protonup-rs were installed system wide)? (Y/n): " INSTALL_PROTON
-    case $INSTALL_PROTON in
-        [Yy]*|"")
-            echo "Do not close Lutris window until all the updates have completed (bottom left)."
-            echo "When the updates have completed close Lutris window to continue."
-            sudo -u "$TARGET_USER" -g "$TARGET_USER" -H /usr/games/lutris >/dev/null 2>&1 &
-            wait $! 2>/dev/null || true
-            echo " "
-            echo "Steam installer: click Install."
-            echo " "
-            echo "Steam installer: click Install."
-            echo " "
-            echo "Steam installer: click Install."
-            echo " "
-            echo "Do not close Steam setup, Steam or other update windows."
-            echo "When the updates have completed and the STEAM Sign In window comes up, close that to continue."
-            sudo -u "$TARGET_USER" -g "$TARGET_USER" -H /usr/games/steam >/dev/null 2>&1 &
-            wait $! 2>/dev/null || true
-            sudo -u "$TARGET_USER" -g "$TARGET_USER" -H protonup-rs --quick-download || { echo "Warning: Failed to download or install GE-Proton with Protonup-rs, continuing..."; }
-            ;;
-    esac
+    if [ -f "$STEAM_FLAG" ]; then
+        read -r -p "Install Steam GE-Proton through Protonup-rs for $TARGET_USER? (Y/n): " INSTALL_PROTON
+        case $INSTALL_PROTON in
+            [Yy]*|"")
+                echo "Do not close Lutris window until all the updates have completed (bottom left)."
+                echo "When the updates have completed close Lutris window to continue."
+                sudo -u "$TARGET_USER" -g "$TARGET_USER" -H /usr/games/lutris >/dev/null 2>&1 &
+                wait $! 2>/dev/null || true
+                echo " "
+                echo "Steam installer: click Install."
+                echo " "
+                echo "Steam installer: click Install."
+                echo " "
+                echo "Steam installer: click Install."
+                echo " "
+                echo "Do not close Steam setup, Steam or Progress windows."
+                echo "When the updates have completed and the STEAM Sign In window comes up, close that to continue."
+                sudo -u "$TARGET_USER" -g "$TARGET_USER" -H /usr/games/steam >/dev/null 2>&1 &
+                wait $! 2>/dev/null || true
+                sudo -u "$TARGET_USER" -g "$TARGET_USER" -H protonup-rs --quick-download || { echo "Warning: Failed to download or install GE-Proton with Protonup-rs, continuing..."; }
+                echo "Launching each game once is necessary to generate directory structure before saved games can be copied from /home/$TARGET_USER/.Saved Games."
+                ;;
+        esac
+    fi
 fi
 
 if [ "$TARGET_USER" != "$MAIN_USER" ]; then
@@ -1120,7 +1137,7 @@ if [ "$TARGET_USER" = "$MAIN_USER" ]; then
 
             sudo mkdir -p "$SNAPSHOT_PATH" >/dev/null 2>&1 || { echo "Warning: Failed to create timeshift directory, continuing..."; }
             sudo apt-get update >/dev/null 2>&1 || { echo "Warning: Failed to update apt for jq, continuing..."; }
-            sudo DEBIAN_FRONTEND=noninteractive apt-get -y -o Dpkg::Options::="--force-confdef" install jq >/dev/null 2>&1 || { echo "Warning: Failed to install jq continuing..."; }
+            sudo DEBIAN_FRONTEND=noninteractive apt-get -y -o Dpkg::Options::="--force-confdef" install jq >/dev/null 2>&1 || true
             if sudo timeshift --snapshot-device "$SNAPSHOT_DEVICE"; then
                 if sudo timeshift --create --comments "Initial restore point"; then
                     if [ -f "$CONFIG_FILE" ]; then

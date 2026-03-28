@@ -3,7 +3,7 @@
 # Copyright (C) 2006, 2007, 2008 Canonical Ltd.
 # Written by Colin Watson <cjwatson@ubuntu.com>.
 #
-# Copyright (C) 2025 Jackjump.com, Inc.
+# Copyright (C) 2025, 2026 Jackjump.com, Inc.
 # Changes by Steve Saunders <steve@jackjump.com>.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -1672,8 +1672,6 @@ class PageGtk(PageBase):
                     return
                 elif source_size > (dest_free * 0.7):
                     use_compression = True
-            windows_users_extra_dirs = ['Public', 'Default',
-                                'Default User', 'All Users']
             mount_point = '/mnt/install_windows'
             if not os.path.exists(mount_point):
                 misc.execute_root('mkdir', '-p', mount_point)
@@ -1688,6 +1686,7 @@ class PageGtk(PageBase):
             dialog.run()
             dialog.destroy()
             # Subpart 3.1: Copy user files to jackjump/users
+            exclude_dirs = {'Application Data', 'Local Settings', 'My Documents', 'My Music', 'My Pictures', 'My Videos', 'Start Menu'}
             for part in install_parts:
                 if not misc.execute_root('mount', '-t', 'ntfs', '-o', 'ro', part[0], mount_point):
                     syslog.syslog(f"JACKJUMP: The partition {part[0]} on install drive with Windows has an issue or something is making it unable to mount.")
@@ -1701,6 +1700,10 @@ class PageGtk(PageBase):
                 if os.path.exists(source_dir):
                     for main_path_size in part[1]:
                         source_path = os.path.join(source_dir, main_path_size[0]) 
+                        base_dir = os.path.basename(source_path)
+                        if base_dir in exclude_dirs:
+                            continue
+
                         if os.path.exists(source_path):
                             dest_path = os.path.join('jackjump/users', main_path_size[0])
                             if not misc.copy_to_drive_root(source_path, copy_fs_dev, dest_path, main_path_size[1], db=None, was_compressed=use_compression):
