@@ -1139,10 +1139,10 @@ if [ "$TARGET_USER" = "$MAIN_USER" ]; then
             sudo apt-get update >/dev/null 2>&1 || { echo "Warning: Failed to update apt for jq, continuing..."; }
             sudo DEBIAN_FRONTEND=noninteractive apt-get -y -o Dpkg::Options::="--force-confdef" install jq >/dev/null 2>&1 || true
             if sudo timeshift --snapshot-device "$SNAPSHOT_DEVICE"; then
-                if sudo timeshift --create --comments "Initial restore point"; then
+                if sudo timeshift --create --tags D; then
                     if [ -f "$CONFIG_FILE" ]; then
                         jq '.schedule_daily = true' "$CONFIG_FILE" > /tmp/timeshift.json && sudo mv /tmp/timeshift.json "$CONFIG_FILE" >/dev/null 2>&1
-                        if sudo timeshift --check; then
+                        if sudo timeshift --create --tags D; then
                             if [ ! -f "$CRON_FILE" ]; then
                                 sudo tee "$CRON_FILE" > /dev/null << 'EOT'
 SHELL=/bin/bash
