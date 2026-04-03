@@ -1029,9 +1029,9 @@ for browser in "${BROWSERS[@]}"; do
             fi
             if [ -d "$WINDOWS_PROFILE" ]; then
                 sudo -u "$TARGET_USER" -g "$TARGET_USER" -H cp "$WINDOWS_PROFILE/places.sqlite" "$LINUX_PROFILE/" 2>/dev/null || { echo "Warning: Failed to copy bookmarks and history for $TARGET_USER, continuing..."; }
-                sudo -u "$TARGET_USER" -g "$TARGET_USER" -H cp -r "$WINDOWS_PROFILE/bookmarkbackups"/* "$LINUX_PROFILE/bookmarkbackups/" 2>/dev/null || { echo "Warning: Failed to copy backups of bookmarks and history for $TARGET_USER, continuing..."; }
+                sudo -u "$TARGET_USER" -g "$TARGET_USER" -H cp -r "$WINDOWS_PROFILE/bookmarkbackups"/* "$LINUX_PROFILE/bookmarkbackups/" 2>/dev/null || true
                 sudo -u "$TARGET_USER" -g "$TARGET_USER" -H cp "$WINDOWS_PROFILE/cookies.sqlite" "$LINUX_PROFILE/" 2>/dev/null || { echo "Warning: Failed to copy cookies for $TARGET_USER, continuing..."; }
-                sudo -u "$TARGET_USER" -g "$TARGET_USER" -H cp "$WINDOWS_PROFILE/logins.json" "$LINUX_PROFILE/" 2>/dev/null || { echo "Warning: Failed to copy logins for $TARGET_USER, continuing..."; }
+                sudo -u "$TARGET_USER" -g "$TARGET_USER" -H cp "$WINDOWS_PROFILE/logins.json" "$LINUX_PROFILE/" 2>/dev/null || true
                 sudo -u "$TARGET_USER" -g "$TARGET_USER" -H cp "$WINDOWS_PROFILE/key4.db" "$LINUX_PROFILE/" 2>/dev/null || { echo "Warning: Failed to copy logins for $TARGET_USER, continuing..."; }
                 sudo -u "$TARGET_USER" -g "$TARGET_USER" -H cp "$WINDOWS_PROFILE/formhistory.sqlite" "$LINUX_PROFILE/" 2>/dev/null || { echo "Warning: Failed to copy form history for $TARGET_USER, continuing..."; }
             fi
@@ -1054,6 +1054,7 @@ if [ "$TARGET_USER" = "$MAIN_USER" ]; then
     read -r -p "Install Steam through Lutris and Protonup-rs (GE: community-maintained installers for games and more)? (Y/n): " INSTALL_LUTRIS
     case $INSTALL_LUTRIS in
         [Yy]*|"")
+            echo "Installing Lutris and Steam..."
             # Enable 32-bit architecture
             sudo dpkg --add-architecture i386 >/dev/null 2>&1 || { echo "Warning: Failed to reset default of 32-bit enabled, continuing..."; }
 
@@ -1065,6 +1066,7 @@ if [ "$TARGET_USER" = "$MAIN_USER" ]; then
             sudo apt-get update >/dev/null 2>&1 || { echo "Warning: Failed to update apt for jq, continuing..."; }
             sudo DEBIAN_FRONTEND=noninteractive apt-get -y -o Dpkg::Options::="--force-confdef" install jq >/dev/null 2>&1 || { echo "Warning: Failed to install jq continuing..."; }
             LATEST_URL=$(curl -s https://api.github.com/repos/auyer/Protonup-rs/releases/latest | jq -r '.assets[] | select(.name | endswith("amd64.deb")) | .browser_download_url')   
+            echo "Installing Protonup-rs..."
             if curl -L -o /tmp/protonup-rs.deb "$LATEST_URL" >/dev/null 2>&1; then
                 chmod 755 /tmp/protonup-rs.deb >/dev/null 2>&1 || { echo "Warning: Failed to chmod Protonup-rs deb package, continuing..."; }
                 sudo DEBIAN_FRONTEND=noninteractive apt-get -y -o Dpkg::Options::="--force-confdef" install /tmp/protonup-rs.deb >/dev/null 2>&1 || { echo "Warning: Failed to install Protonup-rs, continuing..."; }
@@ -1129,34 +1131,42 @@ if [ "$TARGET_USER" = "$MAIN_USER" ]; then
     read -r -p "No dedicated backup drive so configure Timeshift (system) restore points and install duplicity (user file) backups in place? (Y/n): " INSTALL_BACKUP
     case $INSTALL_BACKUP in
         [Yy]*|"")
+            echo "Configuring Timeshift..."
             # Configure Timeshift
             SNAPSHOT_DEVICE=$(sudo findmnt -n -o SOURCE /)
             SNAPSHOT_PATH="/timeshift"
             CONFIG_FILE="/etc/timeshift/timeshift.json"
             CRON_FILE="/etc/cron.d/timeshift-hourly"
+            EXCLUDE_ARRAY="[]"
 
             sudo mkdir -p "$SNAPSHOT_PATH" >/dev/null 2>&1 || { echo "Warning: Failed to create timeshift directory, continuing..."; }
             sudo apt-get update >/dev/null 2>&1 || { echo "Warning: Failed to update apt for jq, continuing..."; }
             sudo DEBIAN_FRONTEND=noninteractive apt-get -y -o Dpkg::Options::="--force-confdef" install jq >/dev/null 2>&1 || true
-            if sudo timeshift --snapshot-device "$SNAPSHOT_DEVICE"; then
-                if sudo timeshift --create --tags D; then
-                    if [ -f "$CONFIG_FILE" ]; then
-                        jq '.schedule_daily = true' "$CONFIG_FILE" > /tmp/timeshift.json && sudo mv /tmp/timeshift.json "$CONFIG_FILE" >/dev/null 2>&1
-                        if sudo timeshift --create --tags D; then
-                            if [ ! -f "$CRON_FILE" ]; then
-                                sudo tee "$CRON_FILE" > /dev/null << 'EOT'
-SHELL=/bin/bash
-PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
-MAILTO=""
-
-0 * * * * root timeshift --check --scripted
-EOT
+            for user in "${VALID_USERS[@]}"; do
+                EXCLUDE_ARRAY=$(echo "$EXCLUDE_ARRAY" | jq --arg pat "/home/${user}/**" '. += [$pat]')
+            done
+            EXCLUDE_ARRAY=$(echo "$EXCLUDE_ARRAY" | jq --arg pat "/root/**" '. += [$pat]')
+            if sudo timeshift --snapshot-device "$SNAPSHOT_DEVICE" --scripted; then
+                if [ -f "$CONFIG_FILE" ]; then
+                    jq --argjson excludes "$EXCLUDE_ARRAY" '.schedule_daily = "true" | .exclude = $excludes' "$CONFIG_FILE" > /tmp/timeshift.json && sudo mv /tmp/timeshift.json "$CONFIG_FILE" >/dev/null 2>&1
+                    chmod 644 "$CONFIG_FILE" >/dev/null 2>&1 || { echo "Warning: Failed to chmod Timeshift config file, continuing..."; }
+                    sudo chown root:root "$CONFIG_FILE" >/dev/null 2>&1 || { echo "Warning: Failed to chown Timeshift config file, continuing..."; }
+                    if sudo timeshift --create --tags D --scripted; then
+                        if [ -f "$CONFIG_FILE" ]; then
+                            jq '.schedule_daily = "true"' "$CONFIG_FILE" > /tmp/timeshift.json && sudo mv /tmp/timeshift.json "$CONFIG_FILE" >/dev/null 2>&1
+                            chmod 644 "$CONFIG_FILE" >/dev/null 2>&1 || { echo "Warning: Failed to chmod Timeshift config file, continuing..."; }
+                            sudo chown root:root "$CONFIG_FILE" >/dev/null 2>&1 || { echo "Warning: Failed to chown Timeshift config file, continuing..."; }
+                            if sudo timeshift --check --scripted; then
+                                if [ ! -f "$CRON_FILE" ]; then
+                                    echo "Warning: Failed to enable Timeshift."
+                                fi
                             fi
                         fi
                     fi
                 fi
             fi
 
+            echo "Installing duplicity..."
             # Install duplicity to back up user files separately
             BACKUP_DIR="/duplicity/$MAIN_USER"
             DUP_FILE="/etc/cron.d/duplicity-daily"
@@ -1201,6 +1211,7 @@ if [ "$TARGET_USER" = "$MAIN_USER" ]; then
     read -r -p "Install Zoom through MWT mirror (for automatic updates of Zoom)? (Y/n): " INSTALL_ZOOM
     case $INSTALL_ZOOM in
         [Yy]*|"")
+            echo "Installing Zoom..."
             sudo wget -qO- https://mirror.mwt.me/zoom/gpgkey | sudo tee /etc/apt/keyrings/mwt.asc > /dev/null || { echo "Warning: Failed to set up Zoom keyring, continuing..."; }
             echo "deb [arch=amd64 signed-by=/etc/apt/keyrings/mwt.asc by-hash=force] https://mirror.mwt.me/zoom/deb any main" | sudo tee /etc/apt/sources.list.d/mwt.list >/dev/null || { echo "Warning: Failed to add Zoom mwt.list to apt sources." >&2; }
             sudo apt-get update >/dev/null 2>&1 || { echo "Warning: Failed to update apt for Zoom, continuing..."; }
