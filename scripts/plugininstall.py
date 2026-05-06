@@ -337,7 +337,7 @@ class Install(install_misc.InstallBase):
                 windows_mount = '/mnt/copy_windows'
                 if not os.path.exists(windows_mount):
                     misc.execute('mkdir', '-p', windows_mount)
-                exclude_dirs = {'Application Data', 'Local Settings', 'My Documents', 'My Music', 'My Pictures', 'My Videos', 'Start Menu'}
+                exclude_dirs = {'Application Data', 'Local Settings', 'My Documents', 'My Music', 'My Pictures', 'My Videos', 'Start Menu', 'Cookies', 'NetHood', 'PrintHood', 'Recent', 'SendTo', 'Templates'}
                 for part in copy_parts:
                     if misc.mount_with_retries('ntfs', part[0], windows_mount, self.db):
                         source_dir = os.path.join(windows_mount, 'Users')
@@ -1051,7 +1051,7 @@ fi
 # CrossOver Linux is $74.
 STEAM_FLAG="/home/$MAIN_USER/.jackjump_steam"
 if [ "$TARGET_USER" = "$MAIN_USER" ]; then
-    read -r -p "Install Steam through Lutris and Protonup-rs (GE: community-maintained installers for games and more)? (Y/n): " INSTALL_LUTRIS
+    read -r -p "Install Steam through Lutris and Protonup-rs (GE: community-maintained installers for games and more) and optimize system? (Y/n): " INSTALL_LUTRIS
     case $INSTALL_LUTRIS in
         [Yy]*|"")
             echo "Installing Lutris and Steam..."
@@ -1090,11 +1090,13 @@ if [ "$TARGET_USER" = "$MAIN_USER" ]; then
             else
                 echo "Protonup-rs deb package failed to download."
             fi
+            gsettings set org.cinnamon.desktop.interface enable-animations false >/dev/null 2>&1 || { echo "Warning: Failed to disable GTK animations for $TARGET_USER, continuing..."; }
+            sudo sysctl vm.swappiness=10 >/dev/null 2>&1 || { echo "Warning: Failed to lower swappiness, continuing..."; }
             ;;
     esac
 else
     if [ -f "$STEAM_FLAG" ]; then
-        read -r -p "Install Steam GE-Proton through Protonup-rs for $TARGET_USER? (Y/n): " INSTALL_PROTON
+        read -r -p "Install Steam GE-Proton through Protonup-rs for $TARGET_USER and optimize? (Y/n): " INSTALL_PROTON
         case $INSTALL_PROTON in
             [Yy]*|"")
                 echo "Do not close Lutris window until all the updates have completed (bottom left)."
@@ -1114,6 +1116,7 @@ else
                 wait $! 2>/dev/null || true
                 sudo -u "$TARGET_USER" -g "$TARGET_USER" -H protonup-rs --quick-download || { echo "Warning: Failed to download or install GE-Proton with Protonup-rs, continuing..."; }
                 echo "Launching each game once is necessary to generate directory structure before saved games can be copied from /home/$TARGET_USER/.Saved Games."
+                sudo -u "$TARGET_USER" -g "$TARGET_USER" -H dbus-run-session -- gsettings set org.cinnamon.desktop.interface enable-animations false >/dev/null 2>&1 || { echo "Warning: Failed to disable GTK animations for $TARGET_USER, continuing..."; }
                 ;;
         esac
     fi
@@ -1307,6 +1310,13 @@ if [ "$ALL_CONFIGURED" = true ]; then
         mv "/home/$MAIN_USER/$DESKTOP_TRANSLATION/jackjump-config.desktop" "/home/$MAIN_USER/.jackjump/desktop_backup/" >/dev/null 2>&1 || true
     fi
     mv "/home/$MAIN_USER/jackjump-config.sh" "/home/$MAIN_USER/.jackjump/jackjump-config.sh.bak" || { echo "Warning: Failed to move Jackjump Configuration script, continuing..."; }
+    if LC_ALL=C ubuntu-drivers devices | grep -q "recommended"; then
+        echo " "
+        echo "To do (you have recommended drivers):"
+        echo "Run Update Manager fully (restarting after kernel updates)."
+        echo "Open Driver Manager and install recommended drivers (only after booting into the latest kernel)."
+        echo " "
+    fi
 fi
 
 # Prompt for additional users if any remain

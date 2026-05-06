@@ -594,6 +594,10 @@ class PageGtk(PageBase):
         copy_has_windows = False
         install_has_bitlocker = False
         copy_has_bitlocker = False
+        install_ntfs_compressed = False
+        copy_ntfs_compressed = False
+        install_has_placeholder = False
+        copy_has_placeholder = False
         users_part_needed = True
         documents_part_needed = True
         pictures_part_needed = True
@@ -637,7 +641,7 @@ class PageGtk(PageBase):
                     install_has_bitlocker = True
                     break
                 elif (partition[3] == 'ntfs' or partition[3] == 'unknown') and partition[1] > 19777216:
-                    if misc.execute_root('mount', '-t', 'ntfs-3g', '-o', 'ro', partition[0], mount_point):
+                    if misc.execute_root('mount', '-t', 'ntfs', '-o', 'ro', partition[0], mount_point):
 
                         if not install_has_windows:
                             install_has_windows = os.path.exists(os.path.join(mount_point, 'Windows'))
@@ -671,6 +675,12 @@ class PageGtk(PageBase):
                                 users_part_needed = False
                                 if not user_dirs:
                                     user_dirs = misc.set_user_dirs(source_dir)
+                                    install_ntfs_compressed = misc.has_ntfs_compression(source_dir, user_dirs)
+                                    if install_ntfs_compressed:
+                                        break
+                                    install_has_placeholder = misc.has_cloud_placeholders(source_dir, user_dirs)
+                                    if install_has_placeholder:
+                                        break
                                 main_dirs, main_size = misc.set_main_dirs(source_dir, user_dirs)
                                 if main_dirs and main_size:
                                     if os.path.exists(public_path) and os.path.isdir(public_path) and os.listdir(public_path):
@@ -877,6 +887,12 @@ class PageGtk(PageBase):
                             if is_documents_part or is_pictures_part or is_desktop_part or is_videos_part or is_music_part or is_downloads_part or is_appdata_part or is_public_part or (users_has_documents and users_has_pictures and users_has_desktop and users_has_videos and users_has_music and users_has_downloads):
                                 if not user_dirs:
                                     user_dirs = misc.set_user_dirs(users_dir)
+                                    install_ntfs_compressed = misc.has_ntfs_compression(users_dir, user_dirs)
+                                    if install_ntfs_compressed:
+                                        break
+                                    install_has_placeholder = misc.has_cloud_placeholders(users_dir, user_dirs)
+                                    if install_has_placeholder:
+                                        break
                                 link_list, link_size = misc.set_var_link_list(users_dir, user_dirs, users_reparse_levels)
                                 if link_list and link_size:
                                     if os.path.exists(users_public_path) and os.path.isdir(users_public_path) and os.listdir(users_public_path):
@@ -970,6 +986,18 @@ class PageGtk(PageBase):
                 install_drive_encrypted = 'ubiquity/text/install_drive_encrypted'
                 self.extra_options['jackjump'] = install_drive_encrypted
                 return
+            if install_ntfs_compressed:
+                syslog.syslog("JACKJUMP: A valid install drive must be selected in order to proceed (that is not NTFS compressed).")
+                #title = ('Please select a valid install drive')
+                no_install_drive = 'ubiquity/text/no_install_drive'
+                self.extra_options['jackjump'] = no_install_drive
+                return
+            if install_has_placeholder:
+                syslog.syslog("JACKJUMP: A valid install drive must be selected in order to proceed (that is not Cloud syncing).")
+                #title = ('Please select a valid install drive')
+                no_install_drive = 'ubiquity/text/no_install_drive'
+                self.extra_options['jackjump'] = no_install_drive
+                return
             if not install_has_windows:
                 self.extra_options['install_has_windows'] = False
                 syslog.syslog(f"JACKJUMP: Install drive {install_device} does not have Windows.")
@@ -1007,7 +1035,7 @@ class PageGtk(PageBase):
                     copy_has_bitlocker = True
                     break
                 elif (partition[3] == 'ntfs' or partition[3] == 'unknown') and partition[1] > 19777216:
-                    if misc.execute_root('mount', '-t', 'ntfs-3g', '-o', 'ro', partition[0], mount_point):
+                    if misc.execute_root('mount', '-t', 'ntfs', '-o', 'ro', partition[0], mount_point):
                         copy_has_reparse = False
                         if users_reparse:
                             users_dir = os.path.join(mount_point, users_reparse)
@@ -1042,6 +1070,12 @@ class PageGtk(PageBase):
                                     users_part_needed = False
                                     if not user_dirs:
                                         user_dirs = misc.set_user_dirs(source_dir)
+                                        copy_ntfs_compressed = misc.has_ntfs_compression(source_dir, user_dirs)
+                                        if copy_ntfs_compressed:
+                                            break
+                                        copy_has_placeholder = misc.has_cloud_placeholders(source_dir, user_dirs)
+                                        if copy_has_placeholder:
+                                            break
                                     main_dirs, main_size = misc.set_main_dirs(source_dir, user_dirs)
                                     if main_dirs and main_size:
                                         if os.path.exists(public_path) and os.path.isdir(public_path) and os.listdir(public_path):
@@ -1256,6 +1290,12 @@ class PageGtk(PageBase):
                             if is_documents_part or is_pictures_part or is_desktop_part or is_videos_part or is_music_part or is_downloads_part or is_appdata_part or is_public_part or (users_has_documents and users_has_pictures and users_has_desktop and users_has_videos and users_has_music and users_has_downloads):
                                 if not user_dirs:
                                     user_dirs = misc.set_user_dirs(users_dir)
+                                    copy_ntfs_compressed = misc.has_ntfs_compression(users_dir, user_dirs)
+                                    if copy_ntfs_compressed:
+                                        break
+                                    copy_has_placeholder = misc.has_cloud_placeholders(users_dir, user_dirs)
+                                    if copy_has_placeholder:
+                                        break
                                 link_list, link_size = misc.set_var_link_list(users_dir, user_dirs, users_reparse_levels)
                                 if link_list and link_size:
                                     if os.path.exists(users_public_path) and os.path.isdir(users_public_path) and os.listdir(users_public_path):
@@ -1381,6 +1421,18 @@ class PageGtk(PageBase):
                 copy_drive_encrypted = 'ubiquity/text/copy_drive_encrypted'
                 self.extra_options['jackjump'] = copy_drive_encrypted
                 return
+            if copy_ntfs_compressed:
+                syslog.syslog("JACKJUMP: Please select a valid copy drive (that is not NTFS compressed).")
+                #title = ('Please select a valid copy drive.')
+                no_copy_drive = 'ubiquity/text/no_copy_drive'
+                self.extra_options['jackjump'] = no_copy_drive
+                return
+            if copy_has_placeholder:
+                syslog.syslog("JACKJUMP: Please select a valid copy drive (that is not Cloud syncing).")
+                #title = ('Please select a valid copy drive.')
+                no_copy_drive = 'ubiquity/text/no_copy_drive'
+                self.extra_options['jackjump'] = no_copy_drive
+                return
             if preinstall_copied:
                 syslog.syslog("JACKJUMP: The jackjump directory on copy drive must be deleted in order to proceed. In addition to preventing errors, this will free up space for copying (by removing old data from previous useage of this migration tool).")
                 #title = ('Please select a valid copy drive.')
@@ -1445,7 +1497,7 @@ class PageGtk(PageBase):
                     continue
                 for partition in self.disk_layout[disk]:
                     if (partition[3] == 'ntfs' or partition[3] == 'unknown'):
-                        if misc.execute_root('mount', '-t', 'ntfs-3g', '-o', 'ro', partition[0], mount_point):
+                        if misc.execute_root('mount', '-t', 'ntfs', '-o', 'ro', partition[0], mount_point):
 
                             other_has_reparse = False
                             if users_reparse:
@@ -1686,7 +1738,7 @@ class PageGtk(PageBase):
             dialog.run()
             dialog.destroy()
             # Subpart 3.1: Copy user files to jackjump/users
-            exclude_dirs = {'Application Data', 'Local Settings', 'My Documents', 'My Music', 'My Pictures', 'My Videos', 'Start Menu'}
+            exclude_dirs = {'Application Data', 'Local Settings', 'My Documents', 'My Music', 'My Pictures', 'My Videos', 'Start Menu', 'Cookies', 'NetHood', 'PrintHood', 'Recent', 'SendTo', 'Templates'}
             for part in install_parts:
                 if not misc.execute_root('mount', '-t', 'ntfs', '-o', 'ro', part[0], mount_point):
                     syslog.syslog(f"JACKJUMP: The partition {part[0]} on install drive with Windows has an issue or something is making it unable to mount.")

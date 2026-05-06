@@ -1,6 +1,6 @@
 # -*- coding: utf-8; Mode: Python; indent-tabs-mode: nil; tab-width: 4 -*-
 
-# Copyright (C) 2025 Jackjump.com, Inc.
+# Copyright (C) 2025, 2026 Jackjump.com, Inc.
 # Changes by Steve Saunders <steve@jackjump.com>.
 
 from collections import namedtuple
@@ -843,6 +843,100 @@ def set_var_link_list(source_dir, user_dirs, variable):
                         ret.append([dirs_root, dirs_bottom, dirs_size])
                         total_size += dirs_size
     return ret, total_size
+
+
+# steve@jackjump.com/grok4 added has_ntfs_compression
+@raise_privileges
+def has_ntfs_compression(source_dir, user_dirs):
+    """Check if there is NTFS compression."""
+    if os.path.exists(source_dir) and not os.path.isdir(source_dir):
+        syslog.syslog(f"JACKJUMP: Source {source_dir} exists but is not a directory, skipping check for NTFS compression.")
+        return False
+    if not user_dirs:
+        syslog.syslog(f"JACKJUMP: Somehow {user_dirs} is lacking, skipping check for NTFS compression.")
+        return False
+
+    for user_dir in user_dirs:
+        user_path = os.path.join(source_dir, user_dir)
+        if os.path.exists(user_path) and os.path.isdir(user_path) and os.listdir(user_path):
+            for main_dir in os.listdir(user_path):
+                if main_dir == 'AppData':
+                    main_path = os.path.join(user_path, main_dir)
+                    if os.path.exists(main_path) and os.path.isdir(main_path) and os.listdir(main_path):
+                        try:
+                            result = subprocess.run([
+                                'find', main_path, '-maxdepth', '4',
+                                '-exec', 'getfattr', '-e', 'hex', '-m', '.*', '-n', 'system.ntfs_attrib_be', '{}', '+'
+                            ], capture_output=True, text=True, timeout=20, env={'LC_ALL': 'C'})
+
+                            for line in result.stdout.splitlines():
+                                if line.startswith("# file:"):
+                                    appdata_path = line[8:]  # Extract the path
+                                elif 'system.ntfs_attrib_be=' in line:
+                                    # Extract path and value
+                                    parts = line.split('=', 1)
+                                    if len(parts) == 2:
+                                        value = parts[1].strip()
+                                        if value and int(value, 16) == 0x0800:  # Compressed bit
+                                            syslog.syslog(f"JACKJUMP: NTFS compression enabled on file: {appdata_path} system.ntfs_attrib_be={value}.")
+                                            return True
+                        except Exception:
+                            pass
+    return False
+
+
+# steve@jackjump.com/grok4 added has_cloud_placeholders
+@raise_privileges
+def has_cloud_placeholders(source_dir, user_dirs):
+    """Check if any user has unhandled Cloud syncing placeholders."""
+    if os.path.exists(source_dir) and not os.path.isdir(source_dir):
+        syslog.syslog(f"JACKJUMP: Source {source_dir} exists but is not a directory, skipping check for Cloud syncing.")
+        return False
+    if not user_dirs:
+        syslog.syslog(f"JACKJUMP: Somehow {user_dirs} is lacking, skipping check for Cloud syncing.")
+        return False
+
+    cloud_folders = {'OneDrive', 'iCloudDrive', 'Sync'}
+
+    for user_dir in user_dirs:
+        user_path = os.path.join(source_dir, user_dir)
+        if os.path.exists(user_path) and os.path.isdir(user_path) and os.listdir(user_path):
+            for main_dir in os.listdir(user_path):
+                if main_dir in cloud_folders or main_dir.startswith('OneDrive - '):
+                    main_path = os.path.join(user_path, main_dir)
+                    if os.path.exists(main_path) and os.path.isdir(main_path) and os.listdir(main_path):
+                        try:
+                            result = subprocess.run(
+                                ['ls', '-l', main_path],
+                                capture_output=True, text=True, timeout=10,
+                                env={'LC_ALL': 'C'}
+                            )
+
+                            output = (result.stdout + result.stderr).lower()
+                            if 'unsupported reparse point' in output:
+                                syslog.syslog(f"JACKJUMP: Cloud sync placeholders detected in {main_path}.")
+                                return True
+
+                            # Deeper check only if no obvious reparse in ls
+                            checked = 0
+                            for root, dirs, files in os.walk(main_path):
+                                for file in files:
+                                    if checked >= 700:  # safety limit
+                                        break
+                                    file_path = os.path.join(root, file)
+                                    if os.path.isfile(file_path) and os.path.getsize(file_path) > 0:
+                                        try:
+                                            with open(file_path, 'rb') as f:
+                                                f.read(512)  # Small read test
+                                        except (OSError, PermissionError, IOError):
+                                            syslog.syslog(syslog.LOG_ERR, f"JACKJUMP: Cloud sync placeholder file detected: {file_path}.")
+                                            return True
+                                        checked += 1
+                                if checked >= 700:
+                                    break
+                        except Exception as e:
+                            syslog.syslog(syslog.LOG_ERR, f"JACKJUMP: Access/check error in {main_path}: {e}")
+    return False
 
 
 # steve@jackjump.com/search.brave.com added get_junction_target

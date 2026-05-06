@@ -16,7 +16,7 @@ Thanks to Google, Microsoft, Mozilla Corporation, Brave Software, Vivaldi Techno
 
 Thanks to the renowned Australian computer programmer, [Andrew Tridgell](https://github.com/tridge), for co-inventing, writing and maintaining [rsync](https://rsync.samba.org/), which powers this Windows to Linux migration tool. Rsync also powers Timeshift and duplicity.
 
-Thanks to [Grok](https://grok.com/) and [Brave Search](https://search.brave.com/) for helping make this Linux migration tool production stable.
+Thanks to [Grok](https://grok.com/) and [Brave Search](https://search.brave.com/) for helping make this Linux migration tool production stable for single Windows partition (standard for most Windows 10/11 users).
 
 Thanks to [Valve Corporation](https://www.valvesoftware.com/) ([Steam](https://store.steampowered.com/)), [Lutris](https://lutris.net/), [Protonup-rs](https://github.com/auyer/Protonup-rs/), [GE-Proton](https://github.com/GloriousEggroll/proton-ge-custom) and [CodeWeavers](https://www.codeweavers.com/) for maintaining the enhancements to [Wine](https://gitlab.winehq.org/wine/wine) that enable thousands of Windows programs to run on Linux.
 
